@@ -10,12 +10,13 @@ the implementation already authorized.
 The private repository [sawantvaishnav1994-ai/jarvis](https://github.com/sawantvaishnav1994-ai/jarvis)
 became accessible during this work session. Its owner and private visibility were
 verified. Initial main contained only an eight-byte README and was unprotected.
-The work log records the final source publication and CI evidence.
+Source publication is complete and remote CI passed all 68 tests. The work log
+records the commit and run URL.
 
 The GitHub integration exposes file/tree/commit operations but no repository
-creation or branch-protection mutation. Configure required review/check protection
-where the account supports it. Retain the actual Foundation checks workflow run
-URL and commit SHA; a prepared workflow is not proof of remote CI success.
+creation or branch-protection mutation. Ruleset access returned HTTP 403 requiring a paid plan for this private repository.
+Protected-branch enforcement therefore remains unavailable; repository visibility
+and billing were not changed. Retain the recorded CI run URL and commit SHA.
 
 ## Independent audit infrastructure
 

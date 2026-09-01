@@ -18,7 +18,7 @@ Target: Linux x86_64, Python 3.12.13. Foundation v1 GO is not issued.
 | Target systemd launcher | Refused to run without a usable systemd user bus; live cgroup drill remains unverified |
 | Current documentation links | Resolved |
 | Master Definition v0.1 | Byte-for-byte unchanged |
-| GitHub destination | Private sawantvaishnav1994-ai/jarvis is now accessible; remote publication/CI evidence recorded in work log and delivery report |
+| GitHub destination | Private sawantvaishnav1994-ai/jarvis published; source tree 18dae7c78306d4bee15fa46631bad7c0f6af2920 verified |
 
 The S3 SDK is not installed here and its full optional dependency lock is not
 verified. Two package-network operations did not complete because network approval
@@ -28,3 +28,9 @@ disaster-recovery drill has been performed.
 
 All tests use synthetic data. Test simulators and local passes are not represented
 as production infrastructure proof. See STATUS.md and HARDENING.md.
+
+Remote CI: [Foundation checks run 33562610591](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33562610591) succeeded for
+commit 12ed36f6d23c794da83e4dcdf21eeec6661e38e3. All 68 tests passed remotely
+in 19.906 seconds; hash-locked installation, lint, architecture checks and demo
+also passed. GitHub ruleset access returned HTTP 403 requiring a paid plan for
+this private repository; no visibility or billing change was made.

@@ -57,18 +57,15 @@ repository permission.
 
 ## Repository state
 
-The private destination is [sawantvaishnav1994-ai/jarvis](https://github.com/sawantvaishnav1994-ai/jarvis).
-It became accessible during this session after initial access checks returned no
-repositories. See the cumulative work log for publication and CI evidence.
-The ZIP includes `git-history.bundle`, which can recreate the committed repository:
+The source is published in the owner's private repository:
+[sawantvaishnav1994-ai/jarvis](https://github.com/sawantvaishnav1994-ai/jarvis).
+The first import preserved the repository's initial commit and matched the tested
+local source tree exactly. [Remote Foundation checks passed](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33562610591), including all 68 tests.
 
-```bash
-git clone git-history.bundle jarvis
-```
-
-When the owner's private remote is available, first verify its owner, visibility,
-existing contents, and branch rules, then push the verified local commit. Do not
-overwrite an existing repository or claim CI success before its actual run.
+GitHub reports that rulesets require a paid plan for this private repository.
+The repository remains private; protected-branch enforcement is not configured.
+Historical pre-import local commits are preserved on a local history branch and
+in earlier source deliveries. Use the private repository for current source.
 
 All rights in Jarvis-owned source are reserved to Vaishnav Sawant. Dependencies
 retain their own licenses. No credentials or runtime data are included.
