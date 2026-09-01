@@ -1,0 +1,1 @@
+"""JARVIS events boundary."""

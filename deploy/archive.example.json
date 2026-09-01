@@ -1,0 +1,7 @@
+{
+  "bucket": "REPLACE-WITH-OWNER-AUDIT-BUCKET",
+  "prefix": "jarvis/REPLACE-WITH-OWNER-ID",
+  "account_id": "000000000000",
+  "region": "us-east-1",
+  "retention_days": 365
+}

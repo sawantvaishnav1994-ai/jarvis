@@ -1,0 +1,2 @@
+# Preserve intentional Markdown hard line breaks in the frozen source document.
+docs/JARVIS_Master_Definition_v0.1.md whitespace=-blank-at-eol

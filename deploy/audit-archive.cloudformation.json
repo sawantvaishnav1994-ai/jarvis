@@ -1,0 +1,296 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "JARVIS independent audit destination. Deploy in the owner's audit account using a separate administrator. No deployment was performed in the development environment.",
+  "Parameters": {
+    "BucketName": {
+      "Type": "String",
+      "MinLength": 3,
+      "MaxLength": 63,
+      "AllowedPattern": "[a-z0-9][a-z0-9-]+[a-z0-9]"
+    },
+    "RuntimeRoleArn": {
+      "Type": "String",
+      "Description": "Existing least-privilege Jarvis runtime IAM role. Must differ from archive administration.",
+      "AllowedPattern": "arn:aws:iam::[0-9]{12}:role/.+"
+    },
+    "Prefix": {
+      "Type": "String",
+      "Description": "Unique immutable owner/installation prefix",
+      "AllowedPattern": "jarvis/[a-zA-Z0-9_-]+"
+    },
+    "RetentionDays": {
+      "Type": "Number",
+      "Default": 365,
+      "MinValue": 1,
+      "MaxValue": 3650,
+      "Description": "Owner-selected compliance minimum. Retained objects cannot be removed early."
+    }
+  },
+  "Resources": {
+    "ArchiveBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BucketName": {
+          "Ref": "BucketName"
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "ObjectLockEnabled": true,
+        "ObjectLockConfiguration": {
+          "ObjectLockEnabled": "Enabled",
+          "Rule": {
+            "DefaultRetention": {
+              "Mode": "COMPLIANCE",
+              "Days": {
+                "Ref": "RetentionDays"
+              }
+            }
+          }
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        }
+      }
+    },
+    "ArchivePolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ArchiveBucket"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "RequireTLS",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ArchiveBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${ArchiveBucket.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            },
+            {
+              "Sid": "ReadConfiguration",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": [
+                "s3:GetBucketVersioning",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketPublicAccessBlock"
+              ],
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ArchiveBucket",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Sid": "ListOwnedVersions",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": "s3:ListBucketVersions",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ArchiveBucket",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "StringLike": {
+                  "s3:prefix": {
+                    "Fn::Sub": "${Prefix}/*"
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "WriteReadOwnedEvidence",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectRetention",
+                "s3:GetObject",
+                "s3:GetObjectVersion",
+                "s3:GetObjectRetention"
+              ],
+              "Resource": {
+                "Fn::Sub": "${ArchiveBucket.Arn}/${Prefix}/*"
+              }
+            },
+            {
+              "Sid": "DenyRuntimeRemovalOrAdministration",
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": [
+                "s3:DeleteObject",
+                "s3:DeleteObjectVersion",
+                "s3:DeleteBucket",
+                "s3:PutBucketPolicy",
+                "s3:DeleteBucketPolicy",
+                "s3:PutBucketVersioning",
+                "s3:PutBucketObjectLockConfiguration",
+                "s3:PutBucketPublicAccessBlock",
+                "s3:PutLifecycleConfiguration",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutReplicationConfiguration",
+                "s3:BypassGovernanceRetention",
+                "s3:PutObjectLegalHold"
+              ],
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ArchiveBucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${ArchiveBucket.Arn}/*"
+                }
+              ]
+            },
+            {
+              "Sid": "RequireComplianceWrites",
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectRetention"
+              ],
+              "Resource": {
+                "Fn::Sub": "${ArchiveBucket.Arn}/${Prefix}/*"
+              },
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:object-lock-mode": "COMPLIANCE"
+                }
+              }
+            },
+            {
+              "Sid": "RequireMinimumRetention",
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": "s3:PutObjectRetention",
+              "Resource": {
+                "Fn::Sub": "${ArchiveBucket.Arn}/${Prefix}/*"
+              },
+              "Condition": {
+                "NumericLessThan": {
+                  "s3:object-lock-remaining-retention-days": {
+                    "Ref": "RetentionDays"
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "RequireBoundedRetention",
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": {
+                  "Ref": "RuntimeRoleArn"
+                }
+              },
+              "Action": "s3:PutObjectRetention",
+              "Resource": {
+                "Fn::Sub": "${ArchiveBucket.Arn}/${Prefix}/*"
+              },
+              "Condition": {
+                "NumericGreaterThan": {
+                  "s3:object-lock-remaining-retention-days": 3700
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Bucket": {
+      "Value": {
+        "Ref": "ArchiveBucket"
+      }
+    },
+    "Account": {
+      "Value": {
+        "Ref": "AWS::AccountId"
+      }
+    },
+    "Region": {
+      "Value": {
+        "Ref": "AWS::Region"
+      }
+    },
+    "Prefix": {
+      "Value": {
+        "Ref": "Prefix"
+      }
+    },
+    "RetentionDays": {
+      "Value": {
+        "Ref": "RetentionDays"
+      }
+    }
+  }
+}
