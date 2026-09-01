@@ -1,0 +1,35 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "dist",
+        "tsBuildInfoFile": "dist/.tsbuildinfo"
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        {
+            "path": "../shared"
+        },
+        {
+            "path": "../identity"
+        },
+        {
+            "path": "../security"
+        },
+        {
+            "path": "../models"
+        },
+        {
+            "path": "../memory"
+        },
+        {
+            "path": "../events"
+        },
+        {
+            "path": "../audit"
+        },
+        {
+            "path": "../tools"
+        }
+    ]
+}

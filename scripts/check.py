@@ -7,7 +7,7 @@ import sys
 root = pathlib.Path(__file__).resolve().parents[1]
 errors = []
 for path in sorted(root.rglob("*.py")):
-    if any(part in {".venv", "build", "dist"} for part in path.parts):
+    if any(part in {".venv", "build", "dist", "node_modules", ".next"} for part in path.parts):
         continue
     text = path.read_text()
     try:

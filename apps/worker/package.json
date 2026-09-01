@@ -1,0 +1,17 @@
+{
+    "name": "@jarvis/worker",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "node dist/main.js"
+    },
+    "dependencies": {
+        "@jarvis/shared": "0.1.0",
+        "@jarvis/identity": "0.1.0",
+        "@jarvis/config": "0.1.0",
+        "@jarvis/security": "0.1.0",
+        "@jarvis/storage": "0.1.0",
+        "@jarvis/events": "0.1.0"
+    }
+}

@@ -1,35 +1,39 @@
-# J0 gate evidence — implementation 0.2.0
+# J0 gate status — TypeScript engineering release 0.3.0
 
 **J0 remains in progress. Foundation v1 GO: NOT ISSUED. J1: NOT STARTED.**
 
-This release implements the previously missing local cryptographic device,
-worker-process, independent-audit adapter, and full-system recovery paths.
-Deployment evidence is separate from local implementation evidence.
+The owner revised J0.1 to a TypeScript modular monorepo. The active foundation now
+uses Node/Next.js, PostgreSQL/pgvector, Drizzle and Redis/BullMQ. The Python 0.2.0
+reference is preserved, with its [historical gate evidence](reference/python-v0.2-status.md).
+Its authenticated device/recovery behavior has not automatically migrated into
+the new API.
 
-| Requested blocker | Implemented and tested | Evidence still required |
+## Current acceptance evidence
+
+- TypeScript packages compile; the Next.js production build passes.
+- 26 unit/contract/security tests pass locally, including privacy, timeout,
+  scope/approval denial, encrypted vault and audit failure behavior.
+- Real PostgreSQL integration, full startup, browser, outage/recovery and stop
+  checks are implemented in CI; their run result will be recorded after publication.
+- This workspace has no Docker/PostgreSQL and cannot install system packages;
+  local mock tests do not establish Docker acceptance.
+
+| Gate | Current implementation | Remaining work |
 | --- | --- | --- |
-| Private GitHub repository | Private repository published; 72-file source tree verified; remote CI passed 68 tests | Repository/access blocker resolved. Rulesets/protected-branch enforcement remain unavailable under the current private-repository plan (GitHub HTTP 403). |
-| Cryptographic device trust | Ed25519 single-use expiring challenges; password plus device proof; encrypted client key; enrollment, device revocation and session invalidation; explicit legacy migration | Physical device/keychain custody and remote transport are not deployed. Local cryptographic proof is verified. |
-| Independently immutable audit | Optional S3 COMPLIANCE adapter; exact-version write/readback; retention, versioning, account and public-access checks; fail-closed archive binding; CloudFormation and live probe | Deploy in an owner-controlled audit account under separate administration. Run the live denial probe. Simulator results do not establish immutable storage. |
-| Worker termination | Default model execution in separate POSIX processes; bounded pipe input/output; deadline and owner cancellation; TERM/KILL escalation and descendant cleanup; host stop integration | Run target-host systemd cgroup and supervisor-loss drills. Python cannot guarantee termination against kernel failure, privileged escape or physical effects. |
-| Complete disaster recovery | Encrypted system snapshot including key material, identity, devices, vault, control/policy records, content, events, audit; latest external deletion checks; fresh-device recovery into Safe Mode | Off-host backup custody, passphrase recovery, dependency cache, live archive access, backup scheduling, retention maintenance and clean target-host recovery drill with measured RPO/RTO. |
+| J0.1 | All 24 artifact categories implemented; build and local tests pass | Complete fresh-checkout Docker CI acceptance |
+| J0.2 | Identity ports/types; historical Python signed-device implementation | Owner/session/device authentication in active TypeScript runtime |
+| J0.3 | Default-deny tool gateway and approval ports; local service stop | Durable authenticated approvals, richer policy, host containment |
+| J0.4 | PostgreSQL domains, encrypted payloads/vault, reviewed migrations | Managed key custody, rotation and recovery-backed destructive migrations |
+| J0.5 | Memory schema/service/adapter and retention rules | Full memory provenance, expiry maintenance, authenticated data interfaces |
+| J0.6 | Model port, privacy checks, swap conformance, bounded wait | Real/local adapters, enforced preflight budgets and process isolation |
+| J0.7 | Tool contract and gateway tested with synthetic echo | Real connector scopes, idempotency/cancellation/reconciliation |
+| J0.8 | Event schema, encrypted persistence and constrained queue worker | Outbox, subscriptions, authenticated ingress, replay/dead-letter semantics |
+| J0.9 | Operational metadata and database append-only audit controls | Independently immutable archive, external witnesses and operations |
+| J0.10 | Historical Python encrypted recovery/export/delete tests | Active-runtime full data sovereignty and off-host disaster drill |
+| J0.11 | Unit/contracts/security and real-stack acceptance suite | Complete authenticated full-J0 workflow and host/deployment tests |
+| J0.12 | Contract versions and acceptance criteria recorded | Close applicable gates, freeze interfaces, owner GO |
 
-## Gate disposition
-
-| Gate | Current evidence | Remaining gate work |
-| --- | --- | --- |
-| J0.1 | Private GitHub repository, package 0.2.0, passing remote CI, checks, documentation | Protected-branch policy requires a supported account plan; optional S3 SDK remains a deployment dependency |
-| J0.2 | Local owner and cryptographic device authentication, revocation, recovery enrollment | Deployed key custody and any future remote/API/agent/guest identities |
-| J0.3 | Deterministic P0–P5 boundaries; exact approvals; safe defaults; bounded model workers | Target-host supervisor evidence; richer scope/risk policy for real connectors |
-| J0.4 | Encrypted records, key separation, vault, portable and full-system backup | Hardware/keychain custody, rotation/secret leasing, durable off-host backup operation |
-| J0.5 | Memory models, scope, provenance, retention, expiry, never-store | Continuous retention maintenance and future guest/agent authorization |
-| J0.6 | Provider-independent Core and isolated mock-a/mock-b workers | Real provider/local-runtime conformance and budgets/streaming |
-| J0.7 | Harmless mock tool through schema, policy, proposal, approval, execution and audit | Real connector idempotency/cancellation and uncertain-outcome recovery |
-| J0.8 | Versioned local events and duplicate rejection | Authenticated ingress, queues, subscriptions, retries and dead letters |
-| J0.9 | HMAC ledger, remote write-ahead witnesses, explicit archive reconciliation | Live immutable destination, retention operations, independent checkpoints/rollback monitoring and crash metrics |
-| J0.10 | Full-system fresh-directory recovery and later-deletion suppression tested locally | Off-site custody, scheduled backups and clean target-host disaster drill |
-| J0.11 | 68 integration/adversarial tests and installed CLI demo | Target-host supervisor and live archive/recovery evidence |
-| J0.12 | Concrete release blockers and acceptance procedure recorded | Close applicable gates, freeze contracts, obtain owner GO |
-
-The prior reference status remains in Git history and the cumulative work log.
-No gate has been silently waived. Deployment steps are in HARDENING.md.
+The private GitHub repository already exists. Branch ruleset enforcement was
+previously rejected by GitHub HTTP 403 under the current private-repository plan;
+visibility has not been changed and no paid upgrade has been performed.
+See [J0.1 deliverables](roadmap/j0.1.md) and [security scope](security/j0.1-boundaries.md).

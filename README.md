@@ -1,71 +1,75 @@
-# JARVIS — J0 foundation reference
+# JARVIS
 
 JARVIS is the system. AI models are replaceable brains used by JARVIS.
 
-This repository contains a runnable local foundation: thirteen logical boundaries,
-signed device authentication, encrypted storage, memory, isolated mock-model
-workers, a permission-controlled mock tool, events, audit, and encrypted system
-recovery. Version 0.2.0 adds an optional independently retained S3 audit adapter.
-Local checks pass; deployment gates remain open before Foundation v1 GO.
+The active engineering foundation is a TypeScript modular monorepo, version
+0.3.0. J0.1 provides a local API, Next.js status interface, queue worker,
+PostgreSQL/pgvector, encrypted development credentials, versioned contracts and
+continuous integration. Personal-data endpoints, login, external tools and
+production deployment are disabled until their security gates are implemented.
 
-The approved J0.1–J0.12 sequence is in [J0_CHARTER.md](docs/J0_CHARTER.md).
-The original [Master Definition v0.1](docs/JARVIS_Master_Definition_v0.1.md) is
-preserved. Read [STATUS.md](docs/STATUS.md) before treating any gate as complete.
+The owner's [Master Definition v0.1](docs/JARVIS_Master_Definition_v0.1.md) remains
+unchanged. [Current gate status](docs/STATUS.md) distinguishes J0.1 from the full
+J0 Foundation v1 GO decision.
 
-## Quick start
+## Start locally
 
-Verified target: Python 3.12 on Linux. Run from this directory:
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
-.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
-.venv/bin/jarvis demo
-```
-
-The demo uses synthetic content, temporary keys, two deterministic local models,
-and a harmless echo tool. It authenticates, stores a conversation and memory,
-records an event, prepares/approves/executes the tool, swaps the model, reads
-memory, encrypts a portable backup, deletes data, and verifies that replaying the
-old backup cannot restore deleted IDs into the same store. It makes no network
-requests at runtime. Installing dependencies requires package-network access.
-
-## Run checks
+Prerequisites: Git access to this private repository, Node **24.19.0** with npm
+11, and a running Docker Engine/Desktop with Compose v2. Linux is the CI target;
+macOS and WSL2 are supported development targets pending host-specific checks.
+No AI-provider account, Vercel project or Supabase project is needed.
 
 ```bash
-.venv/bin/ruff check .
-.venv/bin/python scripts/check.py
-PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/jarvis demo
+git clone https://github.com/sawantvaishnav1994-ai/jarvis.git
+cd jarvis
+npm run setup
+npm start
 ```
 
-CI runs the same lint, architecture, integration, and demo checks. The workflow
-is prepared but has not run on a private remote in this session. Third-party
-Actions are pinned to verified full commit SHAs and the job has read-only
-repository permission.
+`setup` installs locked dependencies, builds packages, generates development
+credentials, starts PostgreSQL and Redis, applies reviewed SQL migrations, and
+builds the web app. `start` checks infrastructure and migrations, starts all three
+Node services, and prints `JARVIS_READY` after their readiness checks pass.
+Open http://127.0.0.1:3000. Keep the terminal open.
 
-## Documents
+```bash
+npm stop          # or Ctrl+C; stops this supervisor's Node services
+npm run infra:down # optional; stops containers and preserves database volumes
+```
 
-- [Architecture and stable boundaries](docs/ARCHITECTURE.md)
-- [Security model and remaining limitations](docs/SECURITY.md)
-- [Local operation and recovery](docs/OPERATIONS.md)
-- [Versioning, migrations, and testing](docs/ENGINEERING.md)
-- [Implementation decisions](docs/adr/0001-foundation-reference.md)
-- [Dependency inventory](docs/DEPENDENCIES.md)
-- [Hardening deployment and acceptance](docs/HARDENING.md)
-- [Cumulative prompts and work record](JARVIS_WORK_LOG.md)
+Ports are bound to loopback: web 3000, API 4000, worker 4001, PostgreSQL 5433,
+Redis 6380. Keep this development stack off public networks. Never point it at
+production. Staging and production templates deliberately refuse startup.
 
-## Repository state
+## Verify
 
-The source is published in the owner's private repository:
-[sawantvaishnav1994-ai/jarvis](https://github.com/sawantvaishnav1994-ai/jarvis).
-The first import preserved the repository's initial commit and matched the tested
-local source tree exactly. [Remote Foundation checks passed](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33562610591), including all 68 tests.
+```bash
+npm run check            # lint, architecture boundaries, types, unit/contracts/security
+npm run test:integration # real development PostgreSQL; synthetic fixtures
+npm run smoke            # service health plus a real queued worker job
+npx playwright install chromium
+npm run test:e2e          # browser -> API -> readiness
+npm run test:failures     # stops/restarts dev Redis and PostgreSQL; run on test data
+```
 
-GitHub reports that rulesets require a paid plan for this private repository.
-The repository remains private; protected-branch enforcement is not configured.
-Historical pre-import local commits are preserved on a local history branch and
-in earlier source deliveries. Use the private repository for current source.
+GitHub Actions runs these with freshly generated development credentials and
+Docker volumes, plus the preserved Python regression suite. It deploys nothing.
 
-All rights in Jarvis-owned source are reserved to Vaishnav Sawant. Dependencies
-retain their own licenses. No credentials or runtime data are included.
+## Repository guide
+
+| Path | Responsibility |
+| --- | --- |
+| `apps/api`, `apps/worker`, `apps/web` | Composition and interface/service processes |
+| `apps/desktop` | Reserved desktop interface boundary |
+| `packages/*` | Core, identity, security, memory, knowledge, models, agents, tools, events, audit, storage, devices, config, shared |
+| `config/*` | Validated environment templates containing secret references |
+| `infrastructure/*` | Docker, reviewed migrations, deployment and monitoring designs |
+| `tests/*` | Contract, security, integration, browser and reference tests |
+| `docs/decisions/*` | ADRs for the active TypeScript architecture |
+| `src/jarvis` | Preserved Python 0.2.0 reference; no automatic data migration |
+
+Read [architecture](docs/architecture/system.md), [development](docs/architecture/development.md),
+[security scope](docs/security/j0.1-boundaries.md), [contracts](docs/protocols/contracts-v1.md),
+and [J0.1 acceptance](docs/roadmap/j0.1.md). The historical Python documents remain
+in `docs/` and `docs/reference/`; they do not describe the active TypeScript API.
+The cumulative [work log](JARVIS_WORK_LOG.md) retains the owner's prompts verbatim.

@@ -1147,3 +1147,639 @@ The smallest recommended next setup is the existing GitHub repository and encryp
 Starting commit: 3ad7dce739a1c8b2102c7e66a6f510f39431dd43. The earlier source import and final documentation commits both passed remote CI; the second run is https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33563016933. Only this cumulative log changes in the current advisory work; implementation and gate status remain unchanged. The repository's required syntax/architecture and existing regression checks were run before publishing this log update; results follow.
 
 Validation result: Python syntax, whitespace hygiene and Core dependency checks passed; all 68 existing tests passed in 15.591 seconds. No tests were added for this documentation-only recommendation.
+
+### Entry 005 — Exact delivered response (backfilled)
+
+```markdown
+**GitHub covers the code. For the remaining J0 deployment checks, we need two things: a Linux machine and protected storage.**
+
+| Component | Purpose | Needed now? |
+|---|---|---|
+| **GitHub** | Source code, history and CI | Already done |
+| **Linux computer or server** | Run Jarvis and verify worker shutdown/recovery | **Yes** |
+| **AWS S3 with Object Lock** | Independently protected audit records; storage for encrypted backups | **Yes, for our current design** |
+| **Existing encrypted SQLite** | Store Jarvis’s data | Already implemented |
+| **Vercel** | Host a future web dashboard | Later |
+| **Supabase** | Optional managed PostgreSQL database | Later |
+
+My recommended **cloud setup is GitHub + AWS**, keeping our existing database. AWS can provide a [Linux server through Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html) and [S3 Object Lock storage](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
+
+Supabase could be useful later, but its storage currently lacks the versioning and Object Lock features our audit adapter requires. [Supabase compatibility documentation](https://supabase.com/docs/guides/storage/s3/compatibility)
+
+We also don’t need a paid AI-model key for the current J0 tests.
+
+Recorded in [JARVIS_WORK_LOG.md](sandbox:/workspace/scratch/aa29cd23aa6c/jarvis-foundation/JARVIS_WORK_LOG.md).
+
+**Would you prefer Jarvis to run on your own computer or on a cloud server?**
+```
+
+## Entry 006 — J0.1 TypeScript monorepo implementation — 2026-09-01
+
+### User prompt — verbatim
+
+```text
+Great. We’ll continue directly into J0.1 — Repository & Engineering Foundation and define it as an implementation-ready milestone.
+
+The goal of J0.1 is simple: create the permanent technical home for Jarvis so every later capability—memory, voice, agents, devices, automation, smart home, local AI—can be added without restructuring the entire project.
+
+J0.1 — Repository & Engineering Foundation
+
+I recommend we build Jarvis as a modular monorepo from the beginning.
+
+The structure should look approximately like this:
+
+jarvis/
+│
+├── apps/
+│   ├── web/
+│   ├── desktop/
+│   ├── api/
+│   └── worker/
+│
+├── packages/
+│   ├── core/
+│   ├── identity/
+│   ├── security/
+│   ├── memory/
+│   ├── knowledge/
+│   ├── models/
+│   ├── agents/
+│   ├── tools/
+│   ├── events/
+│   ├── audit/
+│   ├── storage/
+│   ├── devices/
+│   ├── config/
+│   └── shared/
+│
+├── infrastructure/
+│   ├── docker/
+│   ├── database/
+│   ├── migrations/
+│   ├── deployment/
+│   └── monitoring/
+│
+├── docs/
+│   ├── architecture/
+│   ├── security/
+│   ├── decisions/
+│   ├── protocols/
+│   └── roadmap/
+│
+├── tests/
+│   ├── integration/
+│   ├── security/
+│   └── e2e/
+│
+└── scripts/
+
+The important point is that the UI is not Jarvis.
+
+The web app, desktop app, phone app and future voice device are simply interfaces into the same Jarvis Core.
+
+So:
+
+Web ───────┐
+Desktop ───┤
+Phone ─────┼──► Jarvis API/Core
+Voice ─────┤
+Hardware ──┘
+
+That means we can replace the interface without touching Jarvis’s memory or intelligence.
+
+⸻
+
+Recommended technology direction
+
+For the first version, I would use a TypeScript-first architecture because it gives us strong typing across the web interface, APIs, agents, tools and event schemas.
+
+A strong starting stack would be:
+
+Layer	Recommended starting choice
+Language	TypeScript
+Web	Next.js
+API	Node.js/TypeScript service
+Desktop	Tauri or Electron later
+Database	PostgreSQL
+ORM	Prisma or Drizzle
+Semantic memory	pgvector initially
+Queue/events	Redis-based queue initially
+Object/files	S3-compatible storage
+Validation	Zod
+Authentication	Self-controlled auth layer
+Secrets	Encrypted vault/secrets manager
+Containers	Docker
+CI/CD	GitHub Actions
+Testing	Vitest + Playwright
+Observability	OpenTelemetry-compatible design
+
+The reason I prefer PostgreSQL + pgvector initially rather than immediately adding several databases is simplicity.
+
+At the beginning we can handle:
+
+structured data
+conversations
+events
+permissions
+memories
+vector embeddings
+audit metadata
+
+inside PostgreSQL.
+
+Later, if Jarvis grows enough, we can split workloads into dedicated systems.
+
+⸻
+
+Core engineering rule
+
+Every major Jarvis subsystem should communicate through a defined contract.
+
+For example, Jarvis Core should not directly contain OpenAI-specific code.
+
+Instead:
+
+Jarvis Core
+    ↓
+Model Interface
+    ↓
+Provider Adapter
+    ├── OpenAI
+    ├── Anthropic
+    ├── Gemini
+    └── Local Model
+
+The core might ask:
+
+generate({
+  messages,
+  capabilities,
+  privacyLevel,
+  maxCost
+})
+
+It should not care which provider actually handles it.
+
+That is how we preserve ownership.
+
+⸻
+
+The same applies to memory
+
+Jarvis Core
+    ↓
+Memory Service
+    ↓
+Memory Repository
+    ↓
+PostgreSQL / Vector Store
+
+So later we could replace storage without rewriting Jarvis.
+
+⸻
+
+Tool contract
+
+Every future tool should follow one interface.
+
+Conceptually:
+
+interface JarvisTool {
+  id: string
+  name: string
+  description: string
+  requiredPermissions: Permission[]
+  validate(input: unknown): ToolInput
+  execute(
+    input: ToolInput,
+    context: ExecutionContext
+  ): Promise<ToolResult>
+}
+
+Every tool invocation passes through:
+
+Request
+  ↓
+Permission Check
+  ↓
+Risk Evaluation
+  ↓
+Approval Check
+  ↓
+Execution
+  ↓
+Verification
+  ↓
+Audit
+
+This becomes one of the most important J0 guarantees.
+
+⸻
+
+Event contract
+
+Everything important happening around Jarvis should eventually become an event.
+
+Example:
+
+{
+  id: "event_...",
+  type: "deployment.failed",
+  source: "vercel",
+  timestamp: "...",
+  actor: "...",
+  data: {},
+  sensitivity: "private",
+  correlationId: "..."
+}
+
+Other examples:
+
+conversation.started
+conversation.completed
+memory.created
+memory.updated
+memory.deleted
+tool.requested
+tool.approved
+tool.executed
+tool.failed
+agent.started
+agent.completed
+agent.failed
+device.connected
+device.disconnected
+security.denied
+project.updated
+email.received
+calendar.event.upcoming
+
+Once all systems use events, proactive Jarvis becomes much easier later.
+
+⸻
+
+Identity hierarchy
+
+We should establish an identity model immediately.
+
+Jarvis needs to distinguish:
+
+Owner
+Human User
+Device
+Jarvis Core
+Agent
+Service
+Tool
+External Integration
+
+Even though initially you may be the only human user, building explicit identity now prevents serious security problems later.
+
+Example:
+
+Owner
+│
+├── Device: Laptop
+├── Device: Phone
+│
+└── Jarvis Core
+     │
+     ├── Developer Agent
+     ├── Research Agent
+     └── Tool Gateway
+
+Every important action should have an actor.
+
+⸻
+
+Environment separation
+
+From the first day:
+
+Development
+Staging
+Production
+
+Never let development agents accidentally operate against real production infrastructure.
+
+Each environment gets different credentials and permission boundaries.
+
+⸻
+
+Database separation by concern
+
+Even if everything initially lives inside PostgreSQL, we should logically separate domains.
+
+For example:
+
+identity
+security
+conversations
+memory
+knowledge
+projects
+agents
+tools
+events
+audit
+devices
+integrations
+settings
+
+This makes migrations and access control much cleaner.
+
+⸻
+
+Architectural Decision Records
+
+Jarvis will become a huge project.
+
+We should create ADR files whenever we make an important irreversible or difficult-to-change decision.
+
+For example:
+
+ADR-001 Monorepo architecture
+ADR-002 PostgreSQL as primary storage
+ADR-003 Provider-independent model layer
+ADR-004 Local-first data ownership
+ADR-005 Tool permission gateway
+ADR-006 Append-only audit design
+
+Each ADR records:
+
+Decision
+
+Why
+
+Alternatives considered
+
+Consequences
+
+Date
+
+That way, six months later Jarvis itself can answer:
+
+“Why did we design memory this way?”
+
+⸻
+
+Versioning
+
+Every Jarvis subsystem should have contracts with versions.
+
+For example:
+
+Memory Contract v1
+Tool Contract v1
+Event Contract v1
+Model Contract v1
+Permission Contract v1
+
+If we later change something significantly:
+
+Memory Contract v2
+
+Older components can continue functioning during migration.
+
+This prevents one update from breaking the whole system.
+
+⸻
+
+Configuration
+
+We should avoid hard-coded configuration.
+
+Jarvis should have structured configuration covering:
+
+environment
+model providers
+storage
+privacy
+memory
+security
+tools
+agents
+logging
+events
+device access
+budgets
+rate limits
+
+And configuration itself should have validation.
+
+If security configuration is invalid, Jarvis should refuse to start rather than silently fall back to unsafe defaults.
+
+⸻
+
+Secrets
+
+Never store secrets in source code or ordinary database fields.
+
+Secrets include:
+
+API keys
+passwords
+database credentials
+device tokens
+OAuth credentials
+encryption keys
+
+They should go through a dedicated secrets layer.
+
+Conceptually:
+
+Jarvis
+   ↓
+Secret Manager
+   ↓
+Encrypted Secret Store
+
+Agents should generally receive temporary scoped access rather than raw permanent credentials.
+
+⸻
+
+Logging policy
+
+We actually need two kinds of logs.
+
+Operational logs
+
+For debugging:
+
+errors
+latency
+requests
+service health
+
+Audit records
+
+For accountability:
+
+who performed action
+what happened
+which tool
+which permissions
+whether approval occurred
+result
+timestamp
+
+Operational logs may expire.
+
+Critical audit history should be much more difficult to modify.
+
+⸻
+
+Testing pyramid
+
+Jarvis is too powerful to rely only on manual testing.
+
+We should have:
+
+Unit tests
+for individual components.
+
+Contract tests
+for model/tool/memory/event interfaces.
+
+Integration tests
+for multiple services together.
+
+Security tests
+for authorization and privilege escalation.
+
+End-to-end tests
+for real Jarvis workflows.
+
+Failure tests
+for provider outage, database failure and network loss.
+
+Later:
+
+Agent behavior evaluations
+to determine whether AI follows permissions and policies.
+
+⸻
+
+Development guardrails
+
+From the beginning, I would enforce:
+
+No direct production database modifications.
+No plaintext secrets.
+No direct tool invocation bypassing permission gateway.
+No AI provider code inside Jarvis Core.
+No agent may grant itself permissions.
+No silent schema changes.
+No destructive migration without backup.
+No production deployment without automated tests.
+No audit bypass.
+
+These become repository-level engineering rules.
+
+⸻
+
+J0.1 deliverables
+
+When J0.1 is finished, we should have actual artifacts, not just documentation.
+
+The milestone should contain:
+
+1. Private Jarvis repository.
+2. Monorepo structure.
+3. Shared TypeScript configuration.
+4. Environment management.
+5. API service skeleton.
+6. Web interface skeleton.
+7. Worker service skeleton.
+8. PostgreSQL integration.
+9. Initial migration system.
+10. Shared contract package.
+11. Configuration validation.
+12. Secrets abstraction.
+13. Logging foundation.
+14. Basic event contract.
+15. Basic model contract.
+16. Basic tool contract.
+17. Basic identity types.
+18. Testing framework.
+19. CI pipeline.
+20. Architecture documentation.
+21. ADR system.
+22. Docker development environment.
+23. Health-check endpoints.
+24. Local startup command.
+
+⸻
+
+J0.1 completion test
+
+A fresh computer should eventually be able to clone Jarvis and perform something close to:
+
+git clone ...
+cd jarvis
+setup
+start
+
+Then:
+
+Database starts
+↓
+Migrations run
+↓
+Jarvis API starts
+↓
+Worker starts
+↓
+Web interface starts
+↓
+Health checks pass
+↓
+Tests pass
+
+At that point we have an actual engineering platform.
+
+⸻
+
+Next milestone: J0.2
+
+Once J0.1 exists, we move directly into:
+
+J0.2 — Owner Identity, Authentication & Device Trust
+
+This will answer one of the most important questions in Jarvis:
+
+How does Jarvis know that you are really you?
+
+We’ll design owner identity, login, device enrollment, sessions, recovery, biometric-ready authentication, API identities, agent identities and trust levels.
+
+That security layer needs to exist before Jarvis starts receiving powerful tools or personal memories.
+```
+
+### Implementation scope and evidence
+
+Implementation and test evidence are being recorded below before this session is completed. The revised TypeScript/PostgreSQL direction supersedes the prior Python/SQLite recommendation for the main application; the tested Python reference and its historical claims remain preserved. J0.1 is separate from Foundation v1 GO.
+
+### Implemented in this work session
+
+- Added a TypeScript 6.0/npm-workspaces monorepo (root engineering version 0.3.0), 14 subsystem packages, API/worker/Next.js applications and a reserved desktop boundary. The original Python 0.2 source remains intact.
+- Added strict shared TypeScript settings, exact dependency versions, npm lockfile, ESLint, formatting, import-boundary checks, test type checking and development/staging/production templates.
+- Implemented v1 actor, permission/context, model, memory, tool, event, audit and health contracts. Added a default-deny testable tool gateway and provider-independent Core. Real owner authentication, model providers and personal-data endpoints remain disabled.
+- Implemented AES-256-GCM payload encryption and a separate encrypted development credential vault, 0600 external master-key file, scoped service leases and lease clearing. Credentials are generated, not committed.
+- Added PostgreSQL/pgvector and Redis/BullMQ Docker backing services, Drizzle memory/event/audit repositories, checksummed SQL migrations with transaction/advisory locking, separate migrator/runtime roles, restricted audit writes and mutation-denial triggers. These controls are explicitly not independently immutable storage.
+- Added loopback API/worker/web health endpoints, real dependency readiness, encrypted synthetic worker completion events, operational metadata logs, OTel API boundary, a local startup supervisor, private authenticated stop socket, health/queue smoke test and dependency outage/restart drill.
+- Added architecture/development/security/contract documents, six ADRs, the 24-deliverable acceptance map, deployment/monitoring/database guidance, repository engineering rules and CI for a fresh Docker stack. Preserved historical Python status/README for reference.
+- API exposes only GET health/status. Web is a status interface. No cloud resource, real device, external action, paid service or provider account was created.
+
+### Validation before initial publication
+
+- `npm run check`: passed lint, import/migration boundary checks, TypeScript application/test checking, and 26 unit/contract/security tests across 7 files.
+- `npm run build:web`: passed Next.js 16.3.4 production build.
+- Python syntax/architecture checks and Ruff: passed. Python regression suite: all 68 tests passed in 16.252 seconds.
+- `git diff --check`: passed.
+- Full Docker startup/integration/browser/failure/stop checks are implemented but awaiting remote CI execution. This workspace lacks Docker/PostgreSQL; system package installation failed due environment permissions. No local test is being represented as proof of a real PostgreSQL deployment.
+- Agent-browser's own browser download failed with an untrusted-certificate error. Certificate verification was not disabled; Playwright's verified download path is being tried for browser validation.
+- Next.js, PostgreSQL adapter, Redis image, queue and test documentation/package versions were checked against official sources and the package registry. TypeScript 6.0.3 matches the lint tool's supported range. Redis 8.2.9 replaces the older draft 8.2.1 image.
+
+### Publication and final acceptance
+
+Commit and remote CI results will be appended after the published source tree is verified and the tests run. Foundation v1 GO remains unissued regardless of the J0.1 acceptance result.

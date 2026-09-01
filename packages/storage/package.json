@@ -1,0 +1,27 @@
+{
+    "name": "@jarvis/storage",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "zod": "4.5.4",
+        "@jarvis/shared": "0.1.0",
+        "@jarvis/identity": "0.1.0",
+        "@jarvis/memory": "0.1.0",
+        "@jarvis/events": "0.1.0",
+        "@jarvis/security": "0.1.0",
+        "@jarvis/config": "0.1.0",
+        "drizzle-orm": "0.45.2",
+        "pg": "8.23.0",
+        "@jarvis/audit": "0.1.0"
+    }
+}

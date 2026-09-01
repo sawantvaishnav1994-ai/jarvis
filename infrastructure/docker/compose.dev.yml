@@ -1,0 +1,40 @@
+name: jarvis-development
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18
+    environment:
+      POSTGRES_DB: jarvis_development
+      POSTGRES_USER: jarvis_development_migrator
+      POSTGRES_PASSWORD: ${JARVIS_POSTGRES_PASSWORD:?Use npm run infra:up}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis_development_migrator -d jarvis_development"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: "no"
+  redis:
+    image: redis:8.2.9-alpine
+    environment:
+      REDIS_PASSWORD: ${JARVIS_REDIS_PASSWORD:?Use npm run infra:up}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        printf 'requirepass %s\nappendonly yes\nmaxmemory-policy noeviction\n' "$$REDIS_PASSWORD" | exec redis-server -
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: "no"
+volumes:
+  postgres_data:
+  redis_data:

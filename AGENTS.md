@@ -23,3 +23,19 @@ existing saved file rather than creating a disconnected log for each task.
 Backfill exact previous delivered responses when available; never reconstruct
 unavailable conversation text as a verbatim transcript. This is the owner's
 standing instruction, not an optional documentation step.
+
+## Active TypeScript monorepo (owner revision, 2026-09-01)
+
+Read docs/architecture/system.md and docs/security/j0.1-boundaries.md. The active
+application is apps/* plus packages/*; src/jarvis remains the Python reference.
+Use public package entrypoints, strict TypeScript and versioned Zod contracts.
+Never add provider SDKs, SQL or UI imports to Core. Do not bypass ToolGateway.
+No agent may grant permissions or alter protected policy. No audit bypass.
+No plaintext credentials in source, logs, ordinary tables or environment templates.
+No direct production database changes. Applied SQL migrations are immutable;
+new migrations need a reviewed checksum entry. Destructive migrations require
+verified backup/recovery and authorization. No deployment without passing tests.
+Do not enable personal-data, tool or owner endpoints before J0.2 authentication.
+Run npm run check and npm run build:web before publishing; full-stack CI must
+pass before calling J0.1 accepted. Preserve the required Python regression checks.
+Update one cumulative JARVIS_WORK_LOG.md, preserving all user prompts verbatim.

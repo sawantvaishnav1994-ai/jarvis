@@ -15,3 +15,11 @@ dist/
 .ruff_cache/
 /runtime/
 *.pem
+
+node_modules/
+.next/
+*.tsbuildinfo
+.jarvis/
+playwright-report/
+test-results/
+coverage/

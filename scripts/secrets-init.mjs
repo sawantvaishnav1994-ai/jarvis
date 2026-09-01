@@ -1,0 +1,12 @@
+import { initializeDevelopmentVault } from "@jarvis/security";
+import { runtime, fail } from "./runtime.mjs";
+try {
+    const r = await runtime("jarvis-setup");
+    console.log(
+        JSON.stringify({
+            secrets: await initializeDevelopmentVault(r.vaultPath, r.keyPath),
+        }),
+    );
+} catch {
+    fail("SECRET_INITIALIZATION_FAILED");
+}

@@ -1,0 +1,53 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "packages/shared"
+        },
+        {
+            "path": "packages/identity"
+        },
+        {
+            "path": "packages/config"
+        },
+        {
+            "path": "packages/security"
+        },
+        {
+            "path": "packages/models"
+        },
+        {
+            "path": "packages/memory"
+        },
+        {
+            "path": "packages/events"
+        },
+        {
+            "path": "packages/audit"
+        },
+        {
+            "path": "packages/storage"
+        },
+        {
+            "path": "packages/tools"
+        },
+        {
+            "path": "packages/core"
+        },
+        {
+            "path": "packages/agents"
+        },
+        {
+            "path": "packages/knowledge"
+        },
+        {
+            "path": "packages/devices"
+        },
+        {
+            "path": "apps/api"
+        },
+        {
+            "path": "apps/worker"
+        }
+    ]
+}
