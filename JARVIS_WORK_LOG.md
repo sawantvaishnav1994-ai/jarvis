@@ -1805,3 +1805,12 @@ Commit and remote CI results will be appended after the published source tree is
 J0.1's 24 deliverable categories exist and its fresh-checkout Linux acceptance test passed. The active system is a local engineering platform, with a working status page and backing services. No Vercel, Supabase, AWS resource, production deployment or AI-provider key was needed or created.
 
 Foundation v1 GO remains **not issued**. Next is J0.2 owner authentication, sessions, cryptographic device enrollment/revocation and recovery in the active TypeScript runtime. Independent immutable audit deployment, production host containment, and complete off-host disaster recovery remain later J0 blockers. Existing Python security/recovery evidence is preserved separately; no unreviewed SQLite-to-PostgreSQL owner-data migration occurred.
+
+### Final tested revision
+
+The follow-up source revision `3b3bd515898b00a8fefe10686d3d146e270883e6` passed the complete CI suite again:
+https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33567718496 — **success**, completed 2026-09-01T22:46:22Z.
+
+This includes the corrected security configuration test and explicit blocking-queue retry configuration. The final local checks also passed all 26 TypeScript tests and 68 Python tests (15.719 seconds), with no lint, type, boundary or whitespace errors. The remaining publication changes only record this result in documentation; application code is unchanged from that tested revision.
+
+Local startup for the delivered platform is `npm run setup` followed by `npm start`, using Node 24 and Docker Compose v2. Shutdown is `npm stop`; `npm run infra:down` also stops backing containers without deleting their volumes. The current milestone is J0.1 accepted / J0.2 next, with Foundation v1 GO still not issued.
