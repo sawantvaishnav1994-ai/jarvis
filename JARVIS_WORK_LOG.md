@@ -1092,3 +1092,58 @@ Continued the same authorized J0 hardening and private-repository publication ta
 The private repository and remote CI are complete. Local device proof, bounded workers and the system recovery path are implemented and tested. Foundation v1 GO remains unissued until an owner-controlled independently administered archive is deployed and verified, optional S3 deployment dependencies are locked/installed, and the selected Linux host passes cgroup shutdown plus clean-host disaster-recovery drills with off-site backup/passphrase custody and retention maintenance. Protected-branch enforcement is additionally limited by the current GitHub plan. Broader future connector/agent/mode work remains explicitly listed in docs/STATUS.md; no gate was silently waived.
 
 The cumulative Markdown file continues under its existing saved identity and is also versioned in the private repository. Current source is available in GitHub; no duplicate new source ZIP is needed. The original Master Definition and prior work-log entries remain unchanged.
+
+### Entry 004 delivered final response — verbatim
+
+```text
+Published to your private [JARVIS repository](https://github.com/sawantvaishnav1994-ai/jarvis). **All 68 tests and remote CI pass.**
+
+Implemented:
+
+- Signed device authentication and revocation.
+- Supervised workers with forced termination.
+- Independent audit-storage adapter.
+- Encrypted system recovery with deletion protection.
+
+**Foundation v1 GO remains pending** live audit-storage deployment and target-host shutdown/recovery verification. Those require access to your storage account and Linux host. GitHub branch protection also remains restricted by the current plan.
+
+Updated [JARVIS_WORK_LOG.md](sandbox:/workspace/scratch/aa29cd23aa6c/jarvis-foundation/JARVIS_WORK_LOG.md) with your exact prompts, implementations, tests, commits, and remaining blockers.
+```
+
+## Entry 005 — Services needed beyond GitHub
+
+### User prompt — verbatim
+
+```text
+so for code we have git hub link so what you want more forexample vercel supabase etc etc
+```
+
+### Work performed and recommendation
+
+Reviewed the existing J0 architecture/status and current official AWS, Vercel and Supabase documentation. Used the Supabase skill to assess its fit. This is a deployment recommendation, not a change to the frozen Master Definition or approval to create paid resources.
+
+| Component | Recommendation for the current foundation |
+| --- | --- |
+| GitHub | Already provides private source/version history and passing CI. |
+| Linux runtime | Need one owner-controlled Linux machine or VM for running the current Python foundation and testing systemd shutdown/recovery. An existing suitable computer is sufficient; cloud hosting is optional. AWS Lightsail with Linux is one cloud option. |
+| Independent audit storage | Use AWS S3 with COMPLIANCE Object Lock for the current adapter. Runtime access must remain separate from archive administration. Retention-protected audit and encrypted off-host recovery copies serve different purposes and need explicit retention policies. |
+| Database | Keep the existing encrypted SQLite store for this milestone. There is no current requirement to migrate to a managed database. |
+| Vercel | Optional for a future web dashboard. Vercel Functions have execution-duration limits; the present systemd/process-control design targets an owner-controlled Linux host. This is an assessment of the current code, not a claim that Vercel has no other compute products. |
+| Supabase | Optional managed Postgres later. Its documented S3 compatibility lacks versioning and Object Lock, so it cannot replace the current independent audit destination. |
+| AI provider | No paid model API is needed for the present mock-provider J0 tests. Configure a real provider or local model when implementing actual conversational intelligence. |
+
+The smallest recommended next setup is the existing GitHub repository and encrypted database, plus a Linux runtime and AWS S3 protected storage. The next useful owner choice is whether Jarvis should run on the owner's computer or a cloud server. No server, database, bucket, paid plan, model key or integration was created during this advisory work. No secret credentials were requested in chat.
+
+### Sources checked
+
+- https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html
+- https://docs.aws.amazon.com/lightsail/latest/userguide/how-to-create-amazon-lightsail-instance-virtual-private-server-vps.html
+- https://vercel.com/docs/functions/limitations
+- https://supabase.com/docs/guides/database/overview
+- https://supabase.com/docs/guides/storage/s3/compatibility
+
+### Repository and validation context
+
+Starting commit: 3ad7dce739a1c8b2102c7e66a6f510f39431dd43. The earlier source import and final documentation commits both passed remote CI; the second run is https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33563016933. Only this cumulative log changes in the current advisory work; implementation and gate status remain unchanged. The repository's required syntax/architecture and existing regression checks were run before publishing this log update; results follow.
+
+Validation result: Python syntax, whitespace hygiene and Core dependency checks passed; all 68 existing tests passed in 15.591 seconds. No tests were added for this documentation-only recommendation.
