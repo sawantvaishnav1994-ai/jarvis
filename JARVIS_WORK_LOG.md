@@ -1783,3 +1783,25 @@ Implementation and test evidence are being recorded below before this session is
 ### Publication and final acceptance
 
 Commit and remote CI results will be appended after the published source tree is verified and the tests run. Foundation v1 GO remains unissued regardless of the J0.1 acceptance result.
+
+### J0.1 acceptance result
+
+- Private GitHub source commit: `e0aca69da332ec83a5a6d484fe935b8b7f13bb30`.
+- Source tree: `6a6a3b2582c80efd63646339e9db5c9839b67530`; the remote tree exactly matched the local staged tree. The unsigned GitHub commit was imported only after its raw Git object SHA was verified. The original local implementation commit is preserved on `local-j01-before-github`.
+- Full acceptance run: https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33567299408 — **success**, started 2026-09-01T22:38:41Z, completed 2026-09-01T22:41:01Z. Both jobs passed.
+- TypeScript job: fresh checkout `npm run setup` passed, including real Docker PostgreSQL/pgvector and Redis startup, generated encrypted credentials, migration, package compilation and Next.js production build.
+- Static checks passed. Vitest: 26 unit/contract/security tests across 7 files; 8 real PostgreSQL integration tests passed. The integration tests verify encrypted memory/event persistence, model replacement preserving data, scoped deletion, least-privilege database roles and audit mutation refusal.
+- API, worker and web startup/readiness passed. `JARVIS_SMOKE_PASSED`: three health endpoints and a real Redis/BullMQ worker round trip.
+- Playwright installed Chromium on the CI runner; all 4 browser tests passed in 2.4 seconds. They check all four live readiness indicators, service health contracts, absence of unauthenticated command routes, small-screen overflow and browser errors.
+- `DEPENDENCY_FAILURE_DRILL_PASSED`: stopping and restarting PostgreSQL and Redis transitioned readiness to 503 and back to 200 while liveness remained available.
+- `SERVICE_STOP_PASSED`: the supervisor stop request shut down all three Node service endpoints. This is development shutdown evidence, not a production cgroup/physical-effect guarantee.
+- The preserved Python CI job passed lint, syntax/boundaries, 68 regression tests and the installed CLI demo.
+- `npm audit --omit=dev --json`: zero reported production dependency vulnerabilities at this check; this does not imply a complete security audit.
+- Local browser download remained blocked (agent-browser certificate failure; Playwright CDN timeouts). No TLS verification was disabled. Browser acceptance came from the real GitHub CI browser, not a claimed local visual inspection.
+- Follow-up review corrected the configuration test to toggle the actual `allowExternalActions` field (5 targeted tests passed) and made the QueueEvents blocking connection explicitly use `maxRetriesPerRequest: null`, matching the library requirement and removing its warning. These changes will receive the normal CI gate too.
+
+### Outcome, limits and next work
+
+J0.1's 24 deliverable categories exist and its fresh-checkout Linux acceptance test passed. The active system is a local engineering platform, with a working status page and backing services. No Vercel, Supabase, AWS resource, production deployment or AI-provider key was needed or created.
+
+Foundation v1 GO remains **not issued**. Next is J0.2 owner authentication, sessions, cryptographic device enrollment/revocation and recovery in the active TypeScript runtime. Independent immutable audit deployment, production host containment, and complete off-host disaster recovery remain later J0 blockers. Existing Python security/recovery evidence is preserved separately; no unreviewed SQLite-to-PostgreSQL owner-data migration occurred.

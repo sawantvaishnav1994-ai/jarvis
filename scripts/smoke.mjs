@@ -14,7 +14,9 @@ const connection = {
     connectTimeout: 1500,
 };
 const queue = new Queue(queueName(config.environment), { connection });
-const events = new QueueEvents(queueName(config.environment), { connection });
+const events = new QueueEvents(queueName(config.environment), {
+    connection: { ...connection, maxRetriesPerRequest: null },
+});
 queue.on("error", () => {});
 events.on("error", () => {});
 try {

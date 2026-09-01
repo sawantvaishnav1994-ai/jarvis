@@ -11,7 +11,7 @@ describe("validated environment boundaries", () => {
     });
     it("refuses external actions, cloud models and content logging", () => {
         for (const [section, key] of [
-            ["security", "externalActions"],
+            ["security", "allowExternalActions"],
             ["models", "allowCloud"],
             ["logging", "includeContent"],
         ])

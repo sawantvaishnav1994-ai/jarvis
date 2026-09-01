@@ -13,14 +13,17 @@ the new API.
 - TypeScript packages compile; the Next.js production build passes.
 - 26 unit/contract/security tests pass locally, including privacy, timeout,
   scope/approval denial, encrypted vault and audit failure behavior.
-- Real PostgreSQL integration, full startup, browser, outage/recovery and stop
-  checks are implemented in CI; their run result will be recorded after publication.
+- Real PostgreSQL integration (8 tests), full startup, browser (4 tests), queue
+  smoke, outage/recovery and stop checks passed in [GitHub Actions run
+  33567299408](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33567299408)
+  on source commit `e0aca69da332ec83a5a6d484fe935b8b7f13bb30`. The preserved
+  Python job also passed all 68 tests.
 - This workspace has no Docker/PostgreSQL and cannot install system packages;
   local mock tests do not establish Docker acceptance.
 
 | Gate | Current implementation | Remaining work |
 | --- | --- | --- |
-| J0.1 | All 24 artifact categories implemented; build and local tests pass | Complete fresh-checkout Docker CI acceptance |
+| J0.1 | All 24 artifact categories implemented; fresh Linux checkout/Docker CI acceptance passed | J0.1 accepted for development; proceed to J0.2 |
 | J0.2 | Identity ports/types; historical Python signed-device implementation | Owner/session/device authentication in active TypeScript runtime |
 | J0.3 | Default-deny tool gateway and approval ports; local service stop | Durable authenticated approvals, richer policy, host containment |
 | J0.4 | PostgreSQL domains, encrypted payloads/vault, reviewed migrations | Managed key custody, rotation and recovery-backed destructive migrations |
