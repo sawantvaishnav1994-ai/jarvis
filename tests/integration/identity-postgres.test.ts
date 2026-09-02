@@ -18,6 +18,14 @@ import {
     TestDevice,
     type Login,
 } from "../fixtures/identity.js";
+import {
+    governanceFixture,
+    setupGovernance,
+    completeGo,
+    goRequest,
+    type Issued,
+} from "../fixtures/governance.js";
+import { GovernanceStateSchema } from "@jarvis/security";
 
 // Synthetic identities never claim the owner's development database. This
 // generated database is created and removed by this suite alone.
@@ -256,6 +264,53 @@ it("rolls back device registration and consumed challenge if transactional audit
             )
         ).status,
     ).toBe("approval-required");
+});
+it("J0.3 complete GO persists policies, approvals, replay protection and lockdown in real PostgreSQL", async () => {
+    const governed = governanceFixture(repository),
+        h = await setupGovernance(governed, owner);
+    await completeGo(h);
+    const raw = (
+        await pool.query("SELECT payload FROM security.governance_state")
+    ).rows[0].payload;
+    expect(raw).not.toContain("owner.go");
+    expect(raw).not.toContain(h.actorId);
+    const restart = new PostgresIdentityRepository(pool, cipher);
+    const state = await restart.transaction(async (state) =>
+        GovernanceStateSchema.parse(state.security),
+    );
+    expect(
+        state.policies.some(
+            (p) => p.id === "owner.block" && p.status === "active",
+        ),
+    ).toBe(true);
+    await h.ownerCommand("policy.disable", { id: "owner.block", revision: 1 });
+    const request = goRequest(),
+        a = (await h.subjectCommand("request", request)) as Issued;
+    const calls = await Promise.allSettled(
+        [1, 2].map(() =>
+            h.subjectCommand("execute", {
+                request,
+                authorization: a.authorization,
+            }),
+        ),
+    );
+    expect(calls.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    await expect(
+        pool.query("DELETE FROM security.governance_state"),
+    ).rejects.toThrow();
+    for (const connection of [pool, testAdmin]) {
+        await expect(
+            connection.query(
+                "UPDATE audit.identity_events SET event_type='tampered'",
+            ),
+        ).rejects.toThrow();
+        await expect(
+            connection.query("DELETE FROM audit.identity_events"),
+        ).rejects.toThrow();
+        await expect(
+            connection.query("TRUNCATE audit.identity_events"),
+        ).rejects.toThrow();
+    }
 });
 it("recovers the same owner, revokes previous sessions and preserves verifiable audit evidence", async () => {
     const kit = (await ownerAction(

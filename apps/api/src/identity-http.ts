@@ -5,8 +5,8 @@ import {
     IdentityFault,
     type ServiceProof,
 } from "@jarvis/identity";
-import { ToolGateway, type JarvisTool } from "@jarvis/tools";
-import type { AuditSink } from "@jarvis/audit";
+import { GovernedToolGateway } from "@jarvis/tools";
+import { BoundaryError } from "@jarvis/shared";
 import { randomBytes, randomUUID } from "node:crypto";
 const RequestSchema = z.strictObject({
     method: z.string().max(40),
@@ -21,7 +21,7 @@ const text = z.string().max(20000);
 export function identityHandler(
     engine: IdentityEngine,
     serviceKey: Buffer,
-    audit: AuditSink,
+    gateway: GovernedToolGateway,
 ) {
     return async (
         req: IncomingMessage,
@@ -62,6 +62,19 @@ export function identityHandler(
             } = RequestSchema.parse(JSON.parse(body));
             let result: unknown;
             switch (method) {
+                case "security.subject.begin":
+                    result = await engine.beginSecuritySubject(
+                        text.parse(p.subjectId),
+                        p.input,
+                    );
+                    break;
+                case "security.subject.perform":
+                    result = await engine.performSecuritySubject(
+                        text.parse(p.subjectId),
+                        proofSchema.parse(p.proof),
+                        p.input,
+                    );
+                    break;
                 case "root.begin":
                     result = await engine.beginRoot(
                         text.parse(p.bootstrap),
@@ -152,67 +165,40 @@ export function identityHandler(
                         proofSchema.parse(p.proof),
                         scope,
                         resource,
-                        async (subject) => {
+                        async (subject, authority) => {
                             // This composition root constructs context only after cryptographic
                             // capability verification. No HTTP actor/context object is accepted.
-                            const gateway = new ToolGateway(
-                                {
-                                    evaluate: async (action) => ({
-                                        allowed:
-                                            action.permission === "P0" &&
-                                            action.risk === "low" &&
-                                            action.scope === "mock.read",
-                                        requiresApproval: false,
-                                        reason: "verified-bound-capability",
-                                    }),
-                                },
-                                { consume: async () => false },
-                                audit,
-                            );
-                            const tool: JarvisTool<
-                                string,
-                                { resource: string; result: string }
-                            > = {
-                                version: 1,
-                                id: "mock.repository.read",
-                                name: "Synthetic repository read",
-                                description:
-                                    "No filesystem or external connection",
-                                requiredPermission: "P0",
-                                scope: "mock.read",
-                                risk: "low",
-                                validate: (value) =>
-                                    z.string().max(128).parse(value),
-                                execute: async (value) => ({
-                                    resource: value,
-                                    result: "synthetic-repository-content",
-                                }),
-                                verify: (output) =>
-                                    output.resource === resource,
-                            };
-                            return gateway.invoke(
-                                tool,
-                                resource,
-                                {
-                                    version: 1,
-                                    actor: {
-                                        version: 1,
-                                        id: subject.id,
-                                        kind: subject.kind,
-                                        ownerId: subject.ownerId,
+                            return gateway
+                                .invoke(
+                                    "mock.repository.read",
+                                    resource,
+                                    {
+                                        version: 2,
+                                        actor: {
+                                            version: 1,
+                                            id: subject.id,
+                                            kind: subject.kind,
+                                            ownerId: subject.ownerId,
+                                            environment: "development",
+                                        },
                                         environment: "development",
+                                        requestId: randomUUID(),
+                                        authority,
+                                        trace: {
+                                            traceId:
+                                                randomBytes(16).toString("hex"),
+                                            spanId: randomBytes(8).toString(
+                                                "hex",
+                                            ),
+                                        },
                                     },
-                                    environment: "development",
-                                    requestId: randomUUID(),
-                                    grantedScopes: [scope],
-                                    trace: {
-                                        traceId:
-                                            randomBytes(16).toString("hex"),
-                                        spanId: randomBytes(8).toString("hex"),
-                                    },
-                                },
-                                new AbortController().signal,
-                            );
+                                    new AbortController().signal,
+                                )
+                                .catch((error: unknown) => {
+                                    if (error instanceof BoundaryError)
+                                        throw new IdentityFault(error.code);
+                                    throw error;
+                                });
                         },
                     );
                     break;

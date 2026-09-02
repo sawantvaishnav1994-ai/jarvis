@@ -135,10 +135,16 @@ export async function migrate(
             "GRANT SELECT,INSERT,DELETE ON memory.records TO jarvis_development_runtime",
         );
         await client.query(
-            "GRANT SELECT,INSERT ON events.envelopes,audit.entries TO jarvis_development_runtime",
+            "GRANT SELECT,INSERT ON events.envelopes,audit.entries,audit.policy_entries TO jarvis_development_runtime",
         );
         await client.query(
             "GRANT USAGE ON SCHEMA identity TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT USAGE ON SCHEMA security TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE ON security.governance_state TO jarvis_development_runtime",
         );
         await client.query(
             "GRANT SELECT,INSERT,UPDATE ON identity.root_owner TO jarvis_development_runtime",

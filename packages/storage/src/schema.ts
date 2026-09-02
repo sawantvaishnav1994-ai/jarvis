@@ -31,3 +31,8 @@ export const auditRecords = auditDomain.table("entries", {
     record: jsonb("record").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
+export const policyAuditRecords = auditDomain.table("policy_entries", {
+    id: uuid("id").primaryKey(),
+    record: jsonb("record").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});

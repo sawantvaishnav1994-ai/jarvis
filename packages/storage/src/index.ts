@@ -14,7 +14,12 @@ import {
 import { RecordCipher } from "@jarvis/security";
 import { BoundaryError } from "@jarvis/shared";
 import type { JarvisConfig } from "@jarvis/config";
-import { memories, eventRecords, auditRecords } from "./schema.js";
+import {
+    memories,
+    eventRecords,
+    auditRecords,
+    policyAuditRecords,
+} from "./schema.js";
 export { memories, eventRecords, auditRecords } from "./schema.js";
 export type DatabasePool = pg.Pool;
 export function databasePool(
@@ -119,13 +124,15 @@ export class PostgresAuditSink {
     }
     async append(record: unknown): Promise<void> {
         // Loaded dynamically through a separate port by composition; no credential/prompt payload accepted.
-        const { AuditRecordSchema } = await import("@jarvis/audit");
-        const validated = AuditRecordSchema.parse(record);
-        await this.db.insert(auditRecords).values({
-            id: validated.id,
-            record: validated,
-            createdAt: new Date(validated.timestamp),
-        });
+        const { StoredAuditRecordSchema } = await import("@jarvis/audit");
+        const validated = StoredAuditRecordSchema.parse(record);
+        await this.db
+            .insert(validated.version === 2 ? policyAuditRecords : auditRecords)
+            .values({
+                id: validated.id,
+                record: validated,
+                createdAt: new Date(validated.timestamp),
+            });
     }
 }
 export * from "./migrations.js";

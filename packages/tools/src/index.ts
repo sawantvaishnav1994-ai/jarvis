@@ -8,6 +8,8 @@ import {
     type ApprovalService,
 } from "@jarvis/security";
 import type { AuditSink, AuditRecord } from "@jarvis/audit";
+export * from "./governed.js";
+export * from "./authorized.js";
 export interface JarvisTool<Input = unknown, Output = unknown> {
     readonly version: 1;
     readonly id: string;

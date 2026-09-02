@@ -17,6 +17,7 @@ import {
     type ApprovalEvidence,
     type SubjectRecord,
     type OwnerProfile,
+    type SecurityCommandHandler,
 } from "./contracts.js";
 import {
     canonical,
@@ -58,6 +59,7 @@ const sensitive = new Set<IdentityAction>([
     "subject.create",
     "delegation.issue",
     "recovery.prepare",
+    "security.command",
 ]);
 type Transaction = {
     state: IdentityState;
@@ -72,6 +74,7 @@ export class IdentityEngine {
         readonly passkeys: PasskeyVerifier,
         private readonly bootstrapHash: string,
         private readonly clock: () => number = Date.now,
+        private readonly securityCommands?: SecurityCommandHandler,
     ) {}
     private event(
         tx: Transaction,
@@ -725,6 +728,27 @@ export class IdentityEngine {
             s.lastActivity = this.clock();
             let result: unknown;
             switch (action) {
+                case "security.command":
+                case "security.inspect":
+                    if (!this.securityCommands)
+                        return deny("SECURITY_UNAVAILABLE");
+                    result = await this.securityCommands(
+                        tx.state,
+                        tx.events,
+                        {
+                            actorId: s.ownerId,
+                            ownerId: s.ownerId,
+                            kind: "owner",
+                            sessionId: s.id,
+                            deviceId: s.deviceId,
+                            assurance: evidence ? "A3" : "A2",
+                            evidence,
+                        },
+                        action === "security.inspect"
+                            ? { command: "inspect", data: {} }
+                            : value,
+                    );
+                    break;
                 case "identity.inspect":
                     result = {
                         owner: {
@@ -1004,13 +1028,18 @@ export class IdentityEngine {
             this.event(tx, "permission.expired", "delegation.validate", cap.id);
             return deny("DELEGATION_EXPIRED");
         }
-        this.device(tx, cap.deviceId);
+        const device = this.device(tx, cap.deviceId);
+        if (device.posture === "suspicious")
+            return deny("DEVICE_POSTURE_RESTRICTED");
         const session = Object.values(tx.state.sessions).find(
             (s) => s.id === cap.sessionId,
         );
         if (
             !session ||
             session.revoked ||
+            session.ownerId !== cap.ownerId ||
+            session.deviceId !== cap.deviceId ||
+            session.epoch !== cap.epoch ||
             session.expiresAt <= this.clock() ||
             session.lastActivity + 300000 <= this.clock() ||
             session.risk !== "normal"
@@ -1026,7 +1055,7 @@ export class IdentityEngine {
             return deny("DELEGATION_SCOPE_DENIED");
         tx.actorId = subject.id;
         tx.deviceId = cap.deviceId;
-        return { cap, subject };
+        return { cap, subject, session, device };
     }
     beginDelegated(token: string, scope: string, resource: string) {
         return this.run("delegation.challenge", async (tx) => {
@@ -1052,10 +1081,26 @@ export class IdentityEngine {
         proof: DeviceProof,
         scope: string,
         resource: string,
-        execute: (subject: SubjectRecord) => Promise<unknown>,
+        execute: (
+            subject: SubjectRecord,
+            authority: {
+                ownerId: string;
+                deviceId: string;
+                sessionId: string;
+                deviceTrust: import("./contracts.js").TrustedDevice["trust"];
+                assurance: "A1";
+                verifiedAt: number;
+                expiresAt: number;
+                scopes: string[];
+                resources: string[];
+            },
+        ) => Promise<unknown>,
     ) {
         return this.run("delegation.execute", async (tx) => {
-            const { cap, subject } = this.capability(tx, token),
+            const { cap, subject, session, device } = this.capability(
+                    tx,
+                    token,
+                ),
                 c = this.consume(tx, proof.challengeId, "delegated");
             if (
                 c.sessionId !== cap.id ||
@@ -1071,9 +1116,105 @@ export class IdentityEngine {
                 scope !== "mock.read"
             )
                 return deny("DELEGATION_SCOPE_DENIED");
-            const result = await execute(subject);
+            // Recipient proof authenticates the delegated subject, not the owner's A2/A3.
+            if (this.securityCommands)
+                await this.securityCommands(
+                    tx.state,
+                    tx.events,
+                    {
+                        actorId: subject.id,
+                        ownerId: subject.ownerId,
+                        kind: subject.kind,
+                        sessionId: cap.sessionId,
+                        deviceId: cap.deviceId,
+                        assurance: "A1",
+                        evidence: null,
+                    },
+                    { command: "legacy.guard", data: { scope, resource } },
+                );
+            const result = await execute(structuredClone(subject), {
+                ownerId: cap.ownerId,
+                deviceId: cap.deviceId,
+                sessionId: cap.sessionId,
+                deviceTrust: device.trust,
+                assurance: "A1",
+                verifiedAt: this.clock(),
+                expiresAt: Math.min(
+                    cap.expiresAt,
+                    session.expiresAt,
+                    session.lastActivity + 300000,
+                    device.expiresAt ?? Number.MAX_SAFE_INTEGER,
+                ),
+                scopes: [cap.scope],
+                resources: [cap.resource],
+            });
             this.event(tx, "tool.executed", scope, subject.id);
             return result;
+        });
+    }
+    beginSecuritySubject(subjectId: string, input: unknown) {
+        return this.run("security.subject.challenge", async (tx) => {
+            const subject =
+                tx.state.subjects[IdentifierSchema.parse(subjectId)];
+            if (
+                !subject ||
+                subject.revoked ||
+                subject.ownerId !== tx.state.owner?.id
+            )
+                return deny("SUBJECT_INVALID");
+            const value = ActionInputSchemas["security.command"].parse(input);
+            const encoded = canonical(value);
+            if (encoded.length > 32000) return deny("REQUEST_TOO_LARGE");
+            const c = this.challenge(tx, {
+                kind: "delegated",
+                ownerId: subject.ownerId,
+                deviceId: subject.id,
+                operation: "security.subject",
+                inputHash: digest(encoded),
+            });
+            return { challengeId: c.id, devicePayload: c.payload };
+        });
+    }
+    performSecuritySubject(
+        subjectId: string,
+        proof: DeviceProof,
+        input: unknown,
+    ) {
+        return this.run("security.subject.command", async (tx) => {
+            const subject =
+                tx.state.subjects[IdentifierSchema.parse(subjectId)];
+            if (
+                !subject ||
+                subject.revoked ||
+                subject.ownerId !== tx.state.owner?.id
+            )
+                return deny("SUBJECT_INVALID");
+            tx.actorId = subject.id;
+            const c = this.consume(tx, proof.challengeId, "delegated");
+            const value = ActionInputSchemas["security.command"].parse(input);
+            if (
+                c.ownerId !== subject.ownerId ||
+                c.deviceId !== subject.id ||
+                c.operation !== "security.subject" ||
+                c.inputHash !== digest(canonical(value))
+            )
+                return deny("ACTION_BINDING_MISMATCH");
+            verifyDevice(subject.publicKey, c.payload, proof.signature);
+            if (!this.securityCommands) return deny("SECURITY_UNAVAILABLE");
+            return this.securityCommands(
+                tx.state,
+                tx.events,
+                {
+                    actorId: subject.id,
+                    ownerId: subject.ownerId,
+                    kind: subject.kind,
+                    sessionId: null,
+                    deviceId: null,
+                    assurance: "A1",
+                    evidence: null,
+                },
+                value,
+            );
         });
     }
     async acceptService(

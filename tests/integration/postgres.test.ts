@@ -17,6 +17,15 @@ import { MemoryService } from "@jarvis/memory";
 import { JarvisCore } from "@jarvis/core";
 import { MockModel } from "@jarvis/models";
 import { owner, memory, context } from "../fixtures/foundation.js";
+import { GovernedToolGateway } from "@jarvis/tools";
+import { DeterministicPolicy } from "@jarvis/security";
+import {
+    policyContext,
+    policyControls,
+    policyDocument,
+    policyTool,
+    policyNow,
+} from "../fixtures/policy.js";
 let pool: DatabasePool, admin: DatabasePool, runtimePassword: string;
 const config = await loadConfig("config/development.json");
 const cipher = new RecordCipher(randomBytes(32));
@@ -164,6 +173,75 @@ it("runtime role cannot change schemas or migration history", async () => {
         "CREATE TABLE memory.forbidden(id integer)",
     ])
         await expect(pool.query(sql)).rejects.toThrow();
+});
+it("persists v2 policy evidence and denies mutation/version confusion with either runtime or admin roles", async () => {
+    const ctx = policyContext();
+    const gateway = new GovernedToolGateway(
+        [
+            {
+                descriptor: policyTool(),
+                validate: (value) => value,
+                resource: () => "repository-x",
+                execute: async () => "synthetic-read",
+                verify: (value) => value === "synthetic-read",
+            },
+        ],
+        new DeterministicPolicy(policyDocument()),
+        { read: policyControls },
+        { consume: async () => false },
+        new PostgresAuditSink(pool),
+        () => policyNow,
+    );
+    expect(
+        await gateway.invoke(
+            "mock.repository.read",
+            "synthetic-input",
+            ctx,
+            new AbortController().signal,
+        ),
+    ).toBe("synthetic-read");
+    const records = (
+        await pool.query(
+            "SELECT record FROM audit.policy_entries WHERE record->>'requestId'=$1",
+            [ctx.requestId],
+        )
+    ).rows.map((row) => row.record);
+    expect(records.map((r) => r.result).sort()).toEqual([
+        "authorized",
+        "requested",
+        "success",
+    ]);
+    expect(
+        records.every((r) => r.version === 2 && r.policyRevision === "test-1"),
+    ).toBe(true);
+    expect(JSON.stringify(records)).not.toContain("synthetic-input");
+    for (const connection of [pool, admin]) {
+        for (const sql of [
+            "UPDATE audit.policy_entries SET record='{}'",
+            "DELETE FROM audit.policy_entries",
+            "TRUNCATE audit.policy_entries",
+        ])
+            await expect(connection.query(sql)).rejects.toThrow();
+    }
+    for (const record of [
+        { version: 1 },
+        { version: 99 },
+        { version: null },
+        {},
+    ]) {
+        await expect(
+            pool.query(
+                "INSERT INTO audit.policy_entries(id,record,created_at) VALUES($1,$2,now())",
+                [randomUUID(), record],
+            ),
+        ).rejects.toThrow();
+    }
+    await expect(
+        pool.query(
+            "INSERT INTO audit.entries(id,record,created_at) VALUES($1,$2,now())",
+            [randomUUID(), { version: 2 }],
+        ),
+    ).rejects.toThrow();
 });
 it("runtime audit inserts are allowed while update, delete and truncate are denied", async () => {
     const id = randomUUID();

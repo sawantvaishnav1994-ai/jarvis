@@ -1,10 +1,18 @@
 import { homedir } from "node:os";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { readFile } from "node:fs/promises";
 import { loadConfig, requireDevelopment } from "@jarvis/config";
-import { FileSecretManager, RecordCipher } from "@jarvis/security";
+import {
+    FileSecretManager,
+    RecordCipher,
+    DeterministicPolicy,
+    GovernanceEngine,
+} from "@jarvis/security";
 import { IdentityEngine, WebAuthnPasskeys, digest } from "@jarvis/identity";
 import { PostgresIdentityRepository, PostgresAuditSink } from "@jarvis/storage";
 import { identityHandler } from "./identity-http.js";
+import { developmentToolGateway } from "./tool-runtime.js";
+import { AuthorizedMockToolGateway } from "@jarvis/tools";
 import { Redis } from "@jarvis/events";
 import { databasePool, verifyMigrations } from "@jarvis/storage";
 import { operationalLogger } from "@jarvis/shared";
@@ -15,6 +23,19 @@ async function main() {
         process.env.JARVIS_CONFIG ?? "config/development.json",
     );
     requireDevelopment(config);
+    const policy = new DeterministicPolicy(
+        JSON.parse(
+            await readFile(
+                resolve(
+                    dirname(
+                        process.env.JARVIS_CONFIG ?? "config/development.json",
+                    ),
+                    "policy.development.json",
+                ),
+                "utf8",
+            ),
+        ),
+    );
     const actor = {
         version: 1 as const,
         id: "jarvis-api",
@@ -77,6 +98,8 @@ async function main() {
         ),
         new WebAuthnPasskeys(config.identity.rpID, config.identity.origin),
         digest(bootstrapLease.value.toString("utf8")),
+        Date.now,
+        new GovernanceEngine(new AuthorizedMockToolGateway()).handle,
     );
     const transportKey = Buffer.from(
         transportLease.value.toString("utf8"),
@@ -106,7 +129,11 @@ async function main() {
             return { database, migrations, queue, worker };
         },
         config.rateLimits.requestsPerMinute,
-        identityHandler(identity, transportKey, new PostgresAuditSink(pool)),
+        identityHandler(
+            identity,
+            transportKey,
+            developmentToolGateway(policy, new PostgresAuditSink(pool)),
+        ),
     );
     await new Promise<void>((ok, bad) => {
         server.once("error", bad);

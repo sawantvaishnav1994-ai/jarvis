@@ -1,5 +1,10 @@
 # J0.1/J0.2 system architecture
 
+J0.3 extension (2026-09-02): authenticated security commands reuse this identity
+foundation and add durable policy/risk/approval/authorization state. Only registered
+synthetic tools are executable, through exact one-use permits. See
+[J0.3 authorization](../security/j0.3-authorization.md). J0.4 remains paused.
+
 Updated: 2026-09-02. Active implementation: TypeScript 0.3.0 with J0.2 identity. Contract schemas carry
 `version: 1`; they are candidates for the J0.12 freeze, not a Foundation v1 GO.
 

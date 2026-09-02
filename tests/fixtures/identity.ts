@@ -15,6 +15,7 @@ import {
     type SecurityEvent,
     type IdentityAction,
     type DeviceProof,
+    type SecurityCommandHandler,
 } from "@jarvis/identity";
 import type {
     PublicKeyCredentialCreationOptionsJSON,
@@ -176,6 +177,7 @@ export class TestDevice {
 }
 export function fixture(
     repository: IdentityRepository = new TestIdentityRepository(),
+    securityFactory?: (clock: () => number) => SecurityCommandHandler,
 ) {
     let now = Date.now();
     const bootstrap = randomBytes(32).toString("hex");
@@ -184,6 +186,7 @@ export function fixture(
         new WebAuthnPasskeys("localhost", "http://localhost:3000"),
         digest(bootstrap),
         () => now,
+        securityFactory?.(() => now),
     );
     return {
         engine,

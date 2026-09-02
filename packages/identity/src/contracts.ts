@@ -92,6 +92,14 @@ export type DelegationRecord = {
     epoch: number;
     revoked: boolean;
     audience: "jarvis.mock";
+    governance?: {
+        version: 1;
+        environment: "development" | "staging" | "production";
+        maximumRisk: number;
+        maximumUses: number;
+        uses: number;
+        toolId: string | null;
+    };
 };
 export type ChallengeRecord = {
     id: string;
@@ -151,6 +159,7 @@ export type SecurityEvent = {
     code: string;
     assurance: Assurance;
     approval: ApprovalEvidence | null;
+    details?: Record<string, unknown>;
 };
 export type IdentityState = {
     owner: OwnerProfile | null;
@@ -162,7 +171,24 @@ export type IdentityState = {
     challenges: Record<string, ChallengeRecord>;
     approvals: Record<string, ApprovalRecord>;
     replays: Record<string, { id: string; expiresAt: number }>;
+    /** Validated by Security; persisted atomically with identity and audit. */
+    security?: unknown;
 };
+export type SecurityPrincipal = {
+    actorId: string;
+    ownerId: string;
+    kind: "owner" | SubjectRecord["kind"];
+    sessionId: string | null;
+    deviceId: string | null;
+    assurance: "A1" | "A2" | "A3";
+    evidence: ApprovalEvidence | null;
+};
+export type SecurityCommandHandler = (
+    state: IdentityState,
+    events: SecurityEvent[],
+    principal: SecurityPrincipal,
+    input: unknown,
+) => Promise<unknown>;
 export const emptyIdentityState = (): IdentityState => ({
     owner: null,
     devices: {},
@@ -191,6 +217,8 @@ export const ActionSchema = z.enum([
     "privacy.inspect",
     "critical.confirm",
     "owner.transfer",
+    "security.command",
+    "security.inspect",
 ]);
 export type IdentityAction = z.infer<typeof ActionSchema>;
 export const ActionInputSchemas = {
@@ -224,6 +252,11 @@ export const ActionInputSchemas = {
     "privacy.inspect": z.strictObject({ sharedDisplay: z.boolean() }),
     "critical.confirm": z.strictObject({}),
     "owner.transfer": z.strictObject({}),
+    "security.command": z.strictObject({
+        command: z.string().min(1).max(60),
+        data: z.json(),
+    }),
+    "security.inspect": z.strictObject({}),
 };
 export type DeviceProof = { challengeId: string; signature: string };
 export type SessionProof = DeviceProof & { token: string; approvalId?: string };

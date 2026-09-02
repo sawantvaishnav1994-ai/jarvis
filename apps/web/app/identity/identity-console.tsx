@@ -34,6 +34,32 @@ type Snapshot = {
         code: string;
     }[];
 };
+type SecuritySnapshot = {
+    controls: { flags: string[]; epoch: number };
+    approvals: Record<
+        string,
+        {
+            id: string;
+            status: string;
+            requestHash: string;
+            request: object;
+            risk: { level: string };
+            explanation: {
+                action: string;
+                requestedBy: string;
+                target: string;
+                changes: string;
+                why: string;
+                reversibility: string;
+                impact: string;
+                capability: string;
+                zone: string;
+                authenticationRequired: string;
+                expiresAt: number;
+            };
+        }
+    >;
+};
 async function rpc<T>(method: string, params: object): Promise<T> {
     const response = await fetch("/api/identity", {
         method: "POST",
@@ -67,6 +93,18 @@ export function IdentityConsole() {
     const [recoveryPackage, setRecoveryPackage] = useState(""),
         [recoveryKey, setRecoveryKey] = useState(""),
         [recoveryOwner, setRecoveryOwner] = useState("");
+    const [security, setSecurity] = useState<SecuritySnapshot | null>(null),
+        [securityCommand, setSecurityCommand] = useState(
+            '{"command":"inspect","data":{}}',
+        ),
+        [agentCommand, setAgentCommand] = useState(
+            '{"command":"request","data":{}}',
+        ),
+        [securityResult, setSecurityResult] = useState("");
+    const [securityAgent, setSecurityAgent] = useState<{
+        key: BrowserDevice;
+        subjectId: string;
+    } | null>(null);
     async function run(work: () => Promise<void>) {
         setBusy(true);
         try {
@@ -84,6 +122,9 @@ export function IdentityConsole() {
                 setSnapshot(null);
                 setKit(null);
                 setAgent(null);
+                setSecurity(null);
+                setSecurityResult("");
+                setSecurityAgent(null);
             }
             setMessage(
                 error instanceof Error ? error.message : "REQUEST_DENIED",
@@ -127,6 +168,11 @@ export function IdentityConsole() {
     }
     async function refresh() {
         setSnapshot(await action<Snapshot>("identity.inspect", {}, false));
+    }
+    async function refreshSecurity() {
+        setSecurity(
+            await action<SecuritySnapshot>("security.inspect", {}, false),
+        );
     }
     async function register(kind: "root" | "enroll" | "recovery") {
         const key = await deviceKey(kind === "recovery"),
@@ -455,6 +501,250 @@ export function IdentityConsole() {
                                 Test critical-action denial
                             </button>
                         </div>
+                    </section>
+                    <section className="system">
+                        <h2>J0.3 Security control</h2>
+                        <p>
+                            Deterministic development controls. All tools here
+                            are synthetic; no real deployment or financial
+                            integration is connected.
+                        </p>
+                        <button
+                            disabled={busy}
+                            onClick={() =>
+                                run(async () => {
+                                    await refreshSecurity();
+                                    setMessage("Security state loaded.");
+                                })
+                            }
+                        >
+                            Refresh security state
+                        </button>
+                        <button
+                            disabled={busy}
+                            onClick={() =>
+                                run(async () => {
+                                    const key = await deviceKey(true),
+                                        publicKey = (
+                                            await deviceInput(
+                                                key,
+                                                "J0.3 Developer",
+                                            )
+                                        ).publicKey;
+                                    const result = await action<{
+                                        subjectId: string;
+                                    }>("subject.create", {
+                                        name: "J0.3 Developer",
+                                        kind: "agent",
+                                        publicKey,
+                                        scopes: [],
+                                        resources: [],
+                                    });
+                                    setSecurityAgent({
+                                        key,
+                                        subjectId: result.subjectId,
+                                    });
+                                    setMessage(
+                                        "J0.3 Developer created without permissions.",
+                                    );
+                                })
+                            }
+                        >
+                            Create J0.3 Developer
+                        </button>
+                        {securityAgent && (
+                            <p>
+                                Developer identity:{" "}
+                                <code data-testid="developer-id">
+                                    {securityAgent.subjectId}
+                                </code>
+                            </p>
+                        )}
+                        <label>
+                            Owner security command (JSON)
+                            <textarea
+                                value={securityCommand}
+                                onChange={(e) =>
+                                    setSecurityCommand(e.target.value)
+                                }
+                            />
+                        </label>
+                        <button
+                            disabled={busy}
+                            onClick={() =>
+                                run(async () => {
+                                    const result = await action(
+                                        "security.command",
+                                        JSON.parse(securityCommand),
+                                    );
+                                    setSecurityResult(JSON.stringify(result));
+                                    await refreshSecurity();
+                                    await refresh();
+                                    setMessage("Security command completed.");
+                                })
+                            }
+                        >
+                            Run owner security command
+                        </button>
+                        <label>
+                            Governed agent command (JSON)
+                            <textarea
+                                value={agentCommand}
+                                onChange={(e) =>
+                                    setAgentCommand(e.target.value)
+                                }
+                            />
+                        </label>
+                        <button
+                            disabled={busy || !securityAgent}
+                            onClick={() =>
+                                run(async () => {
+                                    const input = JSON.parse(agentCommand),
+                                        params = {
+                                            subjectId: securityAgent!.subjectId,
+                                            input,
+                                        };
+                                    const c = await rpc<Challenge>(
+                                        "security.subject.begin",
+                                        params,
+                                    );
+                                    const result = await rpc(
+                                        "security.subject.perform",
+                                        {
+                                            ...params,
+                                            proof: await deviceProof(
+                                                securityAgent!.key,
+                                                c,
+                                            ),
+                                        },
+                                    );
+                                    setSecurityResult(JSON.stringify(result));
+                                    await refreshSecurity();
+                                    await refresh();
+                                    setMessage(
+                                        "Governed agent command completed.",
+                                    );
+                                })
+                            }
+                        >
+                            Run governed agent command
+                        </button>
+                        <pre data-testid="security-result">
+                            {securityResult}
+                        </pre>
+                        {security && (
+                            <>
+                                <p data-testid="security-flags">
+                                    {security.controls.flags.join(", ") ||
+                                        "NORMAL"}
+                                </p>
+                                {[true, false].map((active) => (
+                                    <button
+                                        key={String(active)}
+                                        disabled={busy}
+                                        onClick={() =>
+                                            run(async () => {
+                                                await action(
+                                                    "security.command",
+                                                    {
+                                                        command: "controls.set",
+                                                        data: {
+                                                            flag: "SECURITY_LOCKDOWN",
+                                                            active,
+                                                        },
+                                                    },
+                                                );
+                                                await refreshSecurity();
+                                                await refresh();
+                                                setMessage(
+                                                    active
+                                                        ? "Security lockdown activated."
+                                                        : "Security lockdown released.",
+                                                );
+                                            })
+                                        }
+                                    >
+                                        {active
+                                            ? "Activate security lockdown"
+                                            : "Release security lockdown"}
+                                    </button>
+                                ))}
+                                {Object.values(security.approvals)
+                                    .filter((a) => a.status === "pending")
+                                    .map((a) => (
+                                        <article
+                                            key={a.id}
+                                            data-testid={`approval-${a.id}`}
+                                        >
+                                            <h3>
+                                                {a.explanation.action} —{" "}
+                                                {a.risk.level}
+                                            </h3>
+                                            <dl>
+                                                {Object.entries(
+                                                    a.explanation,
+                                                ).map(([key, value]) => (
+                                                    <div key={key}>
+                                                        <dt>{key}</dt>
+                                                        <dd>{String(value)}</dd>
+                                                    </div>
+                                                ))}
+                                            </dl>
+                                            <details>
+                                                <summary>
+                                                    View exact action details
+                                                </summary>
+                                                <pre>
+                                                    {JSON.stringify(
+                                                        a.request,
+                                                        null,
+                                                        2,
+                                                    )}
+                                                </pre>
+                                            </details>
+                                            {(["approve", "deny"] as const).map(
+                                                (decision) => (
+                                                    <button
+                                                        key={decision}
+                                                        disabled={busy}
+                                                        onClick={() =>
+                                                            run(async () => {
+                                                                await action(
+                                                                    "security.command",
+                                                                    {
+                                                                        command:
+                                                                            "approval.decide",
+                                                                        data: {
+                                                                            version: 1,
+                                                                            approvalId:
+                                                                                a.id,
+                                                                            requestHash:
+                                                                                a.requestHash,
+                                                                            decision,
+                                                                        },
+                                                                    },
+                                                                );
+                                                                await refreshSecurity();
+                                                                await refresh();
+                                                                setMessage(
+                                                                    decision ===
+                                                                        "approve"
+                                                                        ? "Exact action approved."
+                                                                        : "Action denied.",
+                                                                );
+                                                            })
+                                                        }
+                                                    >
+                                                        {decision === "approve"
+                                                            ? "Approve exact action with passkey"
+                                                            : "Deny exact action"}
+                                                    </button>
+                                                ),
+                                            )}
+                                        </article>
+                                    ))}
+                            </>
+                        )}
                     </section>
                     <section className="system">
                         <h2>Offline identity recovery kit</h2>

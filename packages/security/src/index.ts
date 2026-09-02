@@ -6,8 +6,8 @@ import {
     IdentifierSchema,
     TraceSchema,
 } from "@jarvis/shared";
-export const PermissionSchema = z.enum(["P0", "P1", "P2", "P3", "P4", "P5"]);
-export type Permission = z.infer<typeof PermissionSchema>;
+import type { Permission } from "./permissions.js";
+export { PermissionSchema, type Permission } from "./permissions.js";
 export const ExecutionContextSchema = z
     .strictObject({
         version: ContractVersionSchema,
@@ -49,6 +49,7 @@ export interface ApprovalService {
         },
     ): Promise<boolean>;
 }
+/** Legacy v1 reference policy. The active API uses DeterministicPolicy and v2 contexts. */
 export class FoundationPolicy implements PolicyEngine {
     async evaluate(
         action: {
@@ -73,3 +74,7 @@ export class FoundationPolicy implements PolicyEngine {
     }
 }
 export * from "./secrets.js";
+export * from "./policy.js";
+export * from "./governance-contracts.js";
+export * from "./governance-policy.js";
+export * from "./governance.js";

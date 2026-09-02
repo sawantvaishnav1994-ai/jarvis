@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "revision": "j0.3.1-development-1",
+    "environment": "development",
+    "rules": [
+        {
+            "id": "synthetic-delegated-read",
+            "effect": "allow",
+            "actorKinds": ["agent", "service", "tool", "integration"],
+            "toolId": "mock.repository.read",
+            "scope": "mock.read",
+            "resource": "repository-x",
+            "permissions": ["P0"],
+            "modes": ["safe"],
+            "minimumAssurance": "A1",
+            "requireApproval": false
+        }
+    ]
+}

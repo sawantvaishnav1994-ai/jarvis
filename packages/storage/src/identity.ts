@@ -54,7 +54,32 @@ export class PostgresIdentityRepository implements IdentityRepository {
             }
             const before = structuredClone(state),
                 events: SecurityEvent[] = [];
+            const security = await client.query<{ payload: string }>(
+                "SELECT payload FROM security.governance_state WHERE singleton=true",
+            );
+            if (security.rows[0])
+                state.security = this.cipher.decrypt(
+                    security.rows[0].payload,
+                    "security:development:governance:v1",
+                );
+            before.security = structuredClone(state.security);
             const result = await work(state, events);
+            if (
+                JSON.stringify(before.security) !==
+                JSON.stringify(state.security)
+            ) {
+                if (state.security === undefined)
+                    throw new Error("SECURITY_STATE_REMOVAL_DENIED");
+                await client.query(
+                    "INSERT INTO security.governance_state(singleton,payload) VALUES(true,$1) ON CONFLICT(singleton) DO UPDATE SET payload=EXCLUDED.payload",
+                    [
+                        this.cipher.encrypt(
+                            state.security,
+                            "security:development:governance:v1",
+                        ),
+                    ],
+                );
+            }
             if (JSON.stringify(before.owner) !== JSON.stringify(state.owner)) {
                 if (
                     !state.owner ||

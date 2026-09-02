@@ -1,0 +1,343 @@
+import { z } from "zod";
+import {
+    IdentifierSchema as Id,
+    EnvironmentSchema as Environment,
+} from "@jarvis/shared";
+import { PermissionSchema } from "./permissions.js";
+
+export const CapabilityNameSchema = z.enum([
+    "github.repo.read",
+    "github.repo.write",
+    "github.branch.create",
+    "github.branch.delete",
+    "github.staging.deploy",
+    "github.production.deploy",
+    "tests.execute",
+    "email.read",
+    "email.draft",
+    "email.send",
+    "email.bulk_send",
+    "calendar.read",
+    "calendar.create",
+    "calendar.update",
+    "calendar.delete",
+    "files.read",
+    "files.write",
+    "files.delete",
+    "memory.read",
+    "memory.create",
+    "memory.update",
+    "memory.delete",
+    "memory.export",
+    "memory.personal.read",
+    "memory.project.read",
+    "security.policy.read",
+    "security.policy.modify",
+    "security.lockdown.activate",
+    "security.lockdown.release",
+    "device.camera.read",
+    "device.microphone.read",
+    "camera.live.read",
+    "home.light.control",
+    "home.lock.unlock",
+    "finance.private.read",
+    "finance.transfer",
+    "email.content.read",
+]);
+export const ResourceScopeSchema = z.strictObject({
+    version: z.literal(1),
+    resource: Id,
+    environments: z.array(Environment).min(1).max(3),
+    fields: z.array(Id).max(32).default([]),
+});
+export const RiskLevelSchema = z.enum(["R0", "R1", "R2", "R3", "R4", "R5"]);
+export const ZoneSchema = z.enum(["Z0", "Z1", "Z2", "Z3", "Z4", "Z5"]);
+export const ReversibilitySchema = z.enum([
+    "REVERSIBLE",
+    "PARTIALLY_REVERSIBLE",
+    "IRREVERSIBLE",
+]);
+export const SecurityFlagSchema = z.enum([
+    "AUTONOMY_DISABLED",
+    "EXTERNAL_ACTIONS_DISABLED",
+    "AGENTS_FROZEN",
+    "READ_ONLY_MODE",
+    "SECURITY_LOCKDOWN",
+    "NETWORK_DISABLED",
+]);
+export const SecurityStateSchema = z.strictObject({
+    version: z.literal(1),
+    epoch: z.number().int().nonnegative(),
+    flags: z.array(SecurityFlagSchema).max(6),
+    frozenActors: z.array(Id).max(100),
+});
+const Natural = z.number().int().nonnegative();
+export const RiskFactorsSchema = z.strictObject({
+    permission: PermissionSchema,
+    reversibility: ReversibilitySchema,
+    blastRadius: z.enum([
+        "record",
+        "file",
+        "repository",
+        "service",
+        "many-users",
+        "all-data",
+        "physical-domain",
+    ]),
+    financialMinor: Natural,
+    privacy: z.number().int().min(0).max(5),
+    security: z.number().int().min(0).max(5),
+    production: z.boolean(),
+    physical: z.number().int().min(0).max(5),
+    volume: Natural,
+    resourceCount: z.number().int().positive(),
+    identityTrust: z.enum(["restricted", "trusted"]),
+    assurance: z.enum(["A1", "A2", "A3", "A4"]),
+    novelty: z.boolean(),
+    unusual: z.boolean(),
+    confidence: z.number().min(0).max(1),
+    verified: z.boolean(),
+    simulated: z.boolean(),
+    testsPassed: z.boolean(),
+    scanPassed: z.boolean(),
+    environment: Environment,
+    fromZone: ZoneSchema,
+    toZone: ZoneSchema,
+    external: z.boolean(),
+    network: z.boolean(),
+});
+export type RiskFactors = z.infer<typeof RiskFactorsSchema>;
+export const RiskAssessmentSchema = z.strictObject({
+    version: z.literal(1),
+    id: Id,
+    level: RiskLevelSchema,
+    factors: RiskFactorsSchema,
+    reasons: z.array(z.string()).min(1),
+    assessedAt: Natural,
+});
+export type RiskAssessment = z.infer<typeof RiskAssessmentSchema>;
+export const DecisionResultSchema = z.enum([
+    "AUTO_ALLOW",
+    "ALLOW_WITH_AUDIT",
+    "REQUEST_APPROVAL",
+    "REQUEST_STEP_UP_AUTH",
+    "REQUEST_APPROVAL_AND_STEP_UP_AUTH",
+    "DENY",
+]);
+export const PolicyRuleV3Schema = z.strictObject({
+    id: Id,
+    effect: z.enum(["allow", "deny"]),
+    capabilities: z.array(CapabilityNameSchema).min(1).max(40),
+    scope: ResourceScopeSchema,
+    actorIds: z.array(Id).max(100),
+    maximumRisk: RiskLevelSchema,
+    requireApproval: z.boolean(),
+    requireStepUp: z.boolean(),
+    allowEscalationRequest: z.boolean().default(false),
+    requireSimulation: z.boolean().default(false),
+    requireTests: z.boolean().default(false),
+    requireScan: z.boolean().default(false),
+    minimumConfidence: z.number().min(0).max(1).default(0),
+    branches: z.array(z.string().min(1).max(100)).max(20).default([]),
+    pathPrefixes: z
+        .array(z.string().regex(/^[a-zA-Z0-9_/-]+\/$/))
+        .max(20)
+        .default([]),
+    notBefore: Natural.default(0),
+    expiresAt: Natural.nullable().default(null),
+    standing: z.boolean().default(false),
+    financial: z
+        .strictObject({
+            singleActionMinor: Natural,
+            dailyMinor: Natural,
+            monthlyMinor: Natural,
+            recipients: z.array(Id).max(100),
+            allowNewRecipient: z.literal(false),
+            allowSubscription: z.literal(false),
+            budgetOwner: Id,
+        })
+        .nullable()
+        .default(null),
+});
+export const PolicyV3Schema = z
+    .strictObject({
+        version: z.literal(1),
+        id: Id,
+        revision: z.number().int().positive(),
+        status: z.enum(["draft", "active", "superseded", "disabled"]),
+        createdAt: Natural,
+        activatedAt: Natural.nullable(),
+        creatorId: Id,
+        precedence: z.enum([
+            "constitution",
+            "owner",
+            "system",
+            "resource",
+            "actor",
+            "workflow",
+            "request",
+        ]),
+        supersedes: z.number().int().positive().nullable(),
+        rules: z.array(PolicyRuleV3Schema).min(1).max(64),
+    })
+    .refine(
+        (p) => new Set(p.rules.map((r) => r.id)).size === p.rules.length,
+        "Duplicate rule ID",
+    );
+export type PolicyV3 = z.infer<typeof PolicyV3Schema>;
+export const PolicyDecisionV3Schema = z.strictObject({
+    version: z.literal(1),
+    result: DecisionResultSchema,
+    reason: z.string().min(1),
+    policyVersions: z.array(z.string()),
+    ruleIds: z.array(z.string()),
+    riskId: Id,
+    approvalRequired: z.boolean(),
+    stepUpRequired: z.boolean(),
+    escalationAllowed: z.boolean(),
+});
+export type PolicyDecisionV3 = z.infer<typeof PolicyDecisionV3Schema>;
+export const ActionRequestV3Schema = z.strictObject({
+    version: z.literal(1),
+    id: Id,
+    toolId: Id,
+    resource: Id,
+    environment: Environment,
+    input: z.record(z.string(), z.json()),
+});
+export type ActionRequestV3 = z.infer<typeof ActionRequestV3Schema>;
+export const AutonomyBudgetSchema = z.strictObject({
+    version: z.literal(1),
+    actorId: Id,
+    maximumRuntimeMs: z.number().int().min(1).max(900000),
+    maximumSpendMinor: Natural,
+    spentMinor: Natural,
+    maximumToolCalls: z.number().int().min(1).max(100),
+    toolCalls: Natural,
+    maximumRisk: RiskLevelSchema,
+    resources: z.array(Id).min(1).max(32),
+    environments: z.array(Environment).min(1).max(3),
+    startedAt: Natural,
+    notBefore: Natural,
+    expiresAt: Natural,
+    networkAllowed: z.boolean(),
+    maximumConcurrent: z.literal(1),
+    approvalThreshold: RiskLevelSchema,
+});
+export const AuthorizationV3Schema = z.strictObject({
+    version: z.literal(1),
+    id: Id,
+    actorId: Id,
+    ownerId: Id,
+    sessionId: Id,
+    deviceId: Id,
+    requestId: Id,
+    toolId: Id,
+    capability: CapabilityNameSchema,
+    permission: PermissionSchema,
+    resource: Id,
+    environment: Environment,
+    policyVersions: z.array(z.string()).min(1),
+    policyHash: z.string().length(64),
+    riskId: Id,
+    risk: RiskLevelSchema,
+    zone: ZoneSchema,
+    approvalId: Id.nullable(),
+    assurance: z.enum(["A1", "A2", "A3"]),
+    issuedAt: Natural,
+    expiresAt: Natural,
+    maximumUses: z.literal(1),
+    uses: Natural,
+    inputHash: z.string().length(64),
+    status: z.enum(["issued", "consumed", "revoked", "expired"]),
+    epoch: Natural,
+    ownershipEpoch: Natural,
+    delegationId: Id.nullable(),
+});
+export type AuthorizationV3 = z.infer<typeof AuthorizationV3Schema>;
+export const ApprovalRequestV3Schema = z.strictObject({
+    version: z.literal(1),
+    id: Id,
+    actorId: Id,
+    request: ActionRequestV3Schema,
+    capability: CapabilityNameSchema,
+    inputHash: z.string().length(64),
+    risk: RiskAssessmentSchema,
+    policyHash: z.string().length(64),
+    policyVersions: z.array(z.string()),
+    epoch: Natural,
+    ownershipEpoch: Natural,
+    createdAt: Natural,
+    expiresAt: Natural,
+    maximumUses: z.literal(1),
+    status: z.enum([
+        "pending",
+        "approved",
+        "denied",
+        "consumed",
+        "revoked",
+        "expired",
+    ]),
+    approvingIdentity: Id.nullable(),
+    ownerSessionId: Id.nullable(),
+    ownerDeviceId: Id.nullable(),
+    assurance: z.enum(["A1", "A3"]).nullable(),
+    proofId: z.string().nullable(),
+    explanation: z.strictObject({
+        action: z.string(),
+        requestedBy: Id,
+        target: Id,
+        changes: z.string(),
+        why: z.string(),
+        reversibility: ReversibilitySchema,
+        impact: z.string(),
+        capability: CapabilityNameSchema,
+        zone: ZoneSchema,
+        authenticationRequired: z.literal("A3"),
+        expiresAt: Natural,
+    }),
+});
+export const ApprovalDecisionV3Schema = z.strictObject({
+    version: z.literal(1),
+    approvalId: Id,
+    decision: z.enum(["approve", "deny"]),
+    requestHash: z.string().length(64),
+});
+export const DelegationV3Schema = z.strictObject({
+    version: z.literal(1),
+    actorId: Id,
+    capability: CapabilityNameSchema,
+    resource: Id,
+    environment: Environment,
+    ttlSeconds: z.number().int().min(1).max(900),
+    maximumUses: z.number().int().min(1).max(100),
+    maximumRisk: RiskLevelSchema,
+    toolId: Id.nullable(),
+});
+export const GovernanceStateSchema = z.strictObject({
+    version: z.literal(1),
+    ownerId: Id,
+    controls: SecurityStateSchema,
+    policies: z.array(PolicyV3Schema).max(256),
+    budgets: z.record(Id, AutonomyBudgetSchema),
+    approvals: z.record(Id, ApprovalRequestV3Schema),
+    authorizations: z.record(Id, AuthorizationV3Schema),
+    requests: z.record(
+        Id,
+        z.strictObject({
+            actorId: Id,
+            request: ActionRequestV3Schema,
+            risk: RiskAssessmentSchema,
+            decision: PolicyDecisionV3Schema,
+        }),
+    ),
+    riskRules: z.tuple([
+        DecisionResultSchema,
+        DecisionResultSchema,
+        DecisionResultSchema,
+        DecisionResultSchema,
+        DecisionResultSchema,
+        DecisionResultSchema,
+    ]),
+});
+export type GovernanceState = z.infer<typeof GovernanceStateSchema>;

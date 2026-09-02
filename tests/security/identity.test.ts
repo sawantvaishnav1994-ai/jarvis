@@ -538,6 +538,17 @@ it("runs one delegated mock permission and denies wrong scope, audience and subj
             execute,
         ),
     ).toEqual({ mock: true });
+    expect(execute).toHaveBeenCalledWith(
+        expect.objectContaining({ id: subject.subjectId }),
+        expect.objectContaining({
+            ownerId: o.session.ownerId,
+            deviceId: o.session.deviceId,
+            sessionId: o.session.sessionId,
+            assurance: "A1",
+            scopes: ["mock.read"],
+            resources: ["repo-x"],
+        }),
+    );
     c = await f.engine.beginDelegated(cap.token, "mock.write", "repo-x");
     await expect(
         f.engine.performDelegated(
@@ -562,6 +573,16 @@ it("runs one delegated mock permission and denies wrong scope, audience and subj
         f.engine.beginAction(cap.token, "owner.transfer", {}),
     ).rejects.toThrow("SESSION_INVALID");
     expect(execute).toHaveBeenCalledTimes(1);
+    const issuingDevice = (f.repository as TestIdentityRepository).state
+        .devices[o.session.deviceId]!;
+    issuingDevice.posture = "suspicious";
+    await expect(
+        f.engine.beginDelegated(cap.token, "mock.read", "repo-x"),
+    ).rejects.toThrow("DEVICE_POSTURE_RESTRICTED");
+    // Transactions copy state; restore the current stored device, not the stale test reference.
+    (f.repository as TestIdentityRepository).state.devices[
+        o.session.deviceId
+    ]!.posture = "unknown";
     f.advance(60001);
     await expect(
         f.engine.beginDelegated(cap.token, "mock.read", "repo-x"),
