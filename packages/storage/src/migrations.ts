@@ -158,6 +158,30 @@ export async function migrate(
         await client.query(
             "GRANT USAGE ON SEQUENCE audit.identity_events_sequence_seq TO jarvis_development_runtime",
         );
+        await client.query(
+            "GRANT USAGE ON SCHEMA storage,recovery,conversations,knowledge,projects TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA storage,conversations,knowledge,projects TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE,DELETE ON memory.sources,memory.embeddings,settings.owner_records TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT UPDATE ON memory.records TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE ON security.key_metadata,security.secret_metadata TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT ON security.data_access_events TO jarvis_development_runtime",
+        );
+        await client.query(
+            "REVOKE DELETE ON storage.backups,storage.backup_items FROM jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,DELETE ON recovery.migration_probe TO jarvis_development_runtime",
+        );
         await client.query("COMMIT");
     } catch (error) {
         await client.query("ROLLBACK");

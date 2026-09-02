@@ -7,6 +7,7 @@ import {
     type OwnerProfile,
 } from "@jarvis/identity";
 import { RecordCipher } from "@jarvis/security";
+import { identityDataTransaction } from "./transaction.js";
 const collections = [
     "devices",
     "passkeys",
@@ -63,7 +64,9 @@ export class PostgresIdentityRepository implements IdentityRepository {
                     "security:development:governance:v1",
                 );
             before.security = structuredClone(state.security);
-            const result = await work(state, events);
+            const result = await identityDataTransaction.run({ client }, () =>
+                work(state, events),
+            );
             if (
                 JSON.stringify(before.security) !==
                 JSON.stringify(state.security)

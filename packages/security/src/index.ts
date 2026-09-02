@@ -78,3 +78,6 @@ export * from "./policy.js";
 export * from "./governance-contracts.js";
 export * from "./governance-policy.js";
 export * from "./governance.js";
+export * from "./envelope.js";
+export * from "./data-policy.js";
+export * from "./storage-privacy.js";

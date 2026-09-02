@@ -1,4 +1,5 @@
 import { z } from "zod";
+export * from "./records-v2.js";
 import {
     ContractVersionSchema,
     IdentifierSchema,

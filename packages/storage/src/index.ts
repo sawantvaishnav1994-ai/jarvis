@@ -137,3 +137,11 @@ export class PostgresAuditSink {
 }
 export * from "./migrations.js";
 export * from "./identity.js";
+export * from "./classified-codec.js";
+export * from "./objects.js";
+export * from "./private-records.js";
+export * from "./data-gateway.js";
+export * from "./data-keys.js";
+export * from "./private-objects.js";
+export * from "./exports.js";
+export * from "./recovery.js";

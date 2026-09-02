@@ -38,11 +38,12 @@ export interface ProtectedToolCatalog {
         capability: string;
         factors: RiskFactors;
     };
-    /** Only deterministic, synchronous, synthetic handlers are registered in J0.3. */
+    /** J0.4 adapters may perform bounded transactional storage work, never arbitrary network effects. */
     execute(
         request: ActionRequestV3,
         authorization: AuthorizationV3,
         permit: object,
+        transient?: unknown,
     ): unknown;
     verify(request: ActionRequestV3, result: unknown): boolean;
 }
@@ -830,9 +831,16 @@ export class GovernanceEngine {
                     .strictObject({
                         authorization: AuthorizationV3Schema,
                         request: ActionRequestV3Schema,
+                        transient: z.json().optional(),
                     })
                     .parse(command.data);
                 const a = state.authorizations[v.authorization.id];
+                if (
+                    v.transient !== undefined &&
+                    v.request.input.payloadHash !==
+                        digest(canonical(v.transient))
+                )
+                    return deny("TRANSIENT_PAYLOAD_BINDING_INVALID");
                 if (a?.status === "consumed") {
                     audit(
                         "security.replay_attempt",
@@ -930,10 +938,11 @@ export class GovernanceEngine {
                     );
                     let result: unknown;
                     try {
-                        result = this.tools.execute(
+                        result = await this.tools.execute(
                             v.request,
                             structuredClone(a),
                             permit,
+                            v.transient,
                         );
                     } finally {
                         executionPermits.delete(permit);

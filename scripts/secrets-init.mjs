@@ -1,6 +1,7 @@
 import {
     initializeDevelopmentVault,
     ensureIdentitySecrets,
+    ensureStorageSecrets,
 } from "@jarvis/security";
 import { runtime, fail } from "./runtime.mjs";
 try {
@@ -11,6 +12,7 @@ try {
         }),
     );
     await ensureIdentitySecrets(r.vaultPath, r.keyPath);
+    await ensureStorageSecrets(r.vaultPath, r.keyPath);
 } catch {
     fail("SECRET_INITIALIZATION_FAILED");
 }

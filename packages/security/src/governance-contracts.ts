@@ -6,6 +6,21 @@ import {
 import { PermissionSchema } from "./permissions.js";
 
 export const CapabilityNameSchema = z.enum([
+    "data.read",
+    "data.write",
+    "data.delete",
+    "data.export",
+    "data.inventory",
+    "data.retention.modify",
+    "data.context.prepare",
+    "storage.object.read",
+    "storage.object.write",
+    "storage.backup.create",
+    "storage.backup.restore",
+    "storage.migration.execute",
+    "storage.keys.rotate",
+    "secrets.metadata.read",
+    "secrets.handle.use",
     "github.repo.read",
     "github.repo.write",
     "github.branch.create",

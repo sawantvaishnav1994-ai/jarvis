@@ -252,3 +252,57 @@ export async function ensureIdentitySecrets(
         await unlink(lock);
     }
 }
+
+/** Additive installation keys. Never overwrites existing credentials or key material. */
+export async function ensureStorageSecrets(
+    vaultPath: string,
+    keyPath: string,
+): Promise<void> {
+    const lock = vaultPath + ".storage-lock",
+        temporary = vaultPath + ".storage-" + randomBytes(8).toString("hex");
+    await writeFile(lock, "storage-v1", { flag: "wx", mode: 0o600 });
+    let key: Buffer | undefined;
+    try {
+        key = await privateFile(keyPath);
+        const vault = VaultSchema.parse(
+            JSON.parse((await privateFile(vaultPath)).toString("utf8")),
+        );
+        if (vault.environment !== "development")
+            throw new BoundaryError("ENVIRONMENT_NOT_ENABLED");
+        const cipher = new RecordCipher(key);
+        let changed = false;
+        for (const ref of [
+            "development/storage/kek/k1",
+            "development/storage/kek/k2",
+            "development/storage/backup/key1",
+        ]) {
+            if (vault.records[ref]) {
+                cipher.decrypt(
+                    JSON.stringify(vault.records[ref]),
+                    "secret:" + ref,
+                );
+                continue;
+            }
+            vault.records[ref] = BoxSchema.parse(
+                JSON.parse(
+                    cipher.encrypt(
+                        randomBytes(32).toString("hex"),
+                        "secret:" + ref,
+                    ),
+                ),
+            );
+            changed = true;
+        }
+        if (changed) {
+            await writeFile(temporary, JSON.stringify(vault), {
+                flag: "wx",
+                mode: 0o600,
+            });
+            await rename(temporary, vaultPath);
+        }
+    } finally {
+        key?.fill(0);
+        await unlink(temporary).catch(() => {});
+        await unlink(lock);
+    }
+}

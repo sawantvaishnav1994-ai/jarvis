@@ -77,3 +77,25 @@ The owner supplied the full J0.4 data-sovereignty specification on 2026-09-02.
 The prior bounded additive work is preserved. J0.4 remains INCOMPLETE; no further
 J0.4 implementation was performed during J0.3 acceptance. It is the next milestone.
 The local draft encryption/record contracts do not replace current live v1 storage.
+
+## J0.4 implementation checkpoint — 2026-09-02
+
+IN PROGRESS — GO NOT ISSUED. Protected baseline: `6c62f85c4c00822a082d304ff96736599cb41cb6`,
+accepted baseline workflow `33621181083`. Applied migrations 0001–0004 are unchanged.
+The additive 0005 draft extends classified records, lineage, objects, keys and recovery.
+Storage operations use the existing J0.3 one-time execution permit and the same
+PostgreSQL transaction as identity, authorization consumption and audit persistence.
+Private payloads are passed transiently with an exact approval-bound digest; request
+history stores the digest rather than the payload. No new private-data API is enabled.
+
+Local checkpoint: 205 TypeScript unit/contract/security tests, lint/type/boundary checks,
+web build, Python static checks and 68 Python regressions passed. New PostgreSQL
+storage/recovery scenarios are authored but not yet accepted. A written test is not
+evidence of a successful real-stack run. CI source revision/run will be recorded after
+execution; J0.3 baseline evidence must not be reused as J0.4 acceptance.
+
+Remaining development gates include secret lifecycle/handle execution integration,
+complete retention execution and backup expiration, comprehensive attachment deletion,
+storage health/inventory, API composition, restored-content validation, general reviewed
+destructive migration support and complete A–S GO coverage. The bounded synthetic
+migration probe is not yet a generalized destructive migration runner. J0.5 is not started.

@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { it, expect } from "vitest";
 import { migrationFiles } from "@jarvis/storage";
 it("accepts reviewed append-only baseline SQL", async () => {
-    expect(await migrationFiles("infrastructure/migrations")).toHaveLength(4);
+    expect(await migrationFiles("infrastructure/migrations")).toHaveLength(5);
 });
 it("refuses modified, unlisted and destructive migrations", async () => {
     const directory = await mkdtemp(join(tmpdir(), "jarvis-migration-"));
