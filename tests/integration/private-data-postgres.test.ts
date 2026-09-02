@@ -22,6 +22,7 @@ import {
     PrivateDataGateway,
     PortableExports,
     StorageRecovery,
+    StorageHealthService,
     PostgresIsolatedRestore,
     verifyPortableExport,
     storageHash,
@@ -71,6 +72,7 @@ const capabilities = [
     "storage.backup.create",
     "storage.backup.restore",
     "storage.migration.execute",
+    "storage.health.read",
 ];
 
 beforeAll(async () => {
@@ -185,6 +187,12 @@ beforeAll(async () => {
                         objects,
                         exports: new PortableExports(records, objects, cipher),
                         recovery,
+                        health: new StorageHealthService(
+                            keys,
+                            objects,
+                            recovery,
+                            "infrastructure/migrations",
+                        ),
                     },
                 ),
                 clock,
@@ -343,10 +351,20 @@ async function execute(
     transient?: unknown,
 ) {
     const input = await authorize(toolId, classification, recordId, transient);
-    const result = (await subject("execute", input)) as {
-        result: { value: unknown };
-    };
-    return result.result.value;
+    try {
+        const result = (await subject("execute", input)) as {
+            result: { value: unknown };
+        };
+        return result.result.value;
+    } catch (error) {
+        const evidence = await pool.query(
+            "SELECT record->>'reason' AS reason FROM security.data_access_events WHERE record->>'requestId'=$1 AND record->>'result'='denied'",
+            [input.request.id],
+        );
+        const reason = evidence.rows[0]?.reason;
+        if (reason) throw new Error(`DATA_EXECUTION_DENIED: ${reason}`);
+        throw error;
+    }
 }
 function record(
     domain: StorageRecord["domain"],
@@ -746,4 +764,47 @@ it("S: data access history is append-only and payload-free; authorization cannot
     );
     expect(events).not.toContain("Sensitive synthetic title");
     expect(events).toContain("data.backup.restore");
+});
+it("R: reports live database, vector, vault, key and object health, including backup corruption", async () => {
+    const result = await execute("data.health", "D4");
+    expect(result).toMatchObject({
+        postgres: true,
+        migrations: true,
+        pgvector: true,
+        objects: true,
+        vault: true,
+        keys: true,
+        backupIntegrity: "invalid",
+        status: "degraded",
+    });
+});
+it("rejects modified transient payloads and cross-owner writes", async () => {
+    const v = record("project", {
+        name: "Exact payload",
+        description: "Must not change",
+    });
+    const authorized = await authorize("data.record.put", "D2", v.id, v);
+    await expect(
+        subject("execute", {
+            ...authorized,
+            transient: {
+                ...v,
+                payload: { name: "Changed", description: "tampered" },
+            },
+        }),
+    ).rejects.toThrow();
+    expect(
+        (
+            await pool.query(
+                "SELECT 1 FROM storage.record_catalog WHERE id=$1",
+                [v.id],
+            )
+        ).rows,
+    ).toEqual([]);
+    await expect(
+        execute("data.record.put", "D2", v.id, {
+            ...v,
+            ownerId: "owner-unrelated",
+        }),
+    ).rejects.toThrow();
 });

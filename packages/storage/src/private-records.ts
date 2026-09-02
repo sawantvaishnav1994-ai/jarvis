@@ -208,6 +208,18 @@ export class PrivateRecords {
         )
             throw new BoundaryError("DATA_CLASS_DOWNGRADE_DENIED");
         const sourceIds = new Set(record.sources);
+        if (
+            existing &&
+            (
+                await tx.query(
+                    "SELECT 1 FROM storage.data_lineage WHERE owner_id=$1 AND source_id=$2 LIMIT 1",
+                    [auth.ownerId, record.id],
+                )
+            ).rowCount
+        )
+            throw new BoundaryError(
+                "SOURCE_REVISION_REQUIRES_DERIVED_INVALIDATION",
+            );
         const required: Record<string, string[]> = {
             message: ["conversationId"],
             embedding: ["memoryId"],
@@ -217,10 +229,46 @@ export class PrivateRecords {
         };
         for (const field of required[record.domain] ?? [])
             sourceIds.add(String(record.payload[field]));
+        if (sourceIds.size && record.policy.consent.externalAI)
+            throw new BoundaryError(
+                "DERIVED_EXTERNAL_REQUIRES_OWNER_RECLASSIFICATION",
+            );
+        if (record.domain === "attachment") {
+            const object = (
+                await tx.query<{ data_class: string }>(
+                    "SELECT data_class FROM storage.objects WHERE owner_id=$1 AND id=$2 AND deleted=false",
+                    [auth.ownerId, record.payload.objectId],
+                )
+            ).rows[0];
+            if (
+                !object ||
+                Number(object.data_class.slice(1)) >
+                    Number(record.policy.classification.slice(1))
+            )
+                throw new BoundaryError("ATTACHMENT_SCOPE_OR_CLASS_DENIED");
+        }
         if (existing && sourceIds.size)
             throw new BoundaryError("DERIVED_REVISION_REQUIRES_RECOMPUTE");
         for (const sourceId of sourceIds) {
             const source = await this.catalog(auth.ownerId, sourceId);
+            const expected =
+                record.domain === "message"
+                    ? "conversation"
+                    : record.domain === "relationship"
+                      ? "entity"
+                      : record.domain === "evidence"
+                        ? "relationship"
+                        : record.domain === "attachment"
+                          ? "message"
+                          : null;
+            if (
+                expected &&
+                (required[record.domain] ?? []).some(
+                    (field) => record.payload[field] === sourceId,
+                ) &&
+                source.domain !== expected
+            )
+                throw new BoundaryError("SOURCE_DOMAIN_MISMATCH");
             if (
                 Number(source.data_class.slice(1)) >
                 Number(record.policy.classification.slice(1))

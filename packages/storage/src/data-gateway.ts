@@ -20,6 +20,7 @@ import { DataKeys } from "./data-keys.js";
 import { PrivateObjects, ObjectUploadSchema } from "./private-objects.js";
 import { PortableExports } from "./exports.js";
 import { StorageRecovery } from "./recovery.js";
+import { StorageHealthService } from "./storage-health.js";
 
 export const DataRequestInputSchema = z.strictObject({
     recordId: z.uuid().nullable(),
@@ -34,6 +35,7 @@ const operations = {
     "data.record.read": { capability: "data.read", permission: "P0" },
     "data.record.forget": { capability: "data.delete", permission: "P4" },
     "data.inventory": { capability: "data.inventory", permission: "P0" },
+    "data.health": { capability: "storage.health.read", permission: "P0" },
     "data.lineage": { capability: "data.read", permission: "P0" },
     "data.object.put": { capability: "storage.object.write", permission: "P3" },
     "data.object.get": { capability: "storage.object.read", permission: "P0" },
@@ -66,6 +68,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
             objects: PrivateObjects;
             exports: PortableExports;
             recovery: StorageRecovery;
+            health?: StorageHealthService;
         },
     ) {}
     describe(request: ActionRequestV3) {
@@ -90,7 +93,8 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                 "data.migration.probe",
             ].includes(request.toolId) &&
                 level !== 4) ||
-            (request.toolId === "data.inventory" && level < 2)
+            (request.toolId === "data.inventory" && level < 2) ||
+            (request.toolId === "data.health" && level !== 4)
         )
             throw new BoundaryError("DATA_ZONE_UNDERSTATED");
         const factors: RiskFactors = {
@@ -214,6 +218,12 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                                   );
                         break;
                 }
+            } else if (request.toolId === "data.health") {
+                if (!this.services?.health)
+                    throw new BoundaryError("DATA_SERVICE_UNAVAILABLE");
+                value = await this.services.health.inspect(
+                    authorization.ownerId,
+                );
             } else if (request.toolId === "data.record.put") {
                 const record = StorageRecordSchema.parse(transient);
                 if (
@@ -331,6 +341,40 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
         } catch (error) {
             await tx.query("ROLLBACK TO SAVEPOINT private_data_operation");
             await tx.query("RELEASE SAVEPOINT private_data_operation");
+            const sqlState =
+                error instanceof Error &&
+                "code" in error &&
+                typeof error.code === "string" &&
+                /^[0-9A-Z]{5}$/.test(error.code)
+                    ? error.code
+                    : null;
+            await tx.query(
+                "INSERT INTO security.data_access_events(id,record) VALUES($1,$2)",
+                [
+                    randomUUID(),
+                    JSON.stringify({
+                        version: 1,
+                        actorId: authorization.actorId,
+                        ownerId: authorization.ownerId,
+                        capability: authorization.capability,
+                        resource: input.recordId,
+                        requestId: request.id,
+                        authorizationId: authorization.id,
+                        policyVersions: authorization.policyVersions,
+                        operation: request.toolId,
+                        timestamp: Date.now(),
+                        result: "denied",
+                        reason:
+                            error instanceof BoundaryError
+                                ? error.code
+                                : error instanceof z.ZodError
+                                  ? "STORAGE_CONTRACT_INVALID"
+                                  : sqlState
+                                    ? `POSTGRES_${sqlState}`
+                                    : "STORAGE_OPERATION_FAILED",
+                    }),
+                ],
+            );
             throw error;
         }
     }

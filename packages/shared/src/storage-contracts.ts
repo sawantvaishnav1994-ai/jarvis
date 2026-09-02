@@ -240,6 +240,8 @@ export const BackupManifestSchema = z.strictObject({
     domains: z.array(Id),
     objectCount: Nat,
     keyId: Id,
+    keyVersion: z.number().int().positive(),
+    algorithm: z.literal("aes-256-gcm"),
     items: z.array(ManifestItem).max(10000),
     state: z.enum(["PENDING", "VALID", "INVALID"]),
     validatedAt: Nat.nullable(),

@@ -19,6 +19,7 @@ export const CapabilityNameSchema = z.enum([
     "storage.backup.restore",
     "storage.migration.execute",
     "storage.keys.rotate",
+    "storage.health.read",
     "secrets.metadata.read",
     "secrets.handle.use",
     "github.repo.read",

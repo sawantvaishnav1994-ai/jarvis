@@ -146,6 +146,8 @@ export class StorageRecovery {
             domains: Object.keys(tables),
             objectCount: Object.keys(objects).length,
             keyId: "backup-key1",
+            keyVersion: 1,
+            algorithm: "aes-256-gcm",
             items,
             state: "PENDING",
             validatedAt: null,
@@ -171,6 +173,7 @@ export class StorageRecovery {
     private async readSnapshot(manifest: z.infer<typeof BackupManifestSchema>) {
         if (
             manifest.keyId !== "backup-key1" ||
+            manifest.keyVersion !== 1 ||
             !manifest.items.length ||
             manifest.items.length > 400
         )
@@ -248,6 +251,21 @@ export class StorageRecovery {
             snapshot.schemaHash !== (await schemaHash(currentDataTransaction()))
         )
             throw new BoundaryError("RESTORE_SCHEMA_MISMATCH");
+        const currentTombstones = (
+            await currentDataTransaction().query<{ record_id: string }>(
+                "SELECT record_id FROM storage.deletion_tombstones WHERE owner_id=$1",
+                [auth.ownerId],
+            )
+        ).rows;
+        const savedTombstones = new Set(
+            snapshot.tables["storage.deletion_tombstones"]!.map(
+                (row) => (row as { record_id: string }).record_id,
+            ),
+        );
+        if (
+            currentTombstones.some((row) => !savedTombstones.has(row.record_id))
+        )
+            throw new BoundaryError("BACKUP_PREDATES_DELETION");
         await this.target.restore(snapshot);
         const job = {
             version: 1,
@@ -290,7 +308,14 @@ export class StorageRecovery {
             Date.now() - manifest.createdAt > 300000 ||
             snapshot.schemaHash !== (await schemaHash(tx)) ||
             canonical(current) !==
-                canonical(snapshot.tables["recovery.migration_probe"])
+                canonical(
+                    [...snapshot.tables["recovery.migration_probe"]!].sort(
+                        (a, b) =>
+                            String((a as { id: string }).id).localeCompare(
+                                String((b as { id: string }).id),
+                            ),
+                    ),
+                )
         )
             throw new BoundaryError("CURRENT_RECOVERY_EVIDENCE_REQUIRED");
         await tx.query(
@@ -373,7 +398,7 @@ export class PostgresIsolatedRestore implements IsolatedRestoreTarget {
                     });
                 if (rows.length)
                     await tx.query(
-                        `INSERT INTO ${table} SELECT * FROM jsonb_populate_recordset(NULL::${table},$1::jsonb)`,
+                        `INSERT INTO ${table}${table === "audit.identity_events" ? " OVERRIDING SYSTEM VALUE" : ""} SELECT * FROM jsonb_populate_recordset(NULL::${table},$1::jsonb)`,
                         [JSON.stringify(rows)],
                     );
             }
