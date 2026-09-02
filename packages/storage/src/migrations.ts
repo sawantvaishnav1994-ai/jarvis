@@ -137,6 +137,21 @@ export async function migrate(
         await client.query(
             "GRANT SELECT,INSERT ON events.envelopes,audit.entries TO jarvis_development_runtime",
         );
+        await client.query(
+            "GRANT USAGE ON SCHEMA identity TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE ON identity.root_owner TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT,UPDATE,DELETE ON identity.devices,identity.passkeys,identity.sessions,identity.subjects,identity.delegations,identity.challenges,identity.approvals,identity.replays TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT SELECT,INSERT ON audit.identity_events TO jarvis_development_runtime",
+        );
+        await client.query(
+            "GRANT USAGE ON SEQUENCE audit.identity_events_sequence_seq TO jarvis_development_runtime",
+        );
         await client.query("COMMIT");
     } catch (error) {
         await client.query("ROLLBACK");

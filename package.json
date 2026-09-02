@@ -19,6 +19,7 @@
         "infra:up": "node scripts/infrastructure.mjs up",
         "infra:down": "node scripts/infrastructure.mjs down",
         "secrets:init": "npm run build:packages && node scripts/secrets-init.mjs",
+        "identity:bootstrap": "npm run build:packages && node scripts/identity-bootstrap.mjs",
         "db:migrate": "npm run build:packages && node scripts/migrate.mjs",
         "build:packages": "tsc -b tsconfig.build.json",
         "build:web": "npm run build --workspace @jarvis/web",
@@ -28,6 +29,7 @@
         "test": "npm run build:packages && vitest run",
         "test:integration": "npm run build:packages && vitest run --config vitest.integration.config.ts",
         "test:e2e": "playwright test",
+        "test:e2e:identity": "playwright test --config playwright.identity.config.ts",
         "smoke": "node scripts/smoke.mjs",
         "check": "npm run lint && npm run typecheck && npm test",
         "test:python": "PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v",
@@ -36,6 +38,7 @@
         "format:check": "prettier --check \"{apps,packages,config}/**/*.{ts,tsx,css,json}\" \"scripts/*.mjs\" \"tests/**/*.ts\" \"*.{json,mjs,ts}\""
     },
     "devDependencies": {
+        "@levischuck/tiny-cbor": "0.2.2",
         "@eslint/js": "10.0.1",
         "@playwright/test": "1.62.1",
         "@types/node": "24.13.3",

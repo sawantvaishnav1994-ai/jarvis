@@ -1,7 +1,10 @@
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { loadConfig, requireDevelopment } from "@jarvis/config";
-import { FileSecretManager } from "@jarvis/security";
+import { FileSecretManager, RecordCipher } from "@jarvis/security";
+import { IdentityEngine, WebAuthnPasskeys, digest } from "@jarvis/identity";
+import { PostgresIdentityRepository, PostgresAuditSink } from "@jarvis/storage";
+import { identityHandler } from "./identity-http.js";
 import { Redis } from "@jarvis/events";
 import { databasePool, verifyMigrations } from "@jarvis/storage";
 import { operationalLogger } from "@jarvis/shared";
@@ -30,6 +33,9 @@ async function main() {
         new Set([
             config.storage.postgres.passwordRef,
             config.events.passwordRef,
+            config.storage.encryptionKeyRef,
+            config.identity.bootstrapRef,
+            config.identity.webTransportRef,
         ]),
     );
     const dbLease = await vault.lease(
@@ -53,6 +59,32 @@ async function main() {
     dbLease.destroy();
     redisLease.destroy();
     redis.on("error", () => {});
+    const keyLease = await vault.lease(config.storage.encryptionKeyRef, actor);
+    const bootstrapLease = await vault.lease(
+        config.identity.bootstrapRef,
+        actor,
+    );
+    const transportLease = await vault.lease(
+        config.identity.webTransportRef,
+        actor,
+    );
+    const identity = new IdentityEngine(
+        new PostgresIdentityRepository(
+            pool,
+            new RecordCipher(
+                Buffer.from(keyLease.value.toString("utf8"), "hex"),
+            ),
+        ),
+        new WebAuthnPasskeys(config.identity.rpID, config.identity.origin),
+        digest(bootstrapLease.value.toString("utf8")),
+    );
+    const transportKey = Buffer.from(
+        transportLease.value.toString("utf8"),
+        "hex",
+    );
+    keyLease.destroy();
+    bootstrapLease.destroy();
+    transportLease.destroy();
     const server = healthServer(
         "api",
         async () => {
@@ -74,6 +106,7 @@ async function main() {
             return { database, migrations, queue, worker };
         },
         config.rateLimits.requestsPerMinute,
+        identityHandler(identity, transportKey, new PostgresAuditSink(pool)),
     );
     await new Promise<void>((ok, bad) => {
         server.once("error", bad);

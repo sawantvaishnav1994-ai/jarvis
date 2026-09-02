@@ -27,4 +27,10 @@ export interface IdentityService {
     resolveSession(token: string): Promise<Actor>;
     revokeSession(token: string): Promise<void>;
 }
-export type DeviceTrust = "unregistered" | "enrolled" | "verified" | "revoked";
+export type DeviceTrust = z.infer<
+    typeof import("./contracts.js").DeviceTrustSchema
+>;
+export * from "./contracts.js";
+export * from "./crypto.js";
+export * from "./passkeys.js";
+export * from "./engine.js";

@@ -13,6 +13,7 @@
         "dist"
     ],
     "dependencies": {
+        "@simplewebauthn/server": "13.3.3",
         "zod": "4.5.4",
         "@jarvis/shared": "0.1.0"
     }

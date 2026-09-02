@@ -1,4 +1,4 @@
-# J0.1 system architecture
+# J0.1/J0.2 system architecture
 
 Date: 2026-09-01. Active implementation: TypeScript 0.3.0. Contract schemas carry
 `version: 1`; they are candidates for the J0.12 freeze, not a Foundation v1 GO.
@@ -19,9 +19,12 @@ flowchart TD
 ```
 
 Solid lines show implemented dependency boundaries; dotted edges mark disabled
-runtime features. The current web uses only API health endpoints. Core/model/
-memory/tool composition is exercised by tests; no unauthenticated owner routes
-are shipped. Worker jobs accept only a validated synthetic `foundation.ping`
+runtime features. The web exposes health and a J0.2 passkey/device identity console;
+its same-origin BFF signs requests to the identity API. Owner operations require
+session/device proof and sensitive changes require fresh passkey approval. Core/
+model/memory composition remains test-only. A recipient-bound delegated mock read
+passes through the ToolGateway; no unauthenticated owner operations are shipped.
+Worker jobs accept only a validated synthetic `foundation.ping`
 envelope and write an encrypted completion event. There are no persistent agents.
 
 ## Package boundaries
@@ -29,7 +32,7 @@ envelope and write an encrypted completion event. There are no persistent agents
 | Package | Owns | Does not own |
 | --- | --- | --- |
 | core | Coordination through ports, privacy checks, model response validation | Provider SDK, database connection, UI |
-| identity | Actor shapes and authentication port | Authenticated sessions yet |
+| identity | Owner/subject types, passkey port/adapter, device-bound sessions, approvals, delegation, recovery | UI, SQL, model-chosen authority |
 | security | Permissions, policy/approval ports, scoped secret leases | Agent-controlled authorization |
 | memory | Memory record schema, owner/project scope, retention rules | SQL |
 | knowledge | Graph entity/relationship ports | A chosen graph engine |
@@ -39,7 +42,7 @@ envelope and write an encrypted completion event. There are no persistent agents
 | events | Event contract and development queue adapter exports | Authenticated external event ingress |
 | audit | Validated minimal accountability records | Operational debug payloads |
 | storage | PostgreSQL/Drizzle repositories, encryption, migrations | Domain orchestration |
-| devices | Enrollment/registration contracts | Implemented device authentication |
+| devices | Shared registration port and trust vocabulary; authentication composed in identity | Real device control or hardware attestation |
 | config | Strict validated environment settings | Plaintext credentials |
 | shared | Common schemas, identifiers, health, trace/log primitives | Business decisions |
 

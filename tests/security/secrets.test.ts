@@ -6,10 +6,33 @@ import { setTimeout as delay } from "node:timers/promises";
 import { it, expect } from "vitest";
 import {
     initializeDevelopmentVault,
+    ensureIdentitySecrets,
     FileSecretManager,
     RecordCipher,
 } from "@jarvis/security";
 import { owner } from "../fixtures/foundation.js";
+it("adds identity secrets idempotently without rotating existing credentials or the custody key", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "jarvis-vault-upgrade-"));
+    const vault = join(directory, "vault", "vault.json"),
+        key = join(directory, "custody", "master.key");
+    try {
+        await initializeDevelopmentVault(vault, key);
+        const before = JSON.parse(await readFile(vault, "utf8")),
+            master = await readFile(key);
+        await ensureIdentitySecrets(vault, key);
+        const after = await readFile(vault, "utf8"),
+            parsed = JSON.parse(after);
+        for (const [ref, encrypted] of Object.entries(before.records))
+            expect(parsed.records[ref]).toEqual(encrypted);
+        expect(Object.keys(parsed.records)).toHaveLength(6);
+        await ensureIdentitySecrets(vault, key);
+        expect(await readFile(vault, "utf8")).toBe(after);
+        expect(await readFile(key)).toEqual(master);
+        expect((await stat(vault)).mode & 0o077).toBe(0);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
 it("authenticates ciphertext and binds it to the owning record", () => {
     const cipher = new RecordCipher(randomBytes(32));
     const encrypted = cipher.encrypt({ content: "private fixture" }, "owner:a");

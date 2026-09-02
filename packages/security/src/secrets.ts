@@ -1,5 +1,12 @@
 import { randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
-import { readFile, writeFile, mkdir, lstat } from "node:fs/promises";
+import {
+    readFile,
+    writeFile,
+    mkdir,
+    lstat,
+    rename,
+    unlink,
+} from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
 import { BoundaryError, type Environment } from "@jarvis/shared";
@@ -190,5 +197,58 @@ export async function initializeDevelopmentVault(
         return "created";
     } finally {
         key.fill(0);
+    }
+}
+// Explicit, additive vault migration. Existing credentials and the master key
+// are never rotated or replaced by installing identity support.
+export async function ensureIdentitySecrets(
+    vaultPath: string,
+    keyPath: string,
+): Promise<void> {
+    const lock = vaultPath + ".identity-lock";
+    await writeFile(lock, "identity-v1", { flag: "wx", mode: 0o600 });
+    const temporary = vaultPath + ".identity-" + randomBytes(8).toString("hex");
+    let key: Buffer | undefined;
+    try {
+        key = await privateFile(keyPath);
+        const vault = VaultSchema.parse(
+            JSON.parse((await privateFile(vaultPath)).toString("utf8")),
+        );
+        if (vault.environment !== "development")
+            throw new BoundaryError("ENVIRONMENT_NOT_ENABLED");
+        const cipher = new RecordCipher(key);
+        let changed = false;
+        for (const ref of [
+            "development/identity/bootstrap",
+            "development/identity/web-transport",
+        ]) {
+            if (vault.records[ref]) {
+                cipher.decrypt(
+                    JSON.stringify(vault.records[ref]),
+                    "secret:" + ref,
+                );
+                continue;
+            }
+            vault.records[ref] = BoxSchema.parse(
+                JSON.parse(
+                    cipher.encrypt(
+                        randomBytes(32).toString("hex"),
+                        "secret:" + ref,
+                    ),
+                ),
+            );
+            changed = true;
+        }
+        if (changed) {
+            await writeFile(temporary, JSON.stringify(vault), {
+                flag: "wx",
+                mode: 0o600,
+            });
+            await rename(temporary, vaultPath);
+        }
+    } finally {
+        key?.fill(0);
+        await unlink(temporary).catch(() => {});
+        await unlink(lock);
     }
 }

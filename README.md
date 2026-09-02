@@ -5,8 +5,9 @@ JARVIS is the system. AI models are replaceable brains used by JARVIS.
 The active engineering foundation is a TypeScript modular monorepo, version
 0.3.0. J0.1 provides a local API, Next.js status interface, queue worker,
 PostgreSQL/pgvector, encrypted development credentials, versioned contracts and
-continuous integration. Personal-data endpoints, login, external tools and
-production deployment are disabled until their security gates are implemented.
+continuous integration. J0.2 adds passkey authentication, cryptographic browser
+device trust, restricted delegation and offline identity recovery. Personal-data
+endpoints, external tools and production deployment remain disabled.
 
 The owner's [Master Definition v0.1](docs/JARVIS_Master_Definition_v0.1.md) remains
 unchanged. [Current gate status](docs/STATUS.md) distinguishes J0.1 from the full
@@ -30,7 +31,17 @@ npm start
 credentials, starts PostgreSQL and Redis, applies reviewed SQL migrations, and
 builds the web app. `start` checks infrastructure and migrations, starts all three
 Node services, and prints `JARVIS_READY` after their readiness checks pass.
-Open http://127.0.0.1:3000. Keep the terminal open.
+Open http://localhost:3000. Keep the terminal open. Use `localhost`, not the IP
+address, for the configured passkey RP/origin.
+
+In a second local terminal, run `npm run identity:bootstrap` and enter its private
+claim code at http://localhost:3000/identity to create your initial owner/passkey.
+Do not paste that code into chat. The assistant has not created your real owner.
+Enroll another browser from that page, then approve its displayed device ID on
+the privileged primary browser with fresh passkey confirmation. Trusted devices
+can inspect identity; privileged enrollment explicitly grants identity management.
+Create an offline identity recovery kit and store its package/key separately.
+It is **not a personal-data or vault backup**. See [identity boundaries](docs/security/j0.2-identity.md).
 
 ```bash
 npm stop          # or Ctrl+C; stops this supervisor's Node services
@@ -70,6 +81,6 @@ Docker volumes, plus the preserved Python regression suite. It deploys nothing.
 
 Read [architecture](docs/architecture/system.md), [development](docs/architecture/development.md),
 [security scope](docs/security/j0.1-boundaries.md), [contracts](docs/protocols/contracts-v1.md),
-and [J0.1 acceptance](docs/roadmap/j0.1.md). The historical Python documents remain
+and [J0.1 acceptance](docs/roadmap/j0.1.md), plus [J0.2 acceptance](docs/roadmap/j0.2.md). The historical Python documents remain
 in `docs/` and `docs/reference/`; they do not describe the active TypeScript API.
 The cumulative [work log](JARVIS_WORK_LOG.md) retains the owner's prompts verbatim.

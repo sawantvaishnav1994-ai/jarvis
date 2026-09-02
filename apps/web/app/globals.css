@@ -179,3 +179,73 @@ footer {
         line-height: 1.5;
     }
 }
+/* Identity controls use the existing foundation shell; no third-party assets. */
+.identity-console .system {
+    margin-bottom: 24px;
+}
+.identity-fields {
+    display: grid;
+    gap: 14px;
+    margin: 20px 0;
+}
+.identity-fields label {
+    display: grid;
+    gap: 8px;
+    font-size: 14px;
+}
+.identity-fields input,
+.identity-fields textarea {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #ccd4d0;
+    border-radius: 8px;
+    background: white;
+    font: inherit;
+}
+.identity-fields textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+.identity-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+.identity-console button {
+    border: 1px solid #bccbc4;
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: #eef4f0;
+    color: #17372a;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+}
+.identity-console button:disabled {
+    cursor: wait;
+    opacity: 0.5;
+}
+.identity-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid #dce5df;
+}
+.identity-row code,
+.identity-console code {
+    overflow-wrap: anywhere;
+}
+.identity-audit {
+    max-height: 360px;
+    overflow: auto;
+    font-size: 13px;
+}
+.identity-console summary {
+    cursor: pointer;
+    font-weight: 600;
+}

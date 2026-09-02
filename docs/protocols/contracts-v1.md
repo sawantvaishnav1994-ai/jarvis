@@ -1,5 +1,14 @@
 # Versioned contract candidates
 
+J0.2 adds identity RPC/actions, recovery package version 1, security events and
+approval evidence; see [identity boundaries](../security/j0.2-identity.md).
+The unused candidate DeviceTrust vocabulary is now unknown/temporary/trusted/
+privileged/hardware-root/revoked. No persisted v1 device records used the previous
+placeholder labels; the TypeScript domain and devices port now share one schema.
+Identity persistence uses encrypted typed maps behind a transaction port; external
+action/device inputs and recovery packages are strictly validated. The complete
+identity storage shape is not yet a frozen public import/export contract.
+
 Every current serialized boundary uses `version: 1` and strict Zod validation.
 Unknown versions/fields are rejected. Package versions are 0.1.0 while the root
 engineering release is 0.3.0. These are candidate contracts; J0.12 freezes the

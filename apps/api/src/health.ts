@@ -1,10 +1,16 @@
-import { createServer, type Server } from "node:http";
+import {
+    createServer,
+    type Server,
+    type IncomingMessage,
+    type ServerResponse,
+} from "node:http";
 import { randomBytes } from "node:crypto";
 import { HealthSchema, operationalLogger, type Health } from "@jarvis/shared";
 export function healthServer(
     service: "api" | "worker",
     probe: () => Promise<Record<string, boolean>>,
     limit = 120,
+    identity?: (req: IncomingMessage, res: ServerResponse) => Promise<boolean>,
 ): Server {
     const log = operationalLogger(service);
     let windowStart = Date.now(),
@@ -26,6 +32,7 @@ export function healthServer(
             return;
         }
         if (req.method !== "GET") {
+            if (identity && (await identity(req, res))) return;
             res.writeHead(405, { allow: "GET" });
             res.end(JSON.stringify({ error: "METHOD_NOT_ALLOWED" }));
             return;

@@ -49,7 +49,7 @@
     "security": {
         "mode": "safe",
         "allowExternalActions": false,
-        "authentication": "not-enabled",
+        "authentication": "passkey",
         "requireAudit": true
     },
     "tools": {
@@ -63,8 +63,14 @@
         "level": "info",
         "includeContent": false
     },
+    "identity": {
+        "rpID": "localhost",
+        "origin": "http://localhost:3000",
+        "bootstrapRef": "production/identity/bootstrap",
+        "webTransportRef": "production/identity/web-transport"
+    },
     "devices": {
-        "enrollmentEnabled": false
+        "enrollmentEnabled": true
     },
     "budgets": {
         "maxRequestCost": 0

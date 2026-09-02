@@ -56,7 +56,7 @@ export const ConfigSchema = z
         security: z.strictObject({
             mode: z.literal("safe"),
             allowExternalActions: z.literal(false),
-            authentication: z.literal("not-enabled"),
+            authentication: z.literal("passkey"),
             requireAudit: z.literal(true),
         }),
         tools: z.strictObject({ enabled: z.literal(false) }),
@@ -68,7 +68,13 @@ export const ConfigSchema = z
             level: z.enum(["info", "warn", "error"]),
             includeContent: z.literal(false),
         }),
-        devices: z.strictObject({ enrollmentEnabled: z.literal(false) }),
+        identity: z.strictObject({
+            rpID: z.literal("localhost"),
+            origin: z.literal("http://localhost:3000"),
+            bootstrapRef: ref,
+            webTransportRef: ref,
+        }),
+        devices: z.strictObject({ enrollmentEnabled: z.literal(true) }),
         budgets: z.strictObject({ maxRequestCost: z.literal(0) }),
         rateLimits: z.strictObject({
             requestsPerMinute: z.number().int().min(1).max(600),
@@ -81,6 +87,8 @@ export const ConfigSchema = z
             v.storage.postgres.migratorPasswordRef,
             v.storage.encryptionKeyRef,
             v.events.passwordRef,
+            v.identity.bootstrapRef,
+            v.identity.webTransportRef,
         ])
             if (!secret.startsWith(prefix))
                 ctx.addIssue({

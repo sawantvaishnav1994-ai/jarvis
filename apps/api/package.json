@@ -7,6 +7,9 @@
         "start": "node dist/main.js"
     },
     "dependencies": {
+        "zod": "4.5.4",
+        "@jarvis/tools": "0.1.0",
+        "@jarvis/audit": "0.1.0",
         "@jarvis/shared": "0.1.0",
         "@jarvis/identity": "0.1.0",
         "@jarvis/config": "0.1.0",

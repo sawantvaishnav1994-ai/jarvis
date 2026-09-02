@@ -49,19 +49,17 @@ export class PostgresMemoryRepository implements MemoryRepository {
         const record = MemoryRecordSchema.parse(input);
         if (record.retention === "never-store")
             throw new BoundaryError("NEVER_STORE");
-        await this.db
-            .insert(memories)
-            .values({
-                id: record.id,
-                ownerId: record.ownerId,
-                projectId: record.projectId,
-                version: 1,
-                payload: this.cipher.encrypt(
-                    record,
-                    "memory:" + record.ownerId + ":" + record.id,
-                ),
-                createdAt: new Date(record.createdAt),
-            });
+        await this.db.insert(memories).values({
+            id: record.id,
+            ownerId: record.ownerId,
+            projectId: record.projectId,
+            version: 1,
+            payload: this.cipher.encrypt(
+                record,
+                "memory:" + record.ownerId + ":" + record.id,
+            ),
+            createdAt: new Date(record.createdAt),
+        });
     }
     async find(ownerId: string, projectId: string): Promise<MemoryRecord[]> {
         const rows = await this.db
@@ -100,20 +98,18 @@ export class PostgresEventPublisher implements EventPublisher {
     }
     async publish(input: JarvisEvent): Promise<void> {
         const e = EventSchema.parse(input);
-        await this.db
-            .insert(eventRecords)
-            .values({
-                id: e.id,
-                type: e.type,
-                environment: e.environment,
-                actorId: e.actor.id,
-                correlationId: e.correlationId,
-                payload: this.cipher.encrypt(
-                    e,
-                    "event:" + e.environment + ":" + e.id,
-                ),
-                occurredAt: new Date(e.timestamp),
-            });
+        await this.db.insert(eventRecords).values({
+            id: e.id,
+            type: e.type,
+            environment: e.environment,
+            actorId: e.actor.id,
+            correlationId: e.correlationId,
+            payload: this.cipher.encrypt(
+                e,
+                "event:" + e.environment + ":" + e.id,
+            ),
+            occurredAt: new Date(e.timestamp),
+        });
     }
 }
 export class PostgresAuditSink {
@@ -125,13 +121,12 @@ export class PostgresAuditSink {
         // Loaded dynamically through a separate port by composition; no credential/prompt payload accepted.
         const { AuditRecordSchema } = await import("@jarvis/audit");
         const validated = AuditRecordSchema.parse(record);
-        await this.db
-            .insert(auditRecords)
-            .values({
-                id: validated.id,
-                record: validated,
-                createdAt: new Date(validated.timestamp),
-            });
+        await this.db.insert(auditRecords).values({
+            id: validated.id,
+            record: validated,
+            createdAt: new Date(validated.timestamp),
+        });
     }
 }
 export * from "./migrations.js";
+export * from "./identity.js";

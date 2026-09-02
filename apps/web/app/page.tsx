@@ -74,12 +74,13 @@ export default async function Page() {
             </section>
             <section className="next">
                 <div>
-                    <p className="eyebrow">NEXT MILESTONE</p>
+                    <p className="eyebrow">IDENTITY FOUNDATION</p>
                     <h2>Owner identity &amp; device trust</h2>
                     <p>
                         Authentication comes before personal memory or powerful
                         tools.
                     </p>
+                    <a href="/identity">Open owner identity console</a>
                 </div>
                 <span className="tag">J0.2</span>
             </section>
