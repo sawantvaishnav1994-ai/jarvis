@@ -817,3 +817,87 @@ it("rejects modified transient payloads and cross-owner writes", async () => {
         }),
     ).rejects.toThrow();
 });
+it("rejects credentials hidden in metadata before persistence or content audit", async () => {
+    const v = record("project", {
+        name: "Safe title",
+        description: "Safe content",
+    });
+    v.reason = "password=synthetic_metadata_credential";
+    await expect(execute("data.record.put", "D2", v.id, v)).rejects.toThrow(
+        "SECRET_IN_GENERIC_DATA_DENIED",
+    );
+    expect(
+        (
+            await pool.query(
+                "SELECT 1 FROM storage.record_catalog WHERE id=$1",
+                [v.id],
+            )
+        ).rows,
+    ).toEqual([]);
+    expect(JSON.stringify(await repository.audit(1000))).not.toContain(
+        "synthetic_metadata_credential",
+    );
+});
+it("requires approval covering the most sensitive derived data before cascade deletion", async () => {
+    const source = record("project", {
+        name: "Cascade source",
+        description: "Private",
+    });
+    const derived = record(
+        "entity",
+        { type: "test", name: "Sensitive derivation", aliases: [] },
+        "D3",
+        [source.id],
+    );
+    await execute("data.record.put", "D2", source.id, source);
+    await execute("data.record.put", "D3", derived.id, derived);
+    await expect(
+        execute("data.record.forget", "D2", source.id),
+    ).rejects.toThrow("DERIVED_DELETE_ZONE_UNDERSTATED");
+    expect(await execute("data.record.read", "D3", derived.id)).toEqual(
+        derived,
+    );
+    await execute("data.record.forget", "D3", source.id);
+    expect(
+        (
+            await pool.query(
+                "SELECT id FROM storage.record_catalog WHERE id=ANY($1::uuid[]) AND deleted=false",
+                [[source.id, derived.id]],
+            )
+        ).rows,
+    ).toEqual([]);
+}, 30000);
+it("refuses attachment deletion without a complete object-purge workflow", async () => {
+    const parent = record(
+        "message",
+        {
+            conversationId: conversation.id,
+            authorId: owner.session.ownerId,
+            content: "Attachment parent",
+            contentType: "text/plain",
+            model: null,
+        },
+        "D3",
+    );
+    await execute("data.record.put", "D3", parent.id, parent);
+    const attachment = record(
+        "attachment",
+        { messageId: parent.id, objectId },
+        "D3",
+    );
+    await execute("data.record.put", "D3", attachment.id, attachment);
+    await expect(
+        execute("data.record.forget", "D3", parent.id),
+    ).rejects.toThrow("ATTACHMENT_DELETE_REQUIRES_OBJECT_PURGE");
+    expect(
+        (await execute("data.object.get", "D2", objectId)) as object,
+    ).toBeTruthy();
+    expect(
+        (
+            await pool.query(
+                "SELECT id FROM storage.record_catalog WHERE id=ANY($1::uuid[]) AND deleted=false",
+                [[parent.id, attachment.id]],
+            )
+        ).rows,
+    ).toHaveLength(2);
+}, 30000);

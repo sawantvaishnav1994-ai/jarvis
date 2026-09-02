@@ -146,7 +146,8 @@ export class PrivateRecords {
         const record = StorageRecordSchema.parse(input);
         this.bound(auth, record);
         Payloads[record.domain].parse(record.payload);
-        rejectGenericSecrets(record.payload);
+        // Metadata is also durable owner data, not a bypass for credentials.
+        rejectGenericSecrets(record);
         const now = this.clock();
         if (record.createdAt > now || record.updatedAt > now)
             throw new BoundaryError("DATA_TIME_INVALID");
@@ -172,6 +173,12 @@ export class PrivateRecords {
                     record.retention.expiresAt)
         )
             throw new BoundaryError("RETENTION_BOUNDARY_MISMATCH");
+        if (
+            record.retention.mode === "KEEP_FOR_DURATION" &&
+            record.retention.expiresAt !==
+                record.createdAt + record.retention.durationMs!
+        )
+            throw new BoundaryError("RETENTION_DURATION_MISMATCH");
         if (
             (["conversation", "message"].includes(record.domain) &&
                 !record.policy.consent.storeConversation) ||
@@ -423,6 +430,19 @@ export class PrivateRecords {
                 [auth.ownerId, id],
             )
         ).rows;
+        if (
+            rows.some(
+                (row) =>
+                    Number(row.data_class.slice(1)) >
+                    Number(auth.zone.slice(1)),
+            )
+        )
+            throw new BoundaryError("DERIVED_DELETE_ZONE_UNDERSTATED");
+        // Removing the attachment record alone would orphan an active encrypted
+        // object. Until the staged object-purge workflow is available, preserve
+        // every record and refuse to claim this cascade is complete.
+        if (rows.some((row) => row.domain === "attachment"))
+            throw new BoundaryError("ATTACHMENT_DELETE_REQUIRES_OBJECT_PURGE");
         const deletionId = randomUUID(),
             ids = rows.map((r) => r.id);
         // Child vectors first, preserving the original memory foreign key.

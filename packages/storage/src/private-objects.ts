@@ -38,6 +38,7 @@ export class PrivateObjects {
         )
             throw new BoundaryError("OBJECT_INPUT_DENIED");
         rejectGenericSecrets(bytes.toString("utf8"));
+        rejectGenericSecrets({ filename: v.filename, mimeType: v.mimeType });
         const binding = EnvelopeBindingSchema.parse({
             version: 1,
             ownerId: auth.ownerId,

@@ -18,7 +18,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
   smoke, dependency outage/recovery and verified service stop. Both CI jobs passed.
   Durable exact approvals, risk, authorization/replay, owner administration and
   emergency controls passed real-stack verification. The separate uncommitted
-  J0.4 draft is excluded. See [acceptance report](roadmap/j0.3-report.md).
+  J0.4 draft was excluded from that historical J0.3 run. See [acceptance report](roadmap/j0.3-report.md).
 - J0.2 development acceptance passed on source `59a581c46574a53e5abbccd6f076743d5d6e9c77`
   in [run 33595165916](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595165916):
   60 TypeScript tests, 14 real PostgreSQL tests, 5 browser scenarios (including
@@ -39,7 +39,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | J0.1 | All 24 artifact categories implemented; fresh Linux checkout/Docker CI acceptance passed | Accepted for development |
 | J0.2 | Real passkeys, device proof, sessions, signed approvals, restricted delegation, identity recovery and console; full development GO flow passed | Accepted for local development; physical-device validation, hardware A4/remote production and full disaster recovery are not claimed |
 | J0.3 | Full development policy/risk/approval/authorization, budgets, persisted controls, audit and A–N GO passed on exact merged source and CI | Accepted for development; real connectors, hardware A4 and production containment remain later gates |
-| J0.4 | Existing PostgreSQL/vault plus local Increment A: classified contracts, envelope cipher/key handles and record codec | Runtime classified repositories, objects/vectors/lineage, managed key custody, full export/delete/backup/recovery GO |
+| J0.4 | Classified PostgreSQL repositories, envelope crypto/rotation, objects, lineage, exports, isolated backup/restore and health; real-stack checkpoint passed | Secret lifecycle, full retention/object deletion/recovery and complete A–S GO; see current report |
 | J0.5 | Memory schema/service/adapter and retention rules | Full memory provenance, expiry maintenance, authenticated data interfaces |
 | J0.6 | Model port, privacy checks, swap conformance, bounded wait | Real/local adapters, enforced preflight budgets and process isolation |
 | J0.7 | Tool contract and gateway tested with synthetic echo | Real connector scopes, idempotency/cancellation/reconciliation |
@@ -74,28 +74,32 @@ only disposable synthetic owners; no real owner, personal data or production
 infrastructure was initialized by this work.
 
 The owner supplied the full J0.4 data-sovereignty specification on 2026-09-02.
-The prior bounded additive work is preserved. J0.4 remains INCOMPLETE; no further
-J0.4 implementation was performed during J0.3 acceptance. It is the next milestone.
-The local draft encryption/record contracts do not replace current live v1 storage.
+Work now extends the accepted J0.3 baseline. J0.4 remains INCOMPLETE. Existing v1
+storage is preserved; new classified records do not silently migrate legacy data.
 
 ## J0.4 implementation checkpoint — 2026-09-02
 
 IN PROGRESS — GO NOT ISSUED. Protected baseline: `6c62f85c4c00822a082d304ff96736599cb41cb6`,
 accepted baseline workflow `33621181083`. Applied migrations 0001–0004 are unchanged.
-The additive 0005 draft extends classified records, lineage, objects, keys and recovery.
+The additive 0005 migration extends classified records, lineage, objects, keys and recovery.
 Storage operations use the existing J0.3 one-time execution permit and the same
 PostgreSQL transaction as identity, authorization consumption and audit persistence.
 Private payloads are passed transiently with an exact approval-bound digest; request
-history stores the digest rather than the payload. No new private-data API is enabled.
+history stores the digest rather than the payload. The next source checkpoint composes
+the new gateway into the existing authenticated identity RPC, with default-deny policies.
 
-Local checkpoint: 205 TypeScript unit/contract/security tests, lint/type/boundary checks,
-web build, Python static checks and 68 Python regressions passed. New PostgreSQL
-storage/recovery scenarios are authored but not yet accepted. A written test is not
-evidence of a successful real-stack run. CI source revision/run will be recorded after
-execution; J0.3 baseline evidence must not be reused as J0.4 acceptance.
+Source `8e5cfc6143adede46c5d75bae46ffdba213586bf` passed
+[CI 33680546883](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33680546883):
+205 TypeScript tests, 30 real PostgreSQL tests, 5 browser scenarios, 68 Python regressions,
+startup/queue, outage/recovery and shutdown. J0.1/J0.2/J0.3 regression passed.
+This is a verified J0.4 checkpoint, not the complete A–S acceptance flow.
+API/browser wiring source `734fee41b4402b2f76f46f71508bde37ab94fc9e` is under
+[CI 33681464024](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33681464024)
+verification. See the [current detailed report](roadmap/j0.4-report.md).
 
 Remaining development gates include secret lifecycle/handle execution integration,
 complete retention execution and backup expiration, comprehensive attachment deletion,
-storage health/inventory, API composition, restored-content validation, general reviewed
-destructive migration support and complete A–S GO coverage. The bounded synthetic
+complete ownership inventory, recovery configuration/key kit, general reviewed
+destructive migration support and complete A–S GO coverage. Health and API adapters
+now exist; the bounded synthetic
 migration probe is not yet a generalized destructive migration runner. J0.5 is not started.

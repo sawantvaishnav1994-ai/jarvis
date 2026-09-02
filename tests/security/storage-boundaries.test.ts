@@ -198,6 +198,30 @@ it.each(["KEEP_UNTIL_DATE", "KEEP_FOR_DURATION", "DELETE_AFTER_SESSION"])(
         ).toThrow();
     },
 );
+it.each([
+    {
+        mode: "KEEP_FOREVER",
+        expiresAt: 1000,
+        durationMs: null,
+        sessionId: null,
+    },
+    { mode: "NEVER_STORE", expiresAt: null, durationMs: 1000, sessionId: null },
+    {
+        mode: "KEEP_UNTIL_DATE",
+        expiresAt: 1000,
+        durationMs: null,
+        sessionId: "other",
+    },
+])("rejects conflicting retention boundaries %#", (boundary) => {
+    expect(() =>
+        RetentionPolicySchema.parse({
+            version: 1,
+            id: randomUUID(),
+            revision: 1,
+            ...boundary,
+        }),
+    ).toThrow();
+});
 it("does not treat a forged authorization object as an execution permit", async () => {
     const gateway = new PrivateDataGateway(
         new PrivateRecords(async () => {

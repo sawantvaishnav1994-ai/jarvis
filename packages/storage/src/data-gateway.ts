@@ -291,7 +291,12 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                     input.recordId,
                 );
                 // Check the stored classification before decrypting; client labels cannot lower risk.
-                if (c.data_class !== input.classification)
+                if (
+                    request.toolId === "data.record.forget"
+                        ? Number(c.data_class.slice(1)) >
+                          Number(input.classification.slice(1))
+                        : c.data_class !== input.classification
+                )
                     throw new BoundaryError("DATA_ZONE_UNDERSTATED");
                 if (request.toolId === "data.record.read")
                     value = await this.records.read(

@@ -57,6 +57,16 @@ export const RetentionPolicySchema = z
                 code: "custom",
                 message: "Retention requires an explicit boundary",
             });
+        if (
+            (!["KEEP_UNTIL_DATE", "KEEP_FOR_DURATION"].includes(r.mode) &&
+                r.expiresAt !== null) ||
+            (r.mode !== "KEEP_FOR_DURATION" && r.durationMs !== null) ||
+            (r.mode !== "DELETE_AFTER_SESSION" && r.sessionId !== null)
+        )
+            c.addIssue({
+                code: "custom",
+                message: "Retention contains conflicting boundaries",
+            });
     });
 export const StorageProvenanceSchema = z.strictObject({
     kind: z.enum([
