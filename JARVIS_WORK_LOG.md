@@ -3133,3 +3133,656 @@ The offline kit restores identity authority only, not personal data, vault keys,
 Next: J0.3 — Security Policy, Permissions, Risk & Approval Engine. No cloud resource, paid service, real provider credential, personal memory, real device integration, powerful tool or live AI agent was enabled. The owner still performs real first enrollment locally using `npm run identity:bootstrap` and http://localhost:3000/identity, after `npm run setup` and `npm start`. Never paste the installation claim code or offline recovery key into chat.
 
 This final documentation revision records the tested implementation and both verbatim copies of the owner's J0.2 prompt. Application code is unchanged from the passing source commit above. The existing cumulative MD file is updated rather than replaced by a disconnected log.
+
+### Delivered J0.2 handoff — verbatim
+
+```text
+J0.2’s local-development identity foundation is implemented in your [private repository](https://github.com/sawantvaishnav1994-ai/jarvis).
+
+Delivered: passkey login, cryptographic device enrollment, secure sessions, differentiated trust, signed approvals, restricted delegation, revocation, identity recovery and audit integration.
+
+[Full CI passed](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595165916):
+
+- 60 TypeScript tests
+- 14 PostgreSQL integration tests
+- 5 browser scenarios, including the complete J0.2 flow
+- 68 Python regressions
+- Startup, outage recovery and shutdown checks
+
+Your prompts, implementation details and test history are saved in [JARVIS_WORK_LOG.md](sandbox:/workspace/scratch/aa29cd23aa6c/jarvis-foundation/JARVIS_WORK_LOG.md).
+
+Your real owner still needs local enrollment. After setup/start, run `npm run identity:bootstrap` in another terminal and open `http://localhost:3000/identity`. Don’t share its claim code.
+
+Next: **J0.3 — Security Policy, Permissions, Risk & Approval Engine.**
+
+Foundation v1 GO remains pending: hardware-backed A4, independent immutable auditing, production containment and complete disaster recovery are still open.
+
+genui{"suggest_automation":{"label":"Remind me to test Jarvis recovery"}}
+```
+
+## Entry 009 — Reconfirmed J0.2 specification — 2026-09-02
+
+### User prompt — verbatim
+
+```text
+Exactly. J0.2 is the security identity foundation of Jarvis, and it should come before powerful tools, private memory, email, files, devices, or automation.
+
+The objective is to make Jarvis able to answer three questions for every meaningful action:
+
+Who is asking?
+From which trusted device/session?
+What is this identity allowed to do?
+
+J0.2 — Owner Identity, Authentication & Device Trust
+
+The identity hierarchy should start with you as the Root Owner.
+
+ROOT OWNER
+│
+├── Trusted Devices
+│   ├── Laptop
+│   ├── Phone
+│   ├── Desktop
+│   └── Future Jarvis hardware
+│
+├── Sessions
+│
+├── Jarvis Core
+│
+├── AI Agents
+│
+├── Services
+│
+└── External Integrations
+
+The critical rule is:
+
+Jarvis, agents, devices, and integrations never become equal to the Owner.
+
+They operate under authority granted by the Owner.
+
+J0.2.1 — Root Owner Identity
+
+On the first secure installation, Jarvis creates exactly one initial Root Owner Identity.
+
+That identity should contain an internal immutable ID, display identity, public authentication credentials, recovery configuration, security settings, created date, and ownership version.
+
+We should avoid making email address or phone number the actual root identity. Those can change.
+
+Internally Jarvis should use something like:
+
+owner_01JARVIS...
+
+Your email, phone, username, and devices are attributes attached to that identity.
+
+This makes ownership portable.
+
+J0.2.2 — Passwordless-first authentication
+
+I would make Jarvis primarily passkey/WebAuthn based, rather than traditional password-first authentication.
+
+That gives us support for Face ID, Touch ID, Windows Hello, hardware security keys, and platform passkeys.
+
+For normal use:
+
+You
+ ↓
+Face ID / fingerprint / device PIN
+ ↓
+Passkey authentication
+ ↓
+Jarvis session
+
+Passwords could exist only as a fallback if we deliberately support them.
+
+For very sensitive operations, Jarvis could require step-up authentication even if you are already logged in.
+
+For example:
+
+“Delete all Jarvis memory.”
+
+Jarvis could require fresh biometric/passkey confirmation.
+
+J0.2.3 — Authentication assurance levels
+
+Not every authentication event should be treated equally.
+
+I recommend something similar to:
+
+Level	Meaning	Example
+A0	Unauthenticated	Public/locked interface
+A1	Basic authenticated session	Normal Jarvis conversation
+A2	Strong trusted-device authentication	Access private information
+A3	Fresh biometric/passkey verification	Sensitive system changes
+A4	Hardware-backed/high-assurance confirmation	Critical owner operations
+
+Then a tool can specify:
+
+Minimum authentication: A3
+
+Jarvis does not decide to ignore it.
+
+J0.2.4 — Device Identity
+
+Every device connected to Jarvis should receive its own cryptographic identity.
+
+A registered laptop should have:
+
+Device ID
+Device public key
+Device type
+Owner
+Enrollment date
+Trust status
+Last seen
+Security posture
+Capabilities
+Revocation status
+
+Jarvis should distinguish:
+
+your phone from your laptop, even though both are operated by you.
+
+This becomes important when a command originates from one device.
+
+Example:
+
+“Unlock the front door.”
+
+A trusted phone physically near the house may eventually be allowed.
+
+An unknown browser session halfway across the world should not have the same authority.
+
+J0.2.5 — Device enrollment
+
+Adding a new device should require approval from an already trusted owner context.
+
+Example:
+
+New laptop requests enrollment
+        ↓
+Jarvis generates challenge
+        ↓
+Existing trusted phone receives request
+        ↓
+Owner approves using biometrics
+        ↓
+New device receives cryptographic identity
+        ↓
+Device added as trusted
+
+This is much safer than simply typing a password on any new computer.
+
+J0.2.6 — Device trust levels
+
+Devices should not simply be trusted / not trusted.
+
+We can use levels:
+
+Unknown — never enrolled.
+
+Temporary — approved for a short session.
+
+Trusted — normal personal device.
+
+Privileged — allowed to perform sensitive owner actions.
+
+Hardware Root — high-security recovery/security device.
+
+Revoked — permanently blocked until re-enrolled.
+
+A home tablet might be trusted but shouldn’t necessarily have the same privileges as your primary phone.
+
+J0.2.7 — Session architecture
+
+After authentication Jarvis creates a session, but sessions should have strict properties:
+
+Session ID
+Identity ID
+Device ID
+Authentication level
+Created time
+Last activity
+Expiration
+Permissions
+Network/context metadata
+Risk state
+
+Sessions should expire and be revocable.
+
+You should be able to ask:
+
+“Jarvis, show all logged-in devices.”
+
+And see exactly where your account is active.
+
+You could then say:
+
+“Log everything out except this phone.”
+
+J0.2.8 — Continuous session risk
+
+Authentication should not stop at login.
+
+Jarvis should continuously evaluate whether a session becomes suspicious.
+
+Signals could include:
+
+new country, impossible travel, unusual device state, sudden privilege escalation, repeated failed authentication, abnormal requests, revoked device, or changed security credentials.
+
+This does not mean invasive surveillance.
+
+It means session security can react to obvious security changes.
+
+A suspicious session could automatically move from:
+
+A2 → A1
+
+and require re-authentication before sensitive actions.
+
+J0.2.9 — Voice identity
+
+Because Jarvis will eventually be voice-driven, we should distinguish:
+
+Voice recognition from authentication.
+
+Jarvis may learn that a speaker sounds like you.
+
+But voice alone should not authorize highly sensitive operations.
+
+Someone could record your voice or synthesize it.
+
+So:
+
+“Jarvis, what’s on my calendar?”
+
+might eventually work after low-risk speaker recognition on a trusted device.
+
+But:
+
+“Jarvis, transfer money.”
+
+should require stronger cryptographic authentication.
+
+Voice is useful context—not the root security key.
+
+J0.2.10 — Face recognition
+
+Same principle.
+
+A camera may help recognize who is present, but facial recognition should not become our sole security mechanism for critical actions.
+
+Instead:
+
+Face recognized
++
+Trusted device
++
+Authenticated session
++
+Required biometric/passkey confirmation
+
+can collectively establish higher confidence.
+
+J0.2.11 — Agent identities
+
+Every AI agent needs a separate identity.
+
+For example:
+
+agent_developer
+agent_research
+agent_email
+agent_security
+
+Each agent gets its own permissions.
+
+The Developer Agent might have:
+
+Read repositories: YES
+Create branch: YES
+Run tests: YES
+Deploy production: NO
+Access personal email: NO
+Access smart locks: NO
+
+This is critical.
+
+An AI agent should never inherit unrestricted owner authority simply because Jarvis created it.
+
+J0.2.12 — Service identities
+
+Internal services also need identities:
+
+service_api
+service_worker
+service_memory
+service_events
+service_scheduler
+
+Service-to-service communication should authenticate.
+
+We should not have:
+
+“Anything inside the network is trusted.”
+
+That assumption causes many security failures.
+
+J0.2.13 — Tool identities
+
+Tools and integrations also need identity records.
+
+For example:
+
+integration_github_personal
+integration_google_calendar
+integration_home_assistant
+
+Each integration contains scopes and permissions.
+
+Jarvis should know:
+
+“This GitHub integration can access repositories A and B but not C.”
+
+J0.2.14 — Delegation tokens
+
+When Jarvis asks an agent to perform work, we shouldn’t hand the agent your full credentials.
+
+Instead Jarvis issues a short-lived delegated authorization.
+
+Example:
+
+Owner
+ ↓
+Jarvis
+ ↓
+Developer Agent
+ ↓
+Temporary capability:
+"read repository X for 15 minutes"
+
+After expiration, the capability dies.
+
+This greatly reduces the blast radius of a compromised agent.
+
+J0.2.15 — Least privilege
+
+The default should always be:
+
+No permission unless explicitly granted.
+
+New agents, tools, devices, and integrations begin with minimal access.
+
+Permissions are then added intentionally.
+
+Never:
+
+“New agent gets access to everything.”
+
+J0.2.16 — Owner approval signatures
+
+Important approvals should create cryptographically verifiable records.
+
+Example:
+
+Action:
+Deploy project X to production
+Requested by:
+Developer Agent
+Approved by:
+Root Owner
+Authentication:
+A3
+Device:
+Primary Phone
+Time:
+2026-...
+Approval signature:
+...
+
+That gives us a reliable audit trail.
+
+J0.2.17 — Recovery system
+
+This needs careful design because you must never permanently lose your own Jarvis.
+
+But account recovery is often the weakest part of security.
+
+I would support multiple recovery mechanisms:
+
+Recovery keys stored offline.
+
+Trusted recovery device.
+
+Hardware security key.
+
+Encrypted recovery package.
+
+Potentially multiple recovery methods requiring a combination rather than one weak fallback.
+
+We should specifically avoid something like:
+
+“Forgot password? Send an email.”
+
+being sufficient to take over your entire Jarvis.
+
+J0.2.18 — Emergency ownership recovery
+
+We also need a worst-case procedure:
+
+Phone stolen.
+Laptop destroyed.
+Server unavailable.
+Primary credentials lost.
+
+The owner should be able to rebuild control from an offline recovery kit.
+
+Conceptually:
+
+New clean Jarvis installation
+ ↓
+Provide recovery package
+ ↓
+Hardware/recovery verification
+ ↓
+Recover owner identity
+ ↓
+Restore encrypted backup
+ ↓
+Revoke old devices
+ ↓
+Rotate credentials
+ ↓
+Restore Jarvis
+
+J0.2.19 — Device revocation
+
+If you lose a phone:
+
+“Jarvis, revoke my old iPhone.”
+
+Jarvis should invalidate its device certificate, terminate sessions, revoke delegated tokens, remove cached secrets where possible, mark the device revoked, and generate an audit event.
+
+Even if that phone later appears online, Jarvis refuses it.
+
+J0.2.20 — Owner lock
+
+We should protect against someone changing the owner identity after compromising a single session.
+
+Root ownership changes should require the strongest authorization.
+
+For example:
+
+A4 authentication
++
+Recovery credential
++
+Explicit ownership-change ceremony
+
+An AI agent should never be able to transfer ownership.
+
+J0.2.21 — Guest identities
+
+Eventually you may want other people to interact with Jarvis.
+
+Instead of sharing your account:
+
+Guest
+Family Member
+Employee
+Administrator
+Service User
+
+could each receive separate identities.
+
+A guest might be allowed to ask:
+
+“Turn on the living-room lights.”
+
+but not:
+
+“Show the owner’s emails.”
+
+That is why multi-identity support belongs in the foundation even if Jarvis initially has one human owner.
+
+J0.2.22 — Privacy-aware identity
+
+Jarvis should know not only who is asking but also who is present.
+
+Imagine your computer is projecting to a meeting room and you ask:
+
+“Jarvis, show my recent messages.”
+
+Jarvis should potentially recognize that it is currently in a shared-display context and warn before exposing private information.
+
+This leads later into contextual privacy.
+
+J0.2.23 — Security events
+
+J0.2 should define identity-related events such as:
+
+identity.created
+identity.updated
+authentication.succeeded
+authentication.failed
+authentication.step_up_required
+session.created
+session.revoked
+session.expired
+device.enrollment_requested
+device.enrolled
+device.revoked
+agent.identity_created
+permission.delegated
+permission.expired
+security.suspicious_session
+security.owner_recovery_started
+security.owner_recovery_completed
+
+These become part of Jarvis’s event nervous system.
+
+J0.2 Database foundation
+
+We will eventually need structures roughly representing:
+
+identities
+owner_profiles
+credentials
+passkeys
+devices
+device_keys
+sessions
+authentication_events
+roles
+permissions
+role_bindings
+delegations
+recovery_credentials
+security_events
+
+Secret values themselves should remain in appropriate secure storage rather than ordinary plaintext database columns.
+
+J0.2 Security rule hierarchy
+
+Authentication should happen before authorization:
+
+WHO ARE YOU?
+      ↓
+ARE YOU AUTHENTICATED?
+      ↓
+WHAT DEVICE?
+      ↓
+WHAT TRUST LEVEL?
+      ↓
+WHAT PERMISSIONS?
+      ↓
+WHAT IS THE ACTION RISK?
+      ↓
+DO WE NEED FRESH APPROVAL?
+      ↓
+EXECUTE / DENY
+
+AI reasoning must sit below this decision hierarchy.
+
+Jarvis cannot simply reason:
+
+“This seems fine, so I’ll bypass authentication.”
+
+The security engine decides.
+
+What J0.2 should actually deliver
+
+J0.2 is finished only when we have working implementation for owner creation, passkey-capable authentication contracts, device enrollment, trusted-device records, secure sessions, authentication assurance levels, permission-ready identities, agent/service identities, delegation tokens, device/session revocation, recovery architecture, security events, audit integration, and automated security tests.
+
+The key tests should include attempts to impersonate the owner, reuse expired sessions, use revoked devices, escalate agent permissions, replay authentication challenges, bypass device enrollment, access owner-only actions from guests, and perform critical actions without step-up authentication.
+
+All must fail safely.
+
+J0.2 GO Gate
+
+Before we approve J0.2 COMPLETE, we should be able to demonstrate this flow:
+
+Fresh Jarvis
+     ↓
+Create Root Owner
+     ↓
+Enroll primary device
+     ↓
+Authenticate securely
+     ↓
+Create trusted session
+     ↓
+Enroll second device through owner approval
+     ↓
+Create restricted AI agent
+     ↓
+Delegate one temporary permission
+     ↓
+Agent performs permitted mock action
+     ↓
+Agent attempts forbidden action → DENIED
+     ↓
+Revoke second device
+     ↓
+Device attempts reconnect → DENIED
+     ↓
+Owner performs recovery test
+     ↓
+All events visible in audit history
+
+If that succeeds, Jarvis finally knows who its owner is, which machines belong to the owner, and exactly where everyone else sits in the authority hierarchy.
+
+The next milestone after that should be J0.3 — Security Policy, Permissions, Risk & Approval Engine, where we turn these identities into enforceable rules for everything Jarvis will eventually be capable of doing.
+```
+
+### Work performed and verified status
+
+This is another verbatim repetition of the existing J0.2 specification, not a new architecture revision. Confirmed the local worktree was clean and synchronized with private GitHub main at `d677c354994696774c265d9b38845497178434b0`. Confirmed its full workflow https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595608410 completed successfully, in addition to the previously recorded source acceptance.
+
+No application code, identity, device registration, permission, infrastructure or milestone scope was changed. J0.2 remains accepted for local development only. Physical-device owner enrollment/validation, hardware-backed A4, independent immutable audit storage, production containment and complete data/vault disaster recovery remain unclaimed. J0.3 is the next implementation milestone; it was not started in this confirmation turn.
+
+Appended this prompt without changing previous entries and backfilled the exact previous delivered response, including its optional reminder offer. No reminder was scheduled. The current conversation and repository already supply the needed continuity; no additional personal-history search was necessary. Only the cumulative MD log is changed.
+
+### Validation for this documentation-only update
+
+`npm run check` passed lint, import/migration boundaries, full TypeScript checking and all 60 tests across 8 files. `NEXT_TELEMETRY_DISABLED=1 npm run build:web` passed. Python architecture/syntax checks and all 68 regression tests passed (16.045 seconds). `git diff --check` passed; the only changed file is `JARVIS_WORK_LOG.md`. Real PostgreSQL/browser acceptance remains evidenced by the successful published full-stack runs above, not by an invented local Docker run. The updated log is saved under its existing identity and synchronized to the private repository without changing runtime code.
