@@ -7,10 +7,21 @@ test.skip(
     process.env.JARVIS_IDENTITY_E2E !== "1",
     "Only run against a disposable fresh CI installation; creates its synthetic owner.",
 );
+// The expanded J0.2 + J0.3 browser story performs many signed RPC ceremonies.
+// Respect the unchanged 120/minute API limit across both browser contexts.
+let nextIdentityRequestAt = 0;
 async function device(browser: Browser) {
     const context = await browser.newContext(),
         page = await context.newPage(),
         cdp = await context.newCDPSession(page);
+    await context.route("**/api/identity", async (route) => {
+        const slot = Math.max(Date.now(), nextIdentityRequestAt);
+        nextIdentityRequestAt = slot + 650;
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.max(0, slot - Date.now())),
+        );
+        await route.continue();
+    });
     await cdp.send("WebAuthn.enable");
     await cdp.send("WebAuthn.addVirtualAuthenticator", {
         options: {

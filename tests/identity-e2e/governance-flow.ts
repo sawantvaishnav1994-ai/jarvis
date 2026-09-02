@@ -117,6 +117,10 @@ export async function browserGovernanceGo(page: Page, ownerId: string) {
     });
     await command("owner", "policy.create", policy);
     await command("owner", "policy.activate", { id: policy.id, revision: 1 });
+    await command("owner", "controls.set", {
+        flag: "READ_ONLY_MODE",
+        active: false,
+    });
     for (const capability of [
         "github.repo.read",
         "github.repo.write",

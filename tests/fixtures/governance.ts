@@ -138,6 +138,11 @@ export async function setupGovernance(
     const policy = goPolicy(owner.session.ownerId, created.subjectId);
     await ownerCommand("policy.create", policy);
     await ownerCommand("policy.activate", { id: policy.id, revision: 1 });
+    // Initial governance state is read-only. Only a fresh owner ceremony opens mock mutations.
+    await ownerCommand("controls.set", {
+        flag: "READ_ONLY_MODE",
+        active: false,
+    });
     for (const capability of [
         "github.repo.read",
         "github.repo.write",
@@ -355,6 +360,16 @@ export async function completeGo(h: GoHarness) {
         GovernanceStateSchema.parse(state.security),
     );
     expect(snapshot.authorizations[issued.authorization.id]?.uses).toBe(1);
+    for (const authorization of Object.values(snapshot.authorizations)) {
+        expect(
+            events.some(
+                (e) =>
+                    e.type === "risk.assessed" &&
+                    e.details?.id === authorization.riskId,
+            ),
+            "Every authorization risk ID resolves to a complete audited assessment",
+        ).toBe(true);
+    }
     expect(snapshot.approvals[pending.approval.id]?.status).toBe("denied");
     expect(snapshot.policies.find((p) => p.id === "owner.block")?.status).toBe(
         "active",

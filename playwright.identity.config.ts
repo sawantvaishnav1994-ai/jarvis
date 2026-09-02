@@ -4,7 +4,7 @@ export default defineConfig({
     fullyParallel: false,
     workers: 1,
     retries: 0,
-    timeout: 240000,
+    timeout: 360000,
     // This flow handles disposable secrets. Never record traces, videos or screenshots.
     use: {
         baseURL: "http://localhost:3000",

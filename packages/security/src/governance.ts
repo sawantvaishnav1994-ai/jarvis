@@ -126,6 +126,7 @@ export class GovernanceEngine {
                           flags: [
                               "EXTERNAL_ACTIONS_DISABLED",
                               "NETWORK_DISABLED",
+                              "READ_ONLY_MODE",
                           ],
                           frozenActors: [],
                       },
@@ -255,6 +256,16 @@ export class GovernanceEngine {
             approvalId: string | null = null,
         ) => {
             const { capability, factors, risk, decision } = evaluate(request);
+            audit("risk.assessed", {
+                requestId: request.id,
+                stage: "authorization",
+                ...risk,
+            });
+            audit("policy.evaluated", {
+                requestId: request.id,
+                stage: "authorization",
+                ...decision,
+            });
             checkControls(factors);
             if (decision.result === "DENY") return deny(decision.reason);
             const grant = findGrant(request, capability);
@@ -856,6 +867,16 @@ export class GovernanceEngine {
                     return deny("AUTHORIZATION_BINDING_INVALID");
                 this.liveParent(identity, a.sessionId, a.deviceId, now);
                 const { factors, risk, decision } = evaluate(v.request);
+                audit("risk.assessed", {
+                    requestId: v.request.id,
+                    stage: "execution",
+                    ...risk,
+                });
+                audit("policy.evaluated", {
+                    requestId: v.request.id,
+                    stage: "execution",
+                    ...decision,
+                });
                 checkControls(factors);
                 if (
                     decision.result === "DENY" ||
