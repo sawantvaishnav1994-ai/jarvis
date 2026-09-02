@@ -222,25 +222,28 @@ it.each([
         }),
     ).toThrow();
 });
-it("does not treat a forged authorization object as an execution permit", async () => {
-    const gateway = new PrivateDataGateway(
-        new PrivateRecords(async () => {
-            throw new Error("must not decrypt");
-        }),
-        new AuthorizedMockToolGateway(),
-    );
-    const request = goRequest("data.record.read", {
-        resource: "owner-data",
-        input: {
-            recordId: randomUUID(),
-            classification: "D3",
-            payloadHash: null,
-        },
-    });
-    await expect(gateway.execute(request, {} as never, {})).rejects.toThrow(
-        "DIRECT_DATA_BYPASS_DENIED",
-    );
-});
+it.each(["data.record.read", "data.object.forget", "data.deletion.purge"])(
+    "rejects direct bypass with a forged authorization: %s",
+    async (toolId) => {
+        const gateway = new PrivateDataGateway(
+            new PrivateRecords(async () => {
+                throw new Error("must not decrypt");
+            }),
+            new AuthorizedMockToolGateway(),
+        );
+        const request = goRequest(toolId, {
+            resource: "owner-data",
+            input: {
+                recordId: randomUUID(),
+                classification: "D3",
+                payloadHash: null,
+            },
+        });
+        await expect(gateway.execute(request, {} as never, {})).rejects.toThrow(
+            "DIRECT_DATA_BYPASS_DENIED",
+        );
+    },
+);
 it("cannot understate export or inventory classification", () => {
     const gateway = new PrivateDataGateway(
         new PrivateRecords(async () => {
@@ -253,6 +256,7 @@ it("cannot understate export or inventory classification", () => {
         "data.inventory",
         "data.backup.restore",
         "data.keys.rotate",
+        "data.deletion.purge",
     ])
         expect(() =>
             gateway.describe(

@@ -55,6 +55,7 @@ let f: ReturnType<typeof fixture>,
 const subjectDevice = new TestDevice();
 const cipher = new RecordCipher(randomBytes(32));
 let records: PrivateRecords,
+    liveObjects: LocalEncryptedObjects,
     backupStore: LocalEncryptedObjects,
     restoreObjects: LocalEncryptedObjects;
 let ownerCommand: (command: string, data: unknown) => Promise<unknown>;
@@ -156,8 +157,9 @@ beforeAll(async () => {
     );
     const keys = new DataKeys(vault, actor.id, cipher);
     records = new PrivateRecords((ownerId) => keys.cipher(ownerId));
+    liveObjects = new LocalEncryptedObjects(join(dir, "objects"));
     const objects = new PrivateObjects(
-        new LocalEncryptedObjects(join(dir, "objects")),
+        liveObjects,
         (id) => keys.cipher(id),
         cipher,
     );
@@ -653,6 +655,11 @@ it("K: exports portable records and objects with validated checksums, without se
     ).toEqual(conversation);
     expect(exported.manifest.secretsIncluded).toBe(false);
 });
+it(
+    "L: stages attachment deletion, fails safely during file outage, then purges exact ciphertext",
+    attachmentDeletionFlow,
+    30000,
+);
 it("L: forget removes memory, private embedding and derived entity, retaining minimal tombstones", async () => {
     await execute("data.record.forget", "D3", memory.id);
     for (const id of [memory.id, embedding.id, entity.id])
@@ -704,6 +711,23 @@ it("M-N: validates encrypted backup and restores into a named isolated database 
             )
         ).rows,
     ).toHaveLength(1);
+    expect(
+        (
+            await targetAdmin.query(
+                "SELECT deleted FROM storage.objects WHERE id=$1",
+                [objectId],
+            )
+        ).rows[0]?.deleted,
+    ).toBe(true);
+    expect(await restoreObjects.list(owner.session.ownerId)).toEqual([]);
+    expect(
+        (
+            await targetAdmin.query(
+                "SELECT state FROM storage.object_purges WHERE object_id=$1",
+                [objectId],
+            )
+        ).rows[0]?.state,
+    ).toBe("PURGED");
 }, 30000);
 it("O: rejects a corrupted backup before changing restored state", async () => {
     const key = backup.items[0]!.path.slice("chunks/".length);
@@ -877,7 +901,7 @@ it("requires approval covering the most sensitive derived data before cascade de
         ).rows,
     ).toEqual([]);
 }, 30000);
-it("refuses attachment deletion without a complete object-purge workflow", async () => {
+async function attachmentDeletionFlow() {
     const parent = record(
         "message",
         {
@@ -896,12 +920,66 @@ it("refuses attachment deletion without a complete object-purge workflow", async
         "D3",
     );
     await execute("data.record.put", "D3", attachment.id, attachment);
-    await expect(
-        execute("data.record.forget", "D3", parent.id),
-    ).rejects.toThrow("ATTACHMENT_DELETE_REQUIRES_OBJECT_PURGE");
+    await expect(execute("data.object.forget", "D2", objectId)).rejects.toThrow(
+        "OBJECT_STILL_REFERENCED",
+    );
+    const key = (
+        await pool.query("SELECT object_key FROM storage.objects WHERE id=$1", [
+            objectId,
+        ])
+    ).rows[0].object_key;
+    const deletion = (await execute("data.record.forget", "D3", parent.id)) as {
+        id: string;
+        state: string;
+    };
+    expect(deletion.state).toBe("DELETING");
+    await expect(execute("data.object.get", "D2", objectId)).rejects.toThrow(
+        "OBJECT_NOT_FOUND",
+    );
+    expect(await liveObjects.verify(owner.session.ownerId, key)).toBe(true);
+    const originalDelete = liveObjects.delete;
+    liveObjects.delete = async () => {
+        throw new Error("synthetic object storage outage");
+    };
+    try {
+        await expect(
+            execute("data.deletion.purge", "D4", deletion.id),
+        ).rejects.toThrow();
+    } finally {
+        liveObjects.delete = originalDelete;
+    }
     expect(
-        (await execute("data.object.get", "D2", objectId)) as object,
-    ).toBeTruthy();
+        (
+            await pool.query(
+                "SELECT state FROM storage.object_purges WHERE deletion_id=$1",
+                [deletion.id],
+            )
+        ).rows[0].state,
+    ).toBe("PENDING");
+    expect(
+        JSON.parse(
+            (
+                await pool.query(
+                    "SELECT payload FROM storage.deletion_requests WHERE id=$1",
+                    [deletion.id],
+                )
+            ).rows[0].payload,
+        ).state,
+    ).toBe("DELETING");
+    const authorization = await authorize(
+        "data.deletion.purge",
+        "D4",
+        deletion.id,
+    );
+    expect(await subject("execute", authorization)).toMatchObject({
+        result: { value: { state: "PURGED", backupExpiryRequired: true } },
+    });
+    await expect(subject("execute", authorization)).rejects.toThrow(
+        "AUTHORIZATION_REPLAY",
+    );
+    await expect(
+        liveObjects.get(owner.session.ownerId, key),
+    ).rejects.toMatchObject({ code: "ENOENT" });
     expect(
         (
             await pool.query(
@@ -909,5 +987,60 @@ it("refuses attachment deletion without a complete object-purge workflow", async
                 [[parent.id, attachment.id]],
             )
         ).rows,
-    ).toHaveLength(2);
+    ).toEqual([]);
+    expect(
+        (
+            await pool.query(
+                "SELECT payload FROM storage.object_versions WHERE object_id=$1",
+                [objectId],
+            )
+        ).rows,
+    ).toEqual([]);
+}
+it("recovers an interrupted unlinked-object purge without restoring active access", async () => {
+    const id = randomUUID();
+    const policy = dataPolicy();
+    policy.consent.keepAttachments = true;
+    await execute("data.object.put", "D2", id, {
+        id,
+        filename: "synthetic-cleanup.txt",
+        mimeType: "text/plain",
+        contentBase64: Buffer.from("synthetic cleanup content").toString(
+            "base64",
+        ),
+        policy,
+    });
+    const deletion = (await execute("data.object.forget", "D2", id)) as {
+        id: string;
+        state: string;
+    };
+    expect(deletion.state).toBe("DELETING");
+    const originalList = liveObjects.list;
+    liveObjects.list = async () => {
+        throw new Error("synthetic post-unlink interruption");
+    };
+    try {
+        await expect(
+            execute("data.deletion.purge", "D4", deletion.id),
+        ).rejects.toThrow();
+    } finally {
+        liveObjects.list = originalList;
+    }
+    expect(
+        (
+            await pool.query(
+                "SELECT state FROM storage.object_purges WHERE deletion_id=$1",
+                [deletion.id],
+            )
+        ).rows[0]?.state,
+    ).toBe("PENDING");
+    await expect(execute("data.object.get", "D2", id)).rejects.toThrow(
+        "OBJECT_NOT_FOUND",
+    );
+    expect(
+        await execute("data.deletion.purge", "D4", deletion.id),
+    ).toMatchObject({ state: "PURGED" });
+    await expect(
+        execute("data.deletion.purge", "D4", randomUUID()),
+    ).rejects.toThrow("DELETION_NOT_FOUND");
 }, 30000);

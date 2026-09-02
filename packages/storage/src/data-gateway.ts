@@ -21,6 +21,7 @@ import { PrivateObjects, ObjectUploadSchema } from "./private-objects.js";
 import { PortableExports } from "./exports.js";
 import { StorageRecovery } from "./recovery.js";
 import { StorageHealthService } from "./storage-health.js";
+import { ObjectDeletion } from "./object-deletion.js";
 
 export const DataRequestInputSchema = z.strictObject({
     recordId: z.uuid().nullable(),
@@ -39,6 +40,8 @@ const operations = {
     "data.lineage": { capability: "data.read", permission: "P0" },
     "data.object.put": { capability: "storage.object.write", permission: "P3" },
     "data.object.get": { capability: "storage.object.read", permission: "P0" },
+    "data.object.forget": { capability: "data.delete", permission: "P4" },
+    "data.deletion.purge": { capability: "data.delete", permission: "P4" },
     "data.keys.rotate": { capability: "storage.keys.rotate", permission: "P4" },
     "data.export": { capability: "data.export", permission: "P4" },
     "data.backup.create": {
@@ -91,6 +94,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                 "data.backup.create",
                 "data.backup.restore",
                 "data.migration.probe",
+                "data.deletion.purge",
             ].includes(request.toolId) &&
                 level !== 4) ||
             (request.toolId === "data.inventory" && level < 2) ||
@@ -99,10 +103,13 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
             throw new BoundaryError("DATA_ZONE_UNDERSTATED");
         const factors: RiskFactors = {
             permission: operation.permission,
-            reversibility:
-                request.toolId === "data.record.forget"
-                    ? "IRREVERSIBLE"
-                    : "REVERSIBLE",
+            reversibility: [
+                "data.record.forget",
+                "data.object.forget",
+                "data.deletion.purge",
+            ].includes(request.toolId)
+                ? "IRREVERSIBLE"
+                : "REVERSIBLE",
             blastRadius: "record",
             financialMinor: 0,
             privacy: level,
@@ -160,6 +167,8 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                 [
                     "data.object.put",
                     "data.object.get",
+                    "data.object.forget",
+                    "data.deletion.purge",
                     "data.keys.rotate",
                     "data.export",
                     "data.backup.create",
@@ -201,6 +210,23 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                     case "data.keys.rotate":
                         value = await s.keys.rotate(authorization);
                         break;
+                    case "data.object.forget":
+                    case "data.deletion.purge": {
+                        if (!input.recordId)
+                            throw new BoundaryError("DATA_RECORD_REQUIRED");
+                        const deletion = new ObjectDeletion(s.objects.store);
+                        value =
+                            request.toolId === "data.object.forget"
+                                ? await deletion.request(
+                                      authorization,
+                                      input.recordId,
+                                  )
+                                : await deletion.purge(
+                                      authorization,
+                                      input.recordId,
+                                  );
+                        break;
+                    }
                     case "data.export":
                         value = await s.exports.create(authorization);
                         break;

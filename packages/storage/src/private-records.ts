@@ -14,6 +14,7 @@ import {
     type EnvelopeBinding,
 } from "@jarvis/security";
 import { currentDataTransaction } from "./transaction.js";
+import { retireObjects } from "./object-deletion.js";
 
 const U = z.uuid(),
     T = z.string().max(16000),
@@ -192,6 +193,14 @@ export class PrivateRecords {
             throw new BoundaryError("DATA_CONSENT_REQUIRED");
         const tx = currentDataTransaction(),
             table = tables[record.domain];
+        if (
+            (
+                await tx.query("SELECT 1 FROM storage.objects WHERE id=$1", [
+                    record.id,
+                ])
+            ).rowCount
+        )
+            throw new BoundaryError("DATA_ID_CONFLICT");
         const existing = (
             await tx.query<Catalog>(
                 "SELECT * FROM storage.record_catalog WHERE id=$1",
@@ -345,6 +354,11 @@ export class PrivateRecords {
             "INSERT INTO storage.record_versions(owner_id,record_id,revision,payload,metadata) VALUES($1,$2,$3,$4,$5)",
             [auth.ownerId, record.id, record.revision, payload, metadata],
         );
+        if (record.domain === "attachment")
+            await tx.query(
+                "INSERT INTO storage.attachment_objects(owner_id,attachment_id,object_id) VALUES($1,$2,$3)",
+                [auth.ownerId, record.id, record.payload.objectId],
+            );
         for (const sourceId of sourceIds) {
             const source = await this.catalog(auth.ownerId, sourceId);
             await tx.query(
@@ -430,6 +444,8 @@ export class PrivateRecords {
                 [auth.ownerId, id],
             )
         ).rows;
+        if (rows.length > 100)
+            throw new BoundaryError("DELETION_SCOPE_TOO_LARGE");
         if (
             rows.some(
                 (row) =>
@@ -438,13 +454,35 @@ export class PrivateRecords {
             )
         )
             throw new BoundaryError("DERIVED_DELETE_ZONE_UNDERSTATED");
-        // Removing the attachment record alone would orphan an active encrypted
-        // object. Until the staged object-purge workflow is available, preserve
-        // every record and refuse to claim this cascade is complete.
-        if (rows.some((row) => row.domain === "attachment"))
-            throw new BoundaryError("ATTACHMENT_DELETE_REQUIRES_OBJECT_PURGE");
         const deletionId = randomUUID(),
             ids = rows.map((r) => r.id);
+        const attachmentIds = rows
+            .filter((r) => r.domain === "attachment")
+            .map((r) => r.id);
+        const links = (
+            await tx.query<{ attachment_id: string; object_id: string }>(
+                "SELECT attachment_id,object_id FROM storage.attachment_objects WHERE owner_id=$1 AND attachment_id=ANY($2::uuid[])",
+                [auth.ownerId, attachmentIds],
+            )
+        ).rows;
+        if (links.length !== attachmentIds.length)
+            throw new BoundaryError("ATTACHMENT_LINKAGE_MIGRATION_REQUIRED");
+        const objectIds = [...new Set(links.map((r) => r.object_id))];
+        if (
+            (
+                await tx.query(
+                    "SELECT 1 FROM storage.attachment_objects WHERE owner_id=$1 AND object_id=ANY($2::uuid[]) AND NOT(attachment_id=ANY($3::uuid[])) LIMIT 1",
+                    [auth.ownerId, objectIds, attachmentIds],
+                )
+            ).rowCount
+        )
+            throw new BoundaryError(
+                "SHARED_OBJECT_DELETE_REQUIRES_BROADER_SCOPE",
+            );
+        await tx.query(
+            "DELETE FROM storage.attachment_objects WHERE owner_id=$1 AND attachment_id=ANY($2::uuid[])",
+            [auth.ownerId, attachmentIds],
+        );
         // Child vectors first, preserving the original memory foreign key.
         rows.sort(
             (a, b) =>
@@ -484,8 +522,8 @@ export class PrivateRecords {
             targetId: id,
             authorizationId: auth.id,
             createdAt: this.clock(),
-            state: "PURGED",
-            affectedIds: ids,
+            state: objectIds.length ? "DELETING" : "PURGED",
+            affectedIds: [...ids, ...objectIds],
             backupExpiryRequired: true,
         };
         // Contains only IDs/state, never deleted content. Backup expiry is explicitly separate.
@@ -493,6 +531,7 @@ export class PrivateRecords {
             "INSERT INTO storage.deletion_requests(id,owner_id,payload) VALUES($1,$2,$3)",
             [deletionId, auth.ownerId, JSON.stringify(result)],
         );
+        await retireObjects(auth, deletionId, objectIds);
         return result;
     }
 }

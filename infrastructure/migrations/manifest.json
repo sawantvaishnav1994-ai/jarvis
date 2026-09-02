@@ -28,5 +28,11 @@
         "file": "0005_private_storage.sql",
         "sha256": "b1ecb0a04d486f685e4547935e43c84aa1b72ac9447fa6d34b75070524b6e880",
         "destructive": false
+    },
+    {
+        "version": 6,
+        "file": "0006_object_deletion.sql",
+        "sha256": "8eac0785d342f80ba92f6ae0706c70efabf7672357971bec8bd5b3a3c8ac81d1",
+        "destructive": false
     }
 ]

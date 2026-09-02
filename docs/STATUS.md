@@ -96,13 +96,21 @@ This is a verified J0.4 checkpoint, not the complete A–S acceptance flow.
 API/browser wiring source `734fee41b4402b2f76f46f71508bde37ab94fc9e` passed
 [CI 33681464024](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33681464024)
 verification, including owner-approved storage/read, replay rejection and NEVER_STORE.
-Follow-up hardening source `2a495849737d255950009d03552f80d3e614dfb9` has passed
-208 TypeScript and 33 PostgreSQL tests; its complete CI result remains pending here.
+Follow-up hardening source `fc0883f70a4d73440d55545888570411fc0a9ff7` passed
+[CI 33682921990](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33682921990):
+208 TypeScript, 34 PostgreSQL, 5 browser scenarios, 68 Python and all lifecycle checks.
+Health reads cannot initialize key metadata; initialization requires a governed write.
 See the [current detailed report](roadmap/j0.4-report.md).
 
 Remaining development gates include secret lifecycle/handle execution integration,
-complete retention execution and backup expiration, comprehensive attachment deletion,
+complete retention execution and backup expiration, shared/legacy attachment deletion,
 complete ownership inventory, recovery configuration/key kit, general reviewed
 destructive migration support and complete A–S GO coverage. Health and API adapters
 now exist; the bounded synthetic
 migration probe is not yet a generalized destructive migration runner. J0.5 is not started.
+
+The next bounded increment adds migration 0006 and staged attachment/object cleanup:
+committed access revocation and purge tickets, followed by separate owner-authorized
+physical ciphertext removal. An outage preserves pending cleanup; shared/unlinked legacy
+attachments fail closed. New migration/recovery tests require exact-source CI before
+acceptance; code existence is not a J0.4 GO.

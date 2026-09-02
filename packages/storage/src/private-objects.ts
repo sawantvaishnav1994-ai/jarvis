@@ -39,6 +39,15 @@ export class PrivateObjects {
             throw new BoundaryError("OBJECT_INPUT_DENIED");
         rejectGenericSecrets(bytes.toString("utf8"));
         rejectGenericSecrets({ filename: v.filename, mimeType: v.mimeType });
+        if (
+            (
+                await currentDataTransaction().query(
+                    "SELECT 1 FROM storage.record_catalog WHERE id=$1",
+                    [v.id],
+                )
+            ).rowCount
+        )
+            throw new BoundaryError("DATA_ID_CONFLICT");
         const binding = EnvelopeBindingSchema.parse({
             version: 1,
             ownerId: auth.ownerId,

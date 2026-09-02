@@ -39,6 +39,8 @@ export const recoveryTables = [
     "storage.record_versions",
     "storage.retention_policies",
     "storage.deletion_requests",
+    "storage.attachment_objects",
+    "storage.object_purges",
     "storage.deletion_tombstones",
     "storage.data_lineage",
     "security.key_metadata",
