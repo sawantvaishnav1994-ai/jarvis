@@ -435,6 +435,16 @@ let conversation: StorageRecord,
     embedding: StorageRecord,
     entity: StorageRecord;
 let objectId: string, backup: { id: string; items: { path: string }[] };
+it("health reads never initialize missing key metadata", async () => {
+    expect(await execute("data.health", "D4")).toMatchObject({
+        status: "unavailable",
+        keys: false,
+        vault: false,
+    });
+    expect(
+        (await pool.query("SELECT id FROM security.key_metadata")).rows,
+    ).toEqual([]);
+});
 it("B-D: persists canonical encrypted conversations and rejects cross-zone reads", async () => {
     conversation = record(
         "conversation",

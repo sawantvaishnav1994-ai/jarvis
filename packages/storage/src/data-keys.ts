@@ -16,7 +16,7 @@ export class DataKeys {
         private readonly actorId: string,
         private readonly metadataCipher: RecordCipher,
     ) {}
-    async metadata(ownerId: string) {
+    async metadata(ownerId: string, initialize = false) {
         const tx = currentDataTransaction();
         let rows = (
             await tx.query<{ id: string; payload: string }>(
@@ -25,6 +25,8 @@ export class DataKeys {
             )
         ).rows;
         if (!rows.length) {
+            if (!initialize)
+                throw new BoundaryError("KEY_METADATA_UNINITIALIZED");
             for (const [id, state, keyVersion] of [
                 ["k1", "ACTIVE", 1],
                 ["k2", "CREATED", 2],
@@ -68,6 +70,9 @@ export class DataKeys {
                 this.metadataCipher.decrypt(r.payload, "storage:key:" + r.id),
             ),
         );
+    }
+    async initialize(ownerId: string) {
+        await this.metadata(ownerId, true);
     }
     async cipher(ownerId: string) {
         const metadata = await this.metadata(ownerId);

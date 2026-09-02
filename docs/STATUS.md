@@ -93,9 +93,12 @@ Source `8e5cfc6143adede46c5d75bae46ffdba213586bf` passed
 205 TypeScript tests, 30 real PostgreSQL tests, 5 browser scenarios, 68 Python regressions,
 startup/queue, outage/recovery and shutdown. J0.1/J0.2/J0.3 regression passed.
 This is a verified J0.4 checkpoint, not the complete A–S acceptance flow.
-API/browser wiring source `734fee41b4402b2f76f46f71508bde37ab94fc9e` is under
+API/browser wiring source `734fee41b4402b2f76f46f71508bde37ab94fc9e` passed
 [CI 33681464024](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33681464024)
-verification. See the [current detailed report](roadmap/j0.4-report.md).
+verification, including owner-approved storage/read, replay rejection and NEVER_STORE.
+Follow-up hardening source `2a495849737d255950009d03552f80d3e614dfb9` has passed
+208 TypeScript and 33 PostgreSQL tests; its complete CI result remains pending here.
+See the [current detailed report](roadmap/j0.4-report.md).
 
 Remaining development gates include secret lifecycle/handle execution integration,
 complete retention execution and backup expiration, comprehensive attachment deletion,

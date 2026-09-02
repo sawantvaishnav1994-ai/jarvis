@@ -181,6 +181,11 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                             throw new BoundaryError(
                                 "DATA_CLASS_OR_ID_MISMATCH",
                             );
+                        if (
+                            upload.policy.retention.mode !== "never-store" &&
+                            upload.policy.retention.mode !== "session"
+                        )
+                            await s.keys.initialize(authorization.ownerId);
                         value = await s.objects.put(authorization, upload);
                         break;
                     }
@@ -231,6 +236,16 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                     record.policy.classification !== input.classification
                 )
                     throw new BoundaryError("DATA_CLASS_OR_ID_MISMATCH");
+                if (
+                    record.retention.mode !== "NEVER_STORE" &&
+                    record.retention.mode !== "DELETE_AFTER_SESSION" &&
+                    record.policy.retention.mode !== "never-store" &&
+                    record.policy.retention.mode !== "session"
+                ) {
+                    if (!this.services?.keys)
+                        throw new BoundaryError("DATA_SERVICE_UNAVAILABLE");
+                    await this.services.keys.initialize(authorization.ownerId);
+                }
                 value = await this.records.put(authorization, record);
             } else if (request.toolId === "data.inventory")
                 value = await this.records.inventory(authorization.ownerId);
