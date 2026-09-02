@@ -521,7 +521,10 @@ export class GovernanceEngine {
                         "github.repo.read",
                         "github.repo.write",
                         "tests.execute",
-                    ].includes(v.capability)
+                        "data.inventory",
+                    ].includes(v.capability) ||
+                    (v.capability === "data.inventory" &&
+                        v.resource !== "owner-data")
                 )
                     return deny("STANDING_DELEGATION_LIMIT");
                 const parent = this.liveParent(

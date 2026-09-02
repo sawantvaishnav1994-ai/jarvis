@@ -247,6 +247,7 @@ beforeAll(async () => {
                 maximumRisk: "R4",
                 requireApproval: true,
                 requireStepUp: true,
+                allowEscalationRequest: true,
                 requireSimulation: true,
                 requireTests: true,
                 requireScan: true,
@@ -258,18 +259,19 @@ beforeAll(async () => {
         id: "owner.storage-test",
         revision: 1,
     });
-    for (const capability of capabilities)
-        await ownerCommand("delegation.grant", {
-            version: 1,
-            actorId: subjectId,
-            capability,
-            resource: "owner-data",
-            environment: "development",
-            ttlSeconds: 600,
-            maximumUses: 100,
-            maximumRisk: "R4",
-            toolId: null,
-        });
+    // Inventory is the bounded R2 parent capability; private actions still need
+    // a separate, exact owner approval. Never create standing R3/R4 authority.
+    await ownerCommand("delegation.grant", {
+        version: 1,
+        actorId: subjectId,
+        capability: "data.inventory",
+        resource: "owner-data",
+        environment: "development",
+        ttlSeconds: 600,
+        maximumUses: 100,
+        maximumRisk: "R2",
+        toolId: null,
+    });
     await ownerCommand("budget.set", {
         version: 1,
         actorId: subjectId,
