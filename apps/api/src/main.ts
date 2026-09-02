@@ -9,7 +9,18 @@ import {
     GovernanceEngine,
 } from "@jarvis/security";
 import { IdentityEngine, WebAuthnPasskeys, digest } from "@jarvis/identity";
-import { PostgresIdentityRepository, PostgresAuditSink } from "@jarvis/storage";
+import {
+    PostgresIdentityRepository,
+    PostgresAuditSink,
+    DataKeys,
+    PrivateRecords,
+    PrivateObjects,
+    LocalEncryptedObjects,
+    PortableExports,
+    StorageRecovery,
+    StorageHealthService,
+    PrivateDataGateway,
+} from "@jarvis/storage";
 import { identityHandler } from "./identity-http.js";
 import { developmentToolGateway } from "./tool-runtime.js";
 import { AuthorizedMockToolGateway } from "@jarvis/tools";
@@ -57,6 +68,9 @@ async function main() {
             config.storage.encryptionKeyRef,
             config.identity.bootstrapRef,
             config.identity.webTransportRef,
+            "development/storage/kek/k1",
+            "development/storage/kek/k2",
+            "development/storage/backup/key1",
         ]),
     );
     const dbLease = await vault.lease(
@@ -89,17 +103,57 @@ async function main() {
         config.identity.webTransportRef,
         actor,
     );
-    const identity = new IdentityEngine(
-        new PostgresIdentityRepository(
-            pool,
-            new RecordCipher(
-                Buffer.from(keyLease.value.toString("utf8"), "hex"),
+    const storageCipher = new RecordCipher(
+        Buffer.from(keyLease.value.toString("utf8"), "hex"),
+    );
+    const backupLease = await vault.lease(
+        "development/storage/backup/key1",
+        actor,
+    );
+    const backupCipher = new RecordCipher(
+        Buffer.from(backupLease.value.toString("utf8"), "hex"),
+    );
+    backupLease.destroy();
+    const keys = new DataKeys(vault, actor.id, storageCipher);
+    const records = new PrivateRecords((ownerId) => keys.cipher(ownerId));
+    const objectStore = new LocalEncryptedObjects(
+        resolve(".jarvis/development/objects"),
+    );
+    const objects = new PrivateObjects(
+        objectStore,
+        (ownerId) => keys.cipher(ownerId),
+        storageCipher,
+    );
+    // Restores never acquire a target from request parameters. Until an isolated
+    // target is provisioned by the operator, API restore attempts fail closed.
+    const recovery = new StorageRecovery(
+        new LocalEncryptedObjects(resolve(".jarvis/development/backups")),
+        objectStore,
+        backupCipher,
+        null,
+    );
+    const dataGateway = new PrivateDataGateway(
+        records,
+        new AuthorizedMockToolGateway(),
+        {
+            keys,
+            objects,
+            recovery,
+            exports: new PortableExports(records, objects, storageCipher),
+            health: new StorageHealthService(
+                keys,
+                objects,
+                recovery,
+                resolve("infrastructure/migrations"),
             ),
-        ),
+        },
+    );
+    const identity = new IdentityEngine(
+        new PostgresIdentityRepository(pool, storageCipher),
         new WebAuthnPasskeys(config.identity.rpID, config.identity.origin),
         digest(bootstrapLease.value.toString("utf8")),
         Date.now,
-        new GovernanceEngine(new AuthorizedMockToolGateway()).handle,
+        new GovernanceEngine(dataGateway).handle,
     );
     const transportKey = Buffer.from(
         transportLease.value.toString("utf8"),

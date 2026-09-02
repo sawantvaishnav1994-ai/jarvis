@@ -172,6 +172,15 @@ beforeAll(async () => {
             targetAdmin,
             restoreObjects,
             cipher,
+            async (snapshot) => {
+                for (const entry of snapshot.tables[
+                    "storage.record_catalog"
+                ]!) {
+                    const row = entry as { id: string; deleted: boolean };
+                    if (!row.deleted)
+                        await records.read(snapshot.ownerId, row.id);
+                }
+            },
         ),
     );
     repository = new PostgresIdentityRepository(pool, cipher);

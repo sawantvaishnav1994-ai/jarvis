@@ -4,7 +4,8 @@ export default defineConfig({
     fullyParallel: false,
     workers: 1,
     retries: 0,
-    timeout: 360000,
+    // Includes J0.4 owner-approved write/read/NEVER_STORE while retaining RPC pacing.
+    timeout: 600000,
     // A signed owner operation includes several paced RPCs plus WebAuthn.
     // Keep the exact assertions; allow the ceremony to finish under CI load.
     expect: { timeout: 15000 },

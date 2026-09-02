@@ -4,7 +4,10 @@ import type pg from "pg";
 import { BackupManifestSchema, BoundaryError } from "@jarvis/shared";
 import { canonical } from "@jarvis/identity";
 import { RecordCipher, type AuthorizationV3 } from "@jarvis/security";
-import { currentDataTransaction } from "./transaction.js";
+import {
+    currentDataTransaction,
+    identityDataTransaction,
+} from "./transaction.js";
 import { storageHash, type ObjectStorage } from "./objects.js";
 
 // Fixed repository-owned tables; no SQL identifiers are accepted from an artifact.
@@ -346,6 +349,9 @@ export class PostgresIsolatedRestore implements IsolatedRestoreTarget {
         private readonly pool: pg.Pool,
         private readonly objects: ObjectStorage,
         private readonly identityCipher: RecordCipher,
+        private readonly validateRestored: (
+            snapshot: RecoverySnapshot,
+        ) => Promise<void>,
     ) {
         if (!/^jarvis_restore_test_[a-f0-9]{16}$/.test(id))
             throw new BoundaryError("RESTORE_TARGET_NOT_ISOLATED");
@@ -412,6 +418,11 @@ export class PostgresIsolatedRestore implements IsolatedRestoreTarget {
                     throw new BoundaryError("RESTORE_OBJECT_HASH_MISMATCH");
             await tx.query(
                 "SELECT setval('audit.identity_events_sequence_seq',GREATEST(COALESCE((SELECT max(sequence) FROM audit.identity_events),0),1))",
+            );
+            // Restored ciphertext must be readable with the separately supplied
+            // recovery keys before this isolated target becomes committed state.
+            await identityDataTransaction.run({ client: tx }, () =>
+                this.validateRestored(snapshot),
             );
             await tx.query("COMMIT");
         } catch (error) {

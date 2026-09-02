@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { FileSecretManager } from "@jarvis/security";
 import { browserGovernanceGo } from "./governance-flow.js";
+import { browserDataFlow } from "./data-flow.js";
 test.skip(
     process.env.JARVIS_IDENTITY_E2E !== "1",
     "Only run against a disposable fresh CI installation; creates its synthetic owner.",
@@ -133,6 +134,7 @@ test("J0.2 GO: real browser passkeys, owner, second device, restricted agent, re
     await click(second.page, "Sign in with passkey", "DEVICE_NOT_TRUSTED");
     await click(second.page, "Refresh owner session", "SESSION_INVALID");
     await browserGovernanceGo(page, ownerId!);
+    await browserDataFlow(page, ownerId!);
     await click(
         page,
         "Create recovery kit",
