@@ -5,6 +5,9 @@ export default defineConfig({
     workers: 1,
     retries: 0,
     timeout: 360000,
+    // A signed owner operation includes several paced RPCs plus WebAuthn.
+    // Keep the exact assertions; allow the ceremony to finish under CI load.
+    expect: { timeout: 15000 },
     // This flow handles disposable secrets. Never record traces, videos or screenshots.
     use: {
         baseURL: "http://localhost:3000",
