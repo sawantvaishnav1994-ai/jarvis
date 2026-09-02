@@ -3100,3 +3100,11 @@ The next milestone after that should be J0.3 — Security Policy, Permissions, R
 ```
 
 This repeats the current J0.2 target without a scope change. Work continued on the existing implementation and full-stack acceptance rather than restarting it.
+
+### First published candidate and CI failure
+
+Candidate commit `615abb7397cbc8f4a877fad9453cacc033073c8d`, tree `cedefb2e0348224bcae6b72bfb8ee8cf658210d7`, matched the staged local source exactly. The raw unsigned commit was verified by SHA before importing it locally. Private repository visibility and permissions were not changed.
+
+Run https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33594668296 passed Python, fresh Docker setup/build, all 58 candidate TypeScript tests, all 14 real PostgreSQL tests (6 identity + 8 foundation), API/worker/web startup, queue smoke and all 4 existing browser tests. The identity browser flow passed owner creation, owner-approved second-device login, restricted delegation, allowed/denied mock tools, critical denial, device/session revocation and recovery-kit creation. It then timed out waiting for the exact accessible label of the populated recovery-package textarea, before recovery itself was executed. J0.2 acceptance was not issued; failure/stop acceptance steps were skipped by CI, and cleanup ran.
+
+The follow-up gives the recovery output an explicit accessible name and bounds browser actions to 15 seconds. Review also rejects noncanonical encodings of device public keys (so revoked-key reuse cannot evade string matching), removes expired unapproved enrollment/public credentials to release temporary slots, enforces the device limit again at registration commit, and clears cached owner/kit/agent UI state after session authority is denied. Two new negative tests bring the local suite to 60 passing tests. Local lint/types/build and all 68 Python regressions passed again (15.538 seconds). `npm audit --omit=dev --json` reported zero known production dependency vulnerabilities at this check; this is not a complete security audit.

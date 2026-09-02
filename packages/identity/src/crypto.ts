@@ -44,7 +44,10 @@ export function validateDeviceKey(value: string): void {
         });
         if (
             key.asymmetricKeyType !== "ec" ||
-            key.asymmetricKeyDetails?.namedCurve !== "prime256v1"
+            key.asymmetricKeyDetails?.namedCurve !== "prime256v1" ||
+            key
+                .export({ format: "der", type: "spki" })
+                .toString("base64url") !== value
         )
             deny("DEVICE_KEY_INVALID");
     } catch {

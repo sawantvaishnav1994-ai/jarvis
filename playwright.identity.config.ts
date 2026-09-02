@@ -8,6 +8,8 @@ export default defineConfig({
     // This flow handles disposable secrets. Never record traces, videos or screenshots.
     use: {
         baseURL: "http://localhost:3000",
+        actionTimeout: 15000,
+        navigationTimeout: 15000,
         browserName: "chromium",
         trace: "off",
         screenshot: "off",

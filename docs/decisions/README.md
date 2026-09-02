@@ -16,3 +16,4 @@ new J0.1 prompt. The original Master Definition is unchanged.
 | 0006 | Local ownership and encrypted secret references |
 | 0007 | Tool gateway, policy and approvals |
 | 0008 | Operational/audit separation and append-only access |
+| 0009 | Portable owner, passkeys, independent device proof and bounded delegation |

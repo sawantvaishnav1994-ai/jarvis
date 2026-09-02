@@ -127,6 +127,22 @@ export class IdentityEngine {
                         delete state.challenges[id];
                 for (const [id, c] of Object.entries(state.replays))
                     if (c.expiresAt < this.clock()) delete state.replays[id];
+                // Unapproved enrollment is temporary, not a permanent slot claim.
+                // Trusted/revoked device tombstones and their audit are retained.
+                for (const [id, device] of Object.entries(state.devices)) {
+                    if (
+                        device.trust !== "unknown" ||
+                        device.expiresAt === null ||
+                        device.expiresAt > this.clock()
+                    )
+                        continue;
+                    delete state.devices[id];
+                    for (const [credentialId, credential] of Object.entries(
+                        state.passkeys,
+                    ))
+                        if (credential.deviceId === id)
+                            delete state.passkeys[credentialId];
+                }
                 try {
                     return { ok: true as const, value: await work(tx) };
                 } catch (error) {
@@ -390,6 +406,8 @@ export class IdentityEngine {
                 return deny("OWNER_ALREADY_EXISTS");
             if (kind === "enroll" && c.ownerId !== tx.state.owner?.id)
                 return deny("OWNER_INVALID");
+            if (Object.keys(tx.state.devices).length >= 100)
+                return deny("DEVICE_LIMIT");
             verifyDevice(c.device.publicKey, c.payload, proof.signature);
             const credential = await this.passkeys.register(
                 response,

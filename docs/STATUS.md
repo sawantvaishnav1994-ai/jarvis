@@ -11,7 +11,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 ## Current acceptance evidence
 
 - TypeScript packages compile; the Next.js production build passes.
-- 58 unit/contract/security tests pass locally, including real WebAuthn verification,
+- 60 unit/contract/security tests pass locally, including real WebAuthn verification,
   device/session/approval/delegation negatives, recovery, privacy and audit failure.
 - J0.2 database and browser acceptance are implemented and awaiting remote CI.
 - Real PostgreSQL integration (8 tests), full startup, browser (4 tests), queue

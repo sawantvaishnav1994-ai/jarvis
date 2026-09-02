@@ -144,6 +144,35 @@ it("creates one immutable root under concurrent bootstrap attempts", async () =>
         f.engine.beginRoot(f.bootstrap, "Replacement", new TestDevice().input),
     ).rejects.toThrow("OWNER_ALREADY_EXISTS");
 });
+it("rejects alternate encodings of the same device key", async () => {
+    const f = fixture(),
+        o = await root(f);
+    await expect(
+        f.engine.beginEnrollment({
+            ...o.device.input,
+            publicKey: o.device.input.publicKey + "=",
+        }),
+    ).rejects.toThrow("DEVICE_KEY_INVALID");
+});
+it("expires unapproved enrollment without consuming permanent device slots", async () => {
+    const f = fixture();
+    await root(f);
+    const d = new TestDevice(),
+        c = await f.engine.beginEnrollment(d.input);
+    const pending = await f.engine.finishRegistration(
+        "enroll",
+        d.proof(c),
+        d.registration(c.options),
+        "test-context",
+    );
+    f.advance(600001);
+    await expect(f.engine.beginLogin(pending.deviceId)).rejects.toThrow(
+        "DEVICE_NOT_TRUSTED",
+    );
+    const state = (f.repository as TestIdentityRepository).state;
+    expect(state.devices[pending.deviceId]).toBeUndefined();
+    expect(state.passkeys[d.credential.toString("base64url")]).toBeUndefined();
+});
 it("rejects unauthorized bootstrap and unauthenticated owner impersonation", async () => {
     const f = fixture();
     await expect(

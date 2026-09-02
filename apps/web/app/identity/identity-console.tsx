@@ -72,6 +72,19 @@ export function IdentityConsole() {
         try {
             await work();
         } catch (error) {
+            if (
+                error instanceof Error &&
+                [
+                    "SESSION_INVALID",
+                    "SESSION_EXPIRED",
+                    "DEVICE_NOT_TRUSTED",
+                    "REAUTHENTICATION_REQUIRED",
+                ].includes(error.message)
+            ) {
+                setSnapshot(null);
+                setKit(null);
+                setAgent(null);
+            }
             setMessage(
                 error instanceof Error ? error.message : "REQUEST_DENIED",
             );
@@ -470,11 +483,16 @@ export function IdentityConsole() {
                             <div className="identity-fields">
                                 <label>
                                     Encrypted recovery package
-                                    <textarea readOnly value={kit.package} />
+                                    <textarea
+                                        aria-label="Encrypted recovery package"
+                                        readOnly
+                                        value={kit.package}
+                                    />
                                 </label>
                                 <label>
                                     Offline recovery key
                                     <input
+                                        aria-label="Offline recovery key"
                                         readOnly
                                         type="password"
                                         value={kit.recoveryKey}
