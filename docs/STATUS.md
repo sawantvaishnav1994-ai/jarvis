@@ -11,11 +11,14 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 ## Current acceptance evidence
 
 - TypeScript packages compile; the Next.js production build passes.
-- J0.3 now implements the owner's complete development security flow, including
-  durable exact approvals, contextual risk, authorization/replay, owner policy
-  administration and persisted emergency controls. Local regression checks pass;
-  exact isolated source verification and full-stack CI evidence are pending.
-  The separate uncommitted J0.4 draft is not part of this acceptance.
+- J0.3 development GO passed on main source `5ee91e681839fd58737d79eeb99821cda0da9d49`
+  in [run 33620442554](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33620442554):
+  147 TypeScript tests, 16 real PostgreSQL tests, 5 browser scenarios (including
+  the combined J0.2 and complete J0.3 A–N GO), 68 Python regressions, startup/queue
+  smoke, dependency outage/recovery and verified service stop. Both CI jobs passed.
+  Durable exact approvals, risk, authorization/replay, owner administration and
+  emergency controls passed real-stack verification. The separate uncommitted
+  J0.4 draft is excluded. See [acceptance report](roadmap/j0.3-report.md).
 - J0.2 development acceptance passed on source `59a581c46574a53e5abbccd6f076743d5d6e9c77`
   in [run 33595165916](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595165916):
   60 TypeScript tests, 14 real PostgreSQL tests, 5 browser scenarios (including
@@ -35,7 +38,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | --- | --- | --- |
 | J0.1 | All 24 artifact categories implemented; fresh Linux checkout/Docker CI acceptance passed | Accepted for development |
 | J0.2 | Real passkeys, device proof, sessions, signed approvals, restricted delegation, identity recovery and console; full development GO flow passed | Accepted for local development; physical-device validation, hardware A4/remote production and full disaster recovery are not claimed |
-| J0.3 | Full development policy/risk/approval/authorization, budgets, persisted controls, audit and A–N GO implementation | Exact merged-source PostgreSQL/browser/CI acceptance pending; production containment remains a later gate |
+| J0.3 | Full development policy/risk/approval/authorization, budgets, persisted controls, audit and A–N GO passed on exact merged source and CI | Accepted for development; real connectors, hardware A4 and production containment remain later gates |
 | J0.4 | Existing PostgreSQL/vault plus local Increment A: classified contracts, envelope cipher/key handles and record codec | Runtime classified repositories, objects/vectors/lineage, managed key custody, full export/delete/backup/recovery GO |
 | J0.5 | Memory schema/service/adapter and retention rules | Full memory provenance, expiry maintenance, authenticated data interfaces |
 | J0.6 | Model port, privacy checks, swap conformance, bounded wait | Real/local adapters, enforced preflight budgets and process isolation |
@@ -52,7 +55,7 @@ visibility has not been changed and no paid upgrade has been performed.
 See [J0.1 deliverables](roadmap/j0.1.md) and [security scope](security/j0.1-boundaries.md).
 See [J0.2 deliverables](roadmap/j0.2.md) and [identity security scope](security/j0.2-identity.md).
 
-**Active milestone: J0.3 — Security Policy, Permissions, Risk & Approval Engine (in progress).**
+**J0.3 — Security Policy, Permissions, Risk & Approval Engine: COMPLETE for development.**
 See [J0.3 increments](roadmap/j0.3.md) and [policy boundaries](security/j0.3-policy.md).
 J0.3.1 prior local validation passed: 112 TypeScript tests, 68 Python regressions
 and web build. On 2026-09-02 the owner explicitly requested completion of J0.3,
@@ -61,13 +64,16 @@ source publication to main and GitHub CI, followed by J0.4. The existing private
 The owner subsequently supplied the full 46-section specification and 80 GO steps.
 Implementation reuses J0.2 proof validation, delegation and transaction storage.
 See [active authorization boundaries](security/j0.3-authorization.md). The previous
-J0.3.1 boundary document remains historical. Publication of isolated source and
-full-stack CI are next; no J0.3 acceptance or Foundation v1 GO is issued yet.
+J0.3.1 boundary document remains historical. The accepted source tree is
+`58402ea7ea3f8e1c58b0a2490014e88bce85ecc5`. Earlier runs 33618677436 and 33619985866
+failed browser harness timing/rate handling and were not accepted; corrected run
+33620442554 passed with rate limits, assertions and runtime security preserved.
+J0.3 development GO is issued. Foundation v1 GO is still NOT ISSUED.
 Owner enrollment on real devices remains an owner-performed ceremony. CI created
 only disposable synthetic owners; no real owner, personal data or production
 infrastructure was initialized by this work.
 
 The owner supplied the full J0.4 data-sovereignty specification on 2026-09-02.
-The prior bounded additive work is preserved; further J0.4 implementation is paused
-until J0.3 passes its gate and CI, per the owner's latest sequencing instruction.
+The prior bounded additive work is preserved. J0.4 remains INCOMPLETE; no further
+J0.4 implementation was performed during J0.3 acceptance. It is the next milestone.
 The local draft encryption/record contracts do not replace current live v1 storage.

@@ -1,6 +1,7 @@
 # ADR-0012 — Durable authorization on the existing identity transaction
 
-Date: 2026-09-02. Status: implemented; full-stack acceptance pending.
+Date: 2026-09-02. Status: accepted for development on source
+`5ee91e681839fd58737d79eeb99821cda0da9d49`, CI run 33620442554.
 
 ## Decision
 
