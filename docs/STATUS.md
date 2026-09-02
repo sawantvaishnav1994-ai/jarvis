@@ -112,5 +112,9 @@ migration probe is not yet a generalized destructive migration runner. J0.5 is n
 The next bounded increment adds migration 0006 and staged attachment/object cleanup:
 committed access revocation and purge tickets, followed by separate owner-authorized
 physical ciphertext removal. An outage preserves pending cleanup; shared/unlinked legacy
-attachments fail closed. New migration/recovery tests require exact-source CI before
-acceptance; code existence is not a J0.4 GO.
+attachments fail closed. This checkpoint is verified on main source
+`c90a814887c1cf7b5bc0f1dc51e5c97a4363e7c2` in
+[CI 33683907734](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33683907734):
+210 TypeScript, 35 real PostgreSQL, 5 browser scenarios, 68 Python and all lifecycle
+checks passed. J0.1/J0.2/J0.3 remain regression-free. The complete J0.4 A–S GO is
+still NOT ISSUED; see the detailed report's coverage map and development gaps.
