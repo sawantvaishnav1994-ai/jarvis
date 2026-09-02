@@ -1,6 +1,7 @@
 # ADR-0009 — Owner passkeys, independent device proof and bounded delegation
 
-Date: 2026-09-02. Status: accepted implementation direction; J0.2 acceptance pending CI.
+Date: 2026-09-02. Status: accepted implementation direction; J0.2 development
+acceptance passed in [run 33595165916](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595165916).
 
 ## Decision
 

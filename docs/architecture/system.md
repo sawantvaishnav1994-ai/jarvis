@@ -1,6 +1,6 @@
 # J0.1/J0.2 system architecture
 
-Date: 2026-09-01. Active implementation: TypeScript 0.3.0. Contract schemas carry
+Updated: 2026-09-02. Active implementation: TypeScript 0.3.0 with J0.2 identity. Contract schemas carry
 `version: 1`; they are candidates for the J0.12 freeze, not a Foundation v1 GO.
 
 ```mermaid

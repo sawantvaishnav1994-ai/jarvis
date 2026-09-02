@@ -13,7 +13,11 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 - TypeScript packages compile; the Next.js production build passes.
 - 60 unit/contract/security tests pass locally, including real WebAuthn verification,
   device/session/approval/delegation negatives, recovery, privacy and audit failure.
-- J0.2 database and browser acceptance are implemented and awaiting remote CI.
+- J0.2 development acceptance passed on source `59a581c46574a53e5abbccd6f076743d5d6e9c77`
+  in [run 33595165916](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33595165916):
+  60 TypeScript tests, 14 real PostgreSQL tests, 5 browser scenarios (including
+  the full owner/device/delegation/revocation/recovery flow), 68 Python regressions,
+  startup/queue smoke, dependency outage/recovery and verified service stop.
 - Real PostgreSQL integration (8 tests), full startup, browser (4 tests), queue
   smoke, outage/recovery and stop checks passed in [GitHub Actions run
   33567299408](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33567299408)
@@ -27,7 +31,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | Gate | Current implementation | Remaining work |
 | --- | --- | --- |
 | J0.1 | All 24 artifact categories implemented; fresh Linux checkout/Docker CI acceptance passed | Accepted for development |
-| J0.2 | Real passkeys, device proof, sessions, signed approvals, restricted delegation, identity recovery and console | Development GO pending real-stack CI; hardware A4/remote production and full disaster recovery excluded |
+| J0.2 | Real passkeys, device proof, sessions, signed approvals, restricted delegation, identity recovery and console; full development GO flow passed | Accepted for local development; physical-device validation, hardware A4/remote production and full disaster recovery are not claimed |
 | J0.3 | Default-deny gateway; exact-bound durable identity approvals; local service stop | Generalized policy/risk/approval administration, independent emergency controls, host containment |
 | J0.4 | PostgreSQL domains, encrypted payloads/vault, reviewed migrations | Managed key custody, rotation and recovery-backed destructive migrations |
 | J0.5 | Memory schema/service/adapter and retention rules | Full memory provenance, expiry maintenance, authenticated data interfaces |
@@ -44,3 +48,8 @@ previously rejected by GitHub HTTP 403 under the current private-repository plan
 visibility has not been changed and no paid upgrade has been performed.
 See [J0.1 deliverables](roadmap/j0.1.md) and [security scope](security/j0.1-boundaries.md).
 See [J0.2 deliverables](roadmap/j0.2.md) and [identity security scope](security/j0.2-identity.md).
+
+**Next implementation milestone: J0.3 — Security Policy, Permissions, Risk & Approval Engine.**
+Owner enrollment on real devices remains an owner-performed ceremony. CI created
+only disposable synthetic owners; no real owner, personal data or production
+infrastructure was initialized by this work.
