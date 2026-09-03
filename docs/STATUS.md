@@ -47,7 +47,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | J0.9 | Operational metadata and database append-only audit controls | Independently immutable archive, external witnesses and operations |
 | J0.10 | Historical Python encrypted recovery/export/delete tests | Active-runtime full data sovereignty and off-host disaster drill |
 | J0.11 | Full Foundation integration and adversarial qualification passed on exact-SHA cloud CI; J0.11 A–T PASS | Development qualification complete; production-only controls remain outside J0.11 |
-| J0.12 | Contract versions and acceptance criteria recorded | Close applicable gates, freeze interfaces, owner GO |
+| J0.12 | Foundation v1 freeze manifests, architecture/security/trust reviews and fail-closed A-T qualification pipeline implemented on isolated validation branch | Exact-SHA qualification and owner-controlled Foundation v1 GO decision; production exclusions remain explicitly unclaimed |
 
 The private GitHub repository already exists. Branch ruleset enforcement was
 previously rejected by GitHub HTTP 403 under the current private-repository plan;
