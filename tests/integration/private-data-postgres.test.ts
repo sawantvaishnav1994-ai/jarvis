@@ -307,8 +307,6 @@ beforeAll(async () => {
         id: "owner.storage-test",
         revision: 1,
     });
-    // Inventory is the bounded R2 parent capability; private actions still need
-    // a separate, exact owner approval. Never create standing R3/R4 authority.
     await ownerCommand("delegation.grant", {
         version: 1,
         actorId: subjectId,
@@ -1215,7 +1213,6 @@ it("L-N: deletion links recovery obligations and expired snapshots cannot restor
     storageClockOffset = 31 * 24 * 60 * 60 * 1000;
     try { await expect(execute("data.backup.restore", "D4", fresh.id)).rejects.toThrow("BACKUP_EXPIRED"); }
     finally { storageClockOffset = 0; }
-    // Time advancement changes eligibility only; no claim of physical byte erasure.
     expect((await pool.query("SELECT count(*)::int AS n FROM storage.backup_items WHERE backup_id=$1", [fresh.id])).rows[0].n).toBeGreaterThan(0);
 }, 30000);
 
@@ -1234,7 +1231,6 @@ it("E-L: shared canonical objects survive one unlink, legacy links reconcile, fi
     await execute("data.record.forget", "D3", a.id);
     expect(await execute("data.object.get", "D2", id)).toEqual(before);
     await expect(execute("data.object.forget", "D2", id)).rejects.toThrow("OBJECT_STILL_REFERENCED");
-    // Synthetic pre-0006 legacy record: canonical ciphertext remains untouched.
     await pool.query("DELETE FROM storage.attachment_objects WHERE attachment_id=$1", [b.id]);
     await expect(execute("data.record.forget", "D3", b.id)).rejects.toThrow("ATTACHMENT_LINKAGE_MIGRATION_REQUIRED");
     expect(await execute("data.attachment.reconcile", "D4", b.id)).toMatchObject({ id: b.id, objectId: id, reconciled: true });
@@ -1259,7 +1255,7 @@ it("A: creates a separately bounded extended-acceptance actor without resetting 
     await ownerCommand("policy.activate", { id: "owner.storage-extended", revision: 1 });
     await ownerCommand("delegation.grant", { version: 1, actorId: subjectId, capability: "data.inventory", resource: "owner-data", environment: "development", ttlSeconds: 900, maximumUses: 100, maximumRisk: "R2", toolId: null });
     await ownerCommand("budget.set", { version: 1, actorId: subjectId, maximumRuntimeMs: 900000, maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 100, toolCalls: 0, maximumRisk: "R4", resources: ["owner-data"], environments: ["development"], startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 900000, networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3" });
-    expect((await pool.query("SELECT version FROM settings.schema_migrations ORDER BY version")).rows.map(row => row.version)).toEqual([1,2,3,4,5,6,7]);
+    expect((await pool.query("SELECT version FROM settings.schema_migrations ORDER BY version")).rows.map(row => row.version)).toEqual([1,2,3,4,5,6,7,8,9,10]);
 });
 
 it("B-G-K: reconstructs provider-independent conversation, graph, settings and safe definitions with deletion metadata", async () => {
