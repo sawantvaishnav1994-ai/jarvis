@@ -11,5 +11,5 @@
     {"version":10,"file":"0010_memory_propagation.sql","sha256":"4d61c5556d6d13f16571c792826173cead8d12b7df49190b419000ff788450a0","destructive":false},
     {"version":11,"file":"0011_event_system.sql","sha256":"a097d3baebdc91244b9657a3fd8ad1ea2508829a4b2bba6f7b63a921b7bdd268","destructive":false},
     {"version":12,"file":"0012_event_retention.sql","sha256":"8d3fb9e657ff98c346b1e71dc7b8ae64a827ae3a4b9247cac81c6f734785d7d4","destructive":false},
-    {"version":13,"file":"0013_audit_observability.sql","sha256":"acb3117315b4302a5ae200402bbb1c8cfb3b1cc6943fdbf469baaa7acae07ee4","destructive":false}
+    {"version":13,"file":"0013_audit_observability.sql","sha256":"8b082762a0dd41f5f627077d609be473ed04c60d0d8d0989be76650c61dd4756","destructive":false}
 ]
