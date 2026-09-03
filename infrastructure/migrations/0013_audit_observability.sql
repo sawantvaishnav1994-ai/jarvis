@@ -20,6 +20,7 @@ CREATE TABLE audit.records_v3 (
     record_hash char(64) NOT NULL UNIQUE,
     payload_redacted boolean NOT NULL DEFAULT false,
     retention_class text NOT NULL,
+    retention_until timestamptz NOT NULL,
     record jsonb NOT NULL,
     UNIQUE(owner_id, project_id, stream_sequence)
 );
@@ -29,6 +30,7 @@ CREATE INDEX audit_records_trace ON audit.records_v3(owner_id, trace_id);
 CREATE INDEX audit_records_correlation ON audit.records_v3(owner_id, correlation_id);
 CREATE INDEX audit_records_action ON audit.records_v3(owner_id, action, recorded_at DESC);
 CREATE INDEX audit_records_result_severity ON audit.records_v3(owner_id, result, severity, recorded_at DESC);
+CREATE INDEX audit_records_retention_due ON audit.records_v3(owner_id, retention_until);
 CREATE TRIGGER audit_v3_no_update_delete BEFORE UPDATE OR DELETE ON audit.records_v3
  FOR EACH ROW EXECUTE FUNCTION audit.prevent_mutation();
 CREATE TRIGGER audit_v3_no_truncate BEFORE TRUNCATE ON audit.records_v3
