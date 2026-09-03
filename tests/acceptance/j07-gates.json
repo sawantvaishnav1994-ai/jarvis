@@ -1,0 +1,26 @@
+{
+  "milestone": "J0.7",
+  "baseline": "3eb07b904ac1e2f9be20a9e52008df824816b774",
+  "gates": {
+    "A": "preserves the exact J0.6 baseline and prior regressions",
+    "B": "invokes a tool through provider-neutral J0.7 contracts",
+    "C": "requires explicit registered tool identity and version",
+    "D": "rejects invalid input and malformed output",
+    "E": "denies execution before adapter dispatch when J0.3 authorization rejects",
+    "F": "binds authorization to exact normalized input and rejects alteration",
+    "G": "keeps model proposals isolated from adapters and credentials",
+    "H": "enforces delegated actor scope through the authorization boundary",
+    "I": "denies forbidden external data egress including D5/local-only data",
+    "J": "brokers credentials only at dispatch and redacts them from results and audit",
+    "K": "simulates or dry-runs without mutation or implicit execution authority",
+    "L": "prevents duplicate effects and rejects idempotency key conflicts",
+    "M": "enforces deadlines and truthful cancellation semantics",
+    "N": "bounds retries and never blindly retries unsafe mutation",
+    "O": "treats timeout after possible mutation as UNKNOWN_OUTCOME and reconciles",
+    "P": "separates provider success from independent verification",
+    "Q": "revalidates emergency and authorization state immediately before dispatch",
+    "R": "treats tool output and prompt injection as untrusted data without authority",
+    "S": "emits safe deterministic audit and provenance without secret leakage",
+    "T": "runs the complete universal gateway path with verification, reconciliation and provider-independent authority"
+  }
+}
