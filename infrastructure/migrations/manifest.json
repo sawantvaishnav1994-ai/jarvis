@@ -8,5 +8,6 @@
     {"version":7,"file":"0007_backup_obligations.sql","sha256":"be64f2845be18cfd5ee03d60a7fd0d7c095dc3c37619511700a480a766e2a6af","destructive":false},
     {"version":8,"file":"0008_memory_lifecycle.sql","sha256":"991073de26881fa031564f723c304b14dea1fb51533bc2ca4c99a780795da21c","destructive":false},
     {"version":9,"file":"0009_memory_controls_audit.sql","sha256":"5fba8e2a06df0e4c68c10c2e882cfc4b6545e9ff4de26a02b4fd47a6a83e6245","destructive":false},
-    {"version":10,"file":"0010_memory_propagation.sql","sha256":"4d61c5556d6d13f16571c792826173cead8d12b7df49190b419000ff788450a0","destructive":false}
+    {"version":10,"file":"0010_memory_propagation.sql","sha256":"4d61c5556d6d13f16571c792826173cead8d12b7df49190b419000ff788450a0","destructive":false},
+    {"version":11,"file":"0011_tool_gateway.sql","sha256":"e3b7eb33f48cb265f735c9ff8bffecd1965a5663acd8712422fd7599ad0dc1c3","destructive":false}
 ]
