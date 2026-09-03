@@ -46,5 +46,11 @@
         "file": "0008_memory_lifecycle.sql",
         "sha256": "991073de26881fa031564f723c304b14dea1fb51533bc2ca4c99a780795da21c",
         "destructive": false
+    },
+    {
+        "version": 9,
+        "file": "0009_memory_controls_audit.sql",
+        "sha256": "5fba8e2a06df0e4c68c10c2e882cfc4b6545e9ff4de26a02b4fd47a6a83e6245",
+        "destructive": false
     }
 ]
