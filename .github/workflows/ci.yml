@@ -82,6 +82,12 @@ jobs:
       - name: J0.7 evidence on failure
         if: failure()
         run: npm run test:j07:go
+      - name: Explicit J0.8 A-T acceptance
+        if: success()
+        run: npm run test:j08:go
+      - name: J0.8 evidence on failure
+        if: failure()
+        run: npm run test:j08:go
       - name: Cleanup
         if: always()
         run: |
