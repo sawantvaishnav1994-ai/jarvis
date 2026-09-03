@@ -1059,7 +1059,7 @@ it("retention: ordinary approved writes cannot change retention or reset creatio
         updatedAt: Date.now(), retention,
         policy: { ...original.policy, retention: { mode: "until" as const,
             expiresAt: new Date(expiresAt).toISOString() } } };
-    await expect(execute("data.record.put", "D4", original.id, update))
+    await expect(execute("data.record.put", "D2", original.id, update))
         .rejects.toThrow("RETENTION_OWNER_APPROVAL_REQUIRED");
     await expect(execute("data.record.put", "D2", original.id, {
         ...original, revision: 2, previousRevision: 1,
@@ -1097,7 +1097,7 @@ it("retention: exact expired cleanup purges derived vectors, rejects altered pla
         storageClockOffset = 120000;
         await expect(execute("data.record.read", "D3", source.id))
             .rejects.toThrow("DATA_EXPIRED");
-        await expect(execute("data.record.put", "D4", source.id, {
+        await expect(execute("data.record.put", "D3", source.id, {
             ...source, revision: 2, previousRevision: 1,
             retention: { ...source.retention, revision: 2, mode: "KEEP_FOREVER", expiresAt: null },
             policy: { ...source.policy, retention: { mode: "keep" } },
@@ -1122,7 +1122,8 @@ it("retention: exact expired cleanup purges derived vectors, rejects altered pla
         expect((await pool.query("SELECT id FROM memory.embeddings WHERE id=$1", [vector.id])).rowCount).toBe(0);
         expect((await pool.query("SELECT record_id FROM storage.deletion_tombstones WHERE record_id=ANY($1::uuid[])", [[source.id, vector.id]])).rowCount).toBe(2);
         await expect(execute("data.record.read", "D3", source.id)).rejects.toThrow("DATA_NOT_FOUND");
-        const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'recordId'=$1", [source.id]);
+        const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'resource'=$1", [source.id]);
+        expect(audit.rows.length).toBeGreaterThan(0);
         expect(JSON.stringify(audit.rows)).not.toContain("Expiry synthetic payload");
     } finally {
         storageClockOffset = 0;
