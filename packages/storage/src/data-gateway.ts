@@ -22,6 +22,7 @@ import { PortableExports } from "./exports.js";
 import { StorageRecovery } from "./recovery.js";
 import { StorageHealthService } from "./storage-health.js";
 import { ObjectDeletion } from "./object-deletion.js";
+import { SecretHandleExecutor, SecretUseReceiptSchema } from "./secret-executor.js";
 
 export const DataRequestInputSchema = z.strictObject({
     recordId: z.uuid().nullable(),
@@ -32,6 +33,7 @@ export const DataRequestInputSchema = z.strictObject({
         .nullable(),
 });
 const operations = {
+    "data.secret.use": { capability: "secrets.handle.use", permission: "P4" },
     "data.record.put": { capability: "data.write", permission: "P3" },
     "data.record.read": { capability: "data.read", permission: "P0" },
     "data.record.forget": { capability: "data.delete", permission: "P4" },
@@ -75,6 +77,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
             exports: PortableExports;
             recovery: StorageRecovery;
             health?: StorageHealthService;
+            secretExecutor?: SecretHandleExecutor;
         },
     ) {}
     describe(request: ActionRequestV3) {
@@ -92,6 +95,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
         const level = Number(input.classification.slice(1));
         if (
             ([
+                "data.secret.use",
                 "data.keys.rotate",
                 "data.export",
                 "data.backup.create",
@@ -256,6 +260,10 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                                   );
                         break;
                 }
+            } else if (request.toolId === "data.secret.use") {
+                if (input.recordId !== null || !this.services?.secretExecutor)
+                    throw new BoundaryError("SECRET_EXECUTOR_UNAVAILABLE");
+                value = await this.services.secretExecutor.execute(authorization, transient);
             } else if (request.toolId.startsWith("data.retention.")) {
                 if (!input.recordId)
                     throw new BoundaryError("DATA_RECORD_REQUIRED");
@@ -445,6 +453,9 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
     verify(request: ActionRequestV3, result: unknown) {
         if (!request.toolId.startsWith("data."))
             return this.fallback.verify(request, result);
+        if (request.toolId === "data.secret.use" &&
+            !SecretUseReceiptSchema.safeParse((result as { value?: unknown })?.value).success)
+            return false;
         return z
             .strictObject({
                 version: z.literal(1),

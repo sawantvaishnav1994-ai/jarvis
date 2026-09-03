@@ -24,6 +24,7 @@ import {
     StorageRecovery,
     StorageHealthService,
     PostgresIsolatedRestore,
+    SecretHandleExecutor,
     verifyPortableExport,
     storageHash,
     type DatabasePool,
@@ -49,6 +50,7 @@ let admin: DatabasePool,
     pool: DatabasePool;
 const created: string[] = [];
 let dir: string, repository: PostgresIdentityRepository;
+let secretVault: FileSecretManager;
 let f: ReturnType<typeof fixture>,
     owner: Awaited<ReturnType<typeof root>>,
     subjectId: string;
@@ -65,6 +67,7 @@ const capabilities = [
     "data.read",
     "data.write",
     "data.retention.modify",
+    "secrets.handle.use",
     "data.delete",
     "data.export",
     "data.inventory",
@@ -155,8 +158,9 @@ beforeAll(async () => {
         keyPath,
         "development",
         actor.id,
-        new Set(["development/storage/kek/k1", "development/storage/kek/k2"]),
+        new Set(["development/storage/kek/k1", "development/storage/kek/k2", "development/tools/synthetic-credential"]),
     );
+    secretVault = vault;
     const keys = new DataKeys(vault, actor.id, cipher);
     records = new PrivateRecords((ownerId) => keys.cipher(ownerId), () => Date.now() + storageClockOffset);
     liveObjects = new LocalEncryptedObjects(join(dir, "objects"));
@@ -200,6 +204,7 @@ beforeAll(async () => {
                         objects,
                         exports: new PortableExports(records, objects, cipher),
                         recovery,
+                        secretExecutor: new SecretHandleExecutor(vault, actor.id),
                         health: new StorageHealthService(
                             keys,
                             objects,
@@ -1129,3 +1134,50 @@ it("retention: exact expired cleanup purges derived vectors, rejects altered pla
         storageClockOffset = 0;
     }
 }, 30000);
+
+it("H: exact owner-approved tool consumes a vault handle without returning or auditing plaintext", async () => {
+    await ownerCommand("budget.set", {
+        version: 1, actorId: subjectId, maximumRuntimeMs: 900000,
+        maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 20, toolCalls: 0,
+        maximumRisk: "R4", resources: ["owner-data"], environments: ["development"],
+        startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 900000,
+        networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3",
+    });
+    const input = { version: 1, handle: "secret://synthetic/credential-check", tool: "synthetic.credential-check" };
+    const lease = await secretVault.lease("development/tools/synthetic-credential", {
+        version: 1, id: "jarvis-data-test", kind: "service", environment: "development",
+    });
+    try {
+        const issued = await authorize("data.secret.use", "D4", null, input);
+        const result = await subject("execute", issued);
+        expect(result).toMatchObject({ result: { value: {
+            version: 1, tool: "synthetic.credential-check", verified: true, secretReturned: false,
+        } } });
+        expect(JSON.stringify(result)).not.toContain(lease.value.toString());
+        await expect(subject("execute", issued)).rejects.toThrow("AUTHORIZATION_REPLAY");
+        const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'requestId'=$1", [issued.request.id]);
+        expect(audit.rowCount).toBe(1);
+        expect(audit.rows[0].record).toMatchObject({ operation: "data.secret.use", result: "allowed" });
+        expect(JSON.stringify(audit.rows)).not.toContain(lease.value.toString());
+        expect(JSON.stringify(await repository.audit(1000))).not.toContain(lease.value.toString());
+    } finally { lease.destroy(); }
+    await expect(secretVault.lease("development/tools/synthetic-credential", {
+        version: 1, id: "jarvis-data-test", kind: "agent", environment: "development",
+    })).rejects.toThrow("SECRET_SCOPE_DENIED");
+});
+it("H: different handles, revoked authorizations and modified execution inputs cannot resolve secrets", async () => {
+    const input = { version: 1, handle: "secret://synthetic/credential-check", tool: "synthetic.credential-check" };
+    await expect(authorize("data.secret.use", "D5", null, input)).rejects.toThrow();
+    await expect(execute("data.secret.use", "D4", null, { ...input, handle: "secret://database/runtime" }))
+        .rejects.toThrow("SECRET_USE_SCOPE_DENIED");
+    const revoked = await authorize("data.secret.use", "D4", null, input);
+    await ownerCommand("authorization.revoke", { id: revoked.authorization.id });
+    await expect(subject("execute", revoked)).rejects.toThrow();
+    const exact = await authorize("data.secret.use", "D4", null, input);
+    await expect(subject("execute", { ...exact, transient: { ...input, handle: "secret://database/runtime" } }))
+        .rejects.toThrow();
+    const expired = await authorize("data.secret.use", "D4", null, input);
+    f.advance(120000);
+    try { await expect(subject("execute", expired)).rejects.toThrow("AUTHORIZATION_EXPIRED"); }
+    finally { f.advance(-120000); }
+});

@@ -275,6 +275,7 @@ export async function ensureStorageSecrets(
             "development/storage/kek/k1",
             "development/storage/kek/k2",
             "development/storage/backup/key1",
+            "development/tools/synthetic-credential",
         ]) {
             if (vault.records[ref]) {
                 cipher.decrypt(

@@ -20,6 +20,7 @@ import {
     StorageRecovery,
     StorageHealthService,
     PrivateDataGateway,
+    SecretHandleExecutor,
 } from "@jarvis/storage";
 import { identityHandler } from "./identity-http.js";
 import { developmentToolGateway } from "./tool-runtime.js";
@@ -71,6 +72,7 @@ async function main() {
             "development/storage/kek/k1",
             "development/storage/kek/k2",
             "development/storage/backup/key1",
+            "development/tools/synthetic-credential",
         ]),
     );
     const dbLease = await vault.lease(
@@ -139,6 +141,7 @@ async function main() {
             keys,
             objects,
             recovery,
+            secretExecutor: new SecretHandleExecutor(vault, actor.id),
             exports: new PortableExports(records, objects, storageCipher),
             health: new StorageHealthService(
                 keys,
