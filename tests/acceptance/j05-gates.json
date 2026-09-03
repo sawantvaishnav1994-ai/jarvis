@@ -1,0 +1,27 @@
+{
+  "milestone": "J0.5",
+  "status": "implementation-in-progress",
+  "baseline": "ae4ecb03cb9e658a00827dfb3ee8da1d0a88845d",
+  "gates": {
+    "A": ["J0.5 A: protects exact J0.4 baseline and prior milestone regressions"],
+    "B": ["J0.5 B: admits an owner-stated memory with canonical policy and provenance"],
+    "C": ["J0.5 C: does not promote an ineligible conversation into durable memory"],
+    "D": ["J0.5 D: preserves model inference as non-owner assertion"],
+    "E": ["J0.5 E: rejects NEVER_STORE and D5 generic memory without derived persistence"],
+    "F": ["J0.5 F: admission replay is idempotent and canonical"],
+    "G": ["J0.5 G: retrieves scoped relevant memory through pgvector with evidence scores"],
+    "H": ["J0.5 H: hybrid retrieval favors stronger structured evidence over weak similarity"],
+    "I": ["J0.5 I: temporal supersession preserves history and returns current truth"],
+    "J": ["J0.5 J: contradictory active propositions produce deterministic conflict state"],
+    "K": ["J0.5 K: owner correction creates authoritative revision without erasing history"],
+    "L": ["J0.5 L: canonical entity linkage reuses identity and preserves evidence"],
+    "M": ["J0.5 M: relationship evidence links graph facts to surviving source memory"],
+    "N": ["J0.5 N: bounded graph retrieval enforces owner project depth and edge limits"],
+    "O": ["J0.5 O: context minimization selects only budgeted highest-value evidence"],
+    "P": ["J0.5 P: external context excludes D5 and NEVER_EXTERNAL before provider boundary"],
+    "Q": ["J0.5 Q: forget propagation invalidates memory vectors and unsupported graph facts"],
+    "R": ["J0.5 R: expiry removes memory from retrieval and propagates derived invalidation"],
+    "S": ["J0.5 S: retrieval failure closes safely or explicitly reports permitted degradation"],
+    "T": ["J0.5 T: owner inspection exposes evidence conflicts and context preview with safe audit"]
+  }
+}
