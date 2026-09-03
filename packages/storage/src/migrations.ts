@@ -135,6 +135,9 @@ export async function migrate(
             "GRANT SELECT,INSERT,DELETE ON memory.records TO jarvis_development_runtime",
         );
         await client.query(
+            "GRANT SELECT,INSERT,UPDATE,DELETE ON memory.lifecycle,memory.revisions,memory.conflicts,memory.conflict_members,memory.admission_decisions TO jarvis_development_runtime",
+        );
+        await client.query(
             "GRANT SELECT,INSERT ON events.envelopes,audit.entries,audit.policy_entries TO jarvis_development_runtime",
         );
         await client.query(
