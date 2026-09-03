@@ -5,6 +5,7 @@ import {
     PrivacySchema,
 } from "@jarvis/shared";
 
+export * from "./control-plane.js";
 export * from "./j06-contracts.js";
 export * from "./router.js";
 export * from "./streaming.js";
