@@ -1,0 +1,26 @@
+{
+  "milestone": "J0.10 Recovery & Data Sovereignty",
+  "baseline": "e9e943b90da9d1be748aedb4dc62ef7017020b39",
+  "gates": [
+    "J0.10-A — Protected baseline",
+    "J0.10-B — Canonical recovery contracts",
+    "J0.10-C — Encrypted backup integrity and authenticity",
+    "J0.10-D — Backup catalog and compatibility",
+    "J0.10-E — Restore plan exact binding",
+    "J0.10-F — Recovery simulation is not authorization",
+    "J0.10-G — Isolated restore only",
+    "J0.10-H — Root Owner and security state preservation",
+    "J0.10-I — Secret and key separation",
+    "J0.10-J — Deletion and tombstone non-resurrection",
+    "J0.10-K — Audit recovery and integrity",
+    "J0.10-L — Recovery safe mode",
+    "J0.10-M — Disaster scenario recovery",
+    "J0.10-N — Portable owner export",
+    "J0.10-O — Import validation",
+    "J0.10-P — Infrastructure replacement",
+    "J0.10-Q — J0.3 authorization and TOCTOU preservation",
+    "J0.10-R — Crash and outage recovery reliability",
+    "J0.10-S — Startup readiness and recovery lifecycle",
+    "J0.10-T — Full recovery and data sovereignty integration"
+  ]
+}

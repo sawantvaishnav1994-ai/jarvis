@@ -19,7 +19,7 @@ jobs:
       - run: PYTHONPATH=src python -m jarvis demo
   typescript-foundation:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env: {NEXT_TELEMETRY_DISABLED: '1'}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -46,6 +46,8 @@ jobs:
       - name: Owner identity and device trust GO flow
         env: {JARVIS_IDENTITY_E2E: '1'}
         run: npm run test:e2e:identity
+      - name: J0.10 backup and recovery disaster drills
+        run: npm run test:j10:recovery-drill
       - name: Dependency outage and recovery
         run: npm run test:failures
       - name: Stop and verify processes
@@ -91,6 +93,12 @@ jobs:
       - name: J0.9 evidence on failure
         if: failure()
         run: npm run test:j09:go
+      - name: Explicit J0.10 A-T acceptance
+        if: success()
+        run: npm run test:j10:go
+      - name: J0.10 evidence on failure
+        if: failure()
+        run: npm run test:j10:go
       - name: Cleanup
         if: always()
         run: |
