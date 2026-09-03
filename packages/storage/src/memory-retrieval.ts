@@ -23,26 +23,34 @@ export class PostgresMemoryVectorSearch {
         const boundedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
         const literal = JSON.stringify(vector);
         const result = await this.pool.query(
-            `SELECT DISTINCT ON (e.memory_id)
-                    e.memory_id,
-                    GREATEST(0::double precision, LEAST(1::double precision,
-                        1 - (e.embedding <=> $2::vector))) AS semantic_score,
-                    l.confidence,
-                    l.assertion,
-                    l.lifecycle
-               FROM memory.embeddings e
-               JOIN memory.lifecycle l
-                 ON l.owner_id=e.owner_id AND l.memory_id=e.memory_id
-               JOIN storage.record_catalog c
-                 ON c.owner_id=l.owner_id AND c.id=l.memory_id
-              WHERE e.owner_id=$1
-                AND e.embedding IS NOT NULL
-                AND vector_dims(e.embedding)=$5
-                AND l.lifecycle='ACTIVE'
-                AND c.deleted=false
-                AND ($4::text IS NULL OR e.provider=$4)
-              ORDER BY e.memory_id, semantic_score DESC
-              LIMIT $3`,
+            `WITH candidates AS (
+                SELECT e.memory_id,
+                       GREATEST(0::double precision, LEAST(1::double precision,
+                           1 - (e.embedding <=> $2::vector))) AS semantic_score,
+                       l.confidence,
+                       l.assertion,
+                       l.lifecycle,
+                       row_number() OVER (
+                           PARTITION BY e.memory_id
+                           ORDER BY (e.embedding <=> $2::vector) ASC, e.id ASC
+                       ) AS rn
+                  FROM memory.embeddings e
+                  JOIN memory.lifecycle l
+                    ON l.owner_id=e.owner_id AND l.memory_id=e.memory_id
+                  JOIN storage.record_catalog c
+                    ON c.owner_id=l.owner_id AND c.id=l.memory_id
+                 WHERE e.owner_id=$1
+                   AND e.embedding IS NOT NULL
+                   AND vector_dims(e.embedding)=$5
+                   AND l.lifecycle='ACTIVE'
+                   AND c.deleted=false
+                   AND ($4::text IS NULL OR e.provider=$4)
+            )
+            SELECT memory_id,semantic_score,confidence,assertion,lifecycle
+              FROM candidates
+             WHERE rn=1
+             ORDER BY semantic_score DESC,memory_id ASC
+             LIMIT $3`,
             [ownerId, literal, boundedLimit, provider, vector.length],
         );
         return result.rows
