@@ -1,6 +1,30 @@
 import { z } from "zod";
 import { DataPolicySchema, IdentifierSchema } from "@jarvis/shared";
-import { ProvenanceSchema } from "@jarvis/memory";
+
+export const KnowledgeProvenanceSchema = z.strictObject({
+    kind: z.enum([
+        "owner-stated",
+        "imported",
+        "tool-observed",
+        "model-inferred",
+    ]),
+    source: z.strictObject({
+        kind: z.enum([
+            "conversation",
+            "file",
+            "website",
+            "tool",
+            "person",
+            "sensor",
+            "model",
+        ]),
+        id: IdentifierSchema,
+        version: z.number().int().positive(),
+    }),
+    capturedAt: z.iso.datetime(),
+    confidence: z.number().min(0).max(1),
+    verifiedAt: z.iso.datetime().nullable(),
+});
 
 export const EntityLifecycleStateSchema = z.enum([
     "ACTIVE",
@@ -20,7 +44,7 @@ export const EntitySchema = z.strictObject({
     aliases: z.array(z.string().min(1).max(1000)).max(100),
     policy: DataPolicySchema,
     lifecycle: EntityLifecycleStateSchema,
-    provenance: z.array(ProvenanceSchema).min(1).max(100),
+    provenance: z.array(KnowledgeProvenanceSchema).min(1).max(100),
     recordVersion: z.number().int().positive(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
@@ -42,7 +66,7 @@ export const RelationshipEvidenceSchema = z.strictObject({
     relationshipId: z.uuid(),
     sourceMemoryId: z.uuid().nullable(),
     sourceRecordId: z.uuid(),
-    provenance: ProvenanceSchema,
+    provenance: KnowledgeProvenanceSchema,
     confidence: z.number().min(0).max(1),
     active: z.boolean(),
     createdAt: z.iso.datetime(),
