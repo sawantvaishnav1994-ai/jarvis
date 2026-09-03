@@ -1,0 +1,2 @@
+import {readFile,writeFile} from "node:fs/promises";
+const path="tests/integration/private-data-postgres.test.ts",from="toEqual([1,2,3,4,5,6,7,8,9,10,11,12,13]);",to="toEqual([1,2,3,4,5,6,7,8,9,10,11,12,13,14]);",text=await readFile(path,"utf8"),hits=text.split(from).length-1;if(hits!==1)throw new Error(`EXPECTED_ONE_BASELINE_ASSERTION_GOT_${hits}`);await writeFile(path,text.replace(from,to));console.log("J0.10_MIGRATION_BASELINE_PATCHED");
