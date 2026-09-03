@@ -64,6 +64,12 @@ jobs:
       - name: J0.4 evidence on failure
         if: failure()
         run: npm run test:j04:go
+      - name: Explicit J0.5 A-T acceptance
+        if: success()
+        run: npm run test:j05:go
+      - name: J0.5 evidence on failure
+        if: failure()
+        run: npm run test:j05:go
       - name: Cleanup
         if: always()
         run: |
