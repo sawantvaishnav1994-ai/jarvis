@@ -1,6 +1,7 @@
 import { z } from "zod";
 export * from "./records-v2.js";
 export * from "./j05-contracts.js";
+export * from "./admission.js";
 import {
     ContractVersionSchema,
     IdentifierSchema,
