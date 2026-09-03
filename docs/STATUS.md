@@ -154,3 +154,17 @@ independently immutable/offline backups, PostgreSQL PITR, multi-region disaster
 recovery, hostile-process containment, real connector credential rotation, secure
 enclave validation and regulatory retention. J0 Foundation v1 GO remains NOT ISSUED,
 and J1/J0.5 have not been started. Any merge to main requires a separate owner decision.
+
+## J0.11 development qualification — 2026-09-04
+
+**J0.11 — Full Foundation Integration, Adversarial Validation & Release-Candidate Qualification: COMPLETE for development validation. J0.11 Development GO is recommended for owner review.**
+
+Protected J0.10 baseline: `f00eabba0bf4cda66b906d61a8e050b95123463f`. Validation branch: `validation/j0.11-full-foundation-integration-20260904`. The behaviorally validated candidate `f5c1df7ccc2926caeddc3f60a8f344aea5c511c8` passed GitHub Actions run `33801036155` from a fresh checkout with disposable PostgreSQL/pgvector and Redis/BullMQ.
+
+The exact run passed 447 TypeScript unit/contract/security tests, 77 real PostgreSQL/pgvector integration tests, four foundation browser tests, the full synthetic Root Owner/passkey/second-device/restricted-agent/revocation/recovery browser ceremony, real queue transport, J0.10 disaster-recovery authenticity and substitution attacks, PostgreSQL/Redis outage and recovery, verified service shutdown, J0.4 `A-S_PASS`, J0.5–J0.10 `A-T_PASS`, and J0.11 `A-T_PASS`. Critical governance, governed-gateway and J0.10-hardening tests were repeated three consecutive times without failure. No migration 0015 or runtime redesign was introduced.
+
+Earlier J0.11 runs `33800548093` and `33800858623` failed only the newly added acceptance-catalog formatting harness. Those failures were retained as evidence; the harness was diagnosed and corrected without skipping or weakening any behavioral/security requirement.
+
+This is development qualification, not production security certification. Production HSM/KMS custody, physical-device ceremonies, independently separated/offline recovery infrastructure, hostile-host containment, production connector credentials and geographically independent disaster recovery remain unclaimed unless separately proven.
+
+Main has not been changed by J0.11. No release or Foundation v1 tag was created. **J0 Foundation v1 GO remains NOT ISSUED. J0.12 and J1 remain NOT STARTED.**
