@@ -46,7 +46,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | J0.8 | Event schema, encrypted persistence and constrained queue worker | Outbox, subscriptions, authenticated ingress, replay/dead-letter semantics |
 | J0.9 | Operational metadata and database append-only audit controls | Independently immutable archive, external witnesses and operations |
 | J0.10 | Historical Python encrypted recovery/export/delete tests | Active-runtime full data sovereignty and off-host disaster drill |
-| J0.11 | Unit/contracts/security and real-stack acceptance suite | Complete authenticated full-J0 workflow and host/deployment tests |
+| J0.11 | Full Foundation integration and adversarial qualification passed on exact-SHA cloud CI; J0.11 A–T PASS | Development qualification complete; production-only controls remain outside J0.11 |
 | J0.12 | Contract versions and acceptance criteria recorded | Close applicable gates, freeze interfaces, owner GO |
 
 The private GitHub repository already exists. Branch ruleset enforcement was
