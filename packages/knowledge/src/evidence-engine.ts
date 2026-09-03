@@ -85,6 +85,7 @@ export class KnowledgeEvidenceEngine {
             if(truncated) break;
             frontier=next; depth++;
         }
+        if(frontier.length && depth>=q.maxDepth) truncated=true;
         const evidenceIds=new Set(edges.flatMap(e=>e.evidenceIds));
         const evidence=(await this.store.evidence(q.ownerId)).filter(e=>evidenceIds.has(e.id)&&e.active);
         return GraphResultSchema.parse({version:1,entities:allEntities.filter(e=>seen.has(e.id)),relationships:edges,evidence,truncated,maxDepthReached:depth});
