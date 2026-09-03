@@ -24,6 +24,7 @@
         "test:integration": "npm run build:packages && vitest run --config vitest.integration.config.ts",
         "test:j04:go": "node scripts/j04-go.mjs",
         "test:j05:go": "node scripts/j05-go.mjs",
+        "test:j06:go": "node scripts/j06-go.mjs",
         "test:e2e": "playwright test",
         "test:e2e:identity": "playwright test --config playwright.identity.config.ts",
         "smoke": "node scripts/smoke.mjs",
