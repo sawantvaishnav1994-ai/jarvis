@@ -11,7 +11,6 @@ import {
     streamModel,
     verifyWithIndependentModel,
     type J06ModelRequest,
-    type J06ModelResult,
     type ModelAuditRecord,
     type ModelDescriptor,
     type ModelRoutePolicy,
