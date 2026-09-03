@@ -145,6 +145,7 @@ export * from "./data-keys.js";
 export * from "./private-objects.js";
 export * from "./exports.js";
 export * from "./recovery.js";
+export * from "./governed-migrations.js";
 export * from "./storage-health.js";
 export * from "./retention.js";
 export * from "./secret-executor.js";

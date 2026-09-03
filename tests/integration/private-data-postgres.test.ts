@@ -25,6 +25,9 @@ import {
     StorageHealthService,
     PostgresIsolatedRestore,
     SecretHandleExecutor,
+    GovernedMigrations,
+    destructiveMigrationHash,
+    reconstructPortableExport,
     verifyPortableExport,
     storageHash,
     type DatabasePool,
@@ -57,6 +60,7 @@ let f: ReturnType<typeof fixture>,
 const subjectDevice = new TestDevice();
 const cipher = new RecordCipher(randomBytes(32));
 let storageClockOffset = 0;
+let securityClock: () => number = Date.now;
 let records: PrivateRecords,
     liveObjects: LocalEncryptedObjects,
     backupStore: LocalEncryptedObjects,
@@ -80,6 +84,12 @@ const capabilities = [
     "storage.migration.execute",
     "storage.health.read",
 ];
+const migrationDefinition = {
+    version: 1, id: "test.remove-owner-probe-v2",
+    affectedTables: ["recovery.migration_probe"],
+    statements: ["DELETE FROM recovery.migration_probe WHERE owner_id=$1"],
+    verificationQuery: "SELECT NOT EXISTS(SELECT 1 FROM recovery.migration_probe WHERE owner_id=$1) AS verified",
+};
 
 beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), "jarvis-private-data-"));
@@ -190,13 +200,14 @@ beforeAll(async () => {
                 }
             },
         ),
-        () => Date.now() + storageClockOffset,
+        () => securityClock() + storageClockOffset,
     );
     repository = new PostgresIdentityRepository(pool, cipher);
     f = fixture(
         repository,
-        (clock) =>
-            new GovernanceEngine(
+        (clock) => {
+            securityClock = clock;
+            return new GovernanceEngine(
                 new PrivateDataGateway(
                     records,
                     new AuthorizedMockToolGateway(),
@@ -205,7 +216,8 @@ beforeAll(async () => {
                         objects,
                         exports: new PortableExports(records, objects, cipher),
                         recovery,
-                        secretExecutor: new SecretHandleExecutor(vault, actor.id),
+                        secretExecutor: new SecretHandleExecutor(vault, actor.id, clock),
+                        migrations: new GovernedMigrations(recovery, [migrationDefinition], clock),
                         health: new StorageHealthService(
                             keys,
                             objects,
@@ -215,7 +227,8 @@ beforeAll(async () => {
                     },
                 ),
                 clock,
-            ).handle,
+            ).handle;
+        },
     );
     owner = await root(f);
     const createdSubject = (await ownerAction(
@@ -1217,4 +1230,78 @@ it("E-L: shared canonical objects survive one unlink, legacy links reconcile, fi
     const deletion = await execute("data.record.forget", "D3", b.id) as { id: string };
     await expect(execute("data.object.get", "D2", id)).rejects.toThrow("OBJECT_NOT_FOUND");
     expect(await execute("data.deletion.purge", "D4", deletion.id)).toMatchObject({ state: "PURGED" });
+}, 30000);
+
+it("A: creates a separately bounded extended-acceptance actor without resetting existing budgets", async () => {
+    const next = await ownerAction(f.engine, owner.device, owner.session, "subject.create", {
+        name: "Restricted portability validation", kind: "service", publicKey: subjectDevice.input.publicKey, scopes: [], resources: [],
+    }) as { subjectId: string };
+    subjectId = next.subjectId;
+    await ownerCommand("policy.create", {
+        version: 1, id: "owner.storage-extended", revision: 1, status: "draft", createdAt: 0, activatedAt: null,
+        creatorId: owner.session.ownerId, precedence: "owner", supersedes: null,
+        rules: [{ id: "exact-extended-data", effect: "allow", actorIds: [subjectId], capabilities,
+            scope: { version: 1, resource: "owner-data", environments: ["development"] }, maximumRisk: "R4",
+            requireApproval: true, requireStepUp: true, allowEscalationRequest: true,
+            requireSimulation: true, requireTests: true, requireScan: true, minimumConfidence: 1 }],
+    });
+    await ownerCommand("policy.activate", { id: "owner.storage-extended", revision: 1 });
+    await ownerCommand("delegation.grant", { version: 1, actorId: subjectId, capability: "data.inventory", resource: "owner-data", environment: "development", ttlSeconds: 900, maximumUses: 100, maximumRisk: "R2", toolId: null });
+    await ownerCommand("budget.set", { version: 1, actorId: subjectId, maximumRuntimeMs: 900000, maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 100, toolCalls: 0, maximumRisk: "R4", resources: ["owner-data"], environments: ["development"], startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 900000, networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3" });
+    expect((await pool.query("SELECT version FROM settings.schema_migrations ORDER BY version")).rows.map(row => row.version)).toEqual([1,2,3,4,5,6,7]);
+});
+
+it("B-G-K: reconstructs provider-independent conversation, graph, settings and safe definitions with deletion metadata", async () => {
+    const c = record("conversation", { title: "Portable conversation", participants: [owner.session.ownerId], archived: false }, "D2");
+    const messages = ["first", "second"].map(content => record("message", { conversationId: c.id, authorId: subjectId, content, contentType: "text/plain", model: { provider: "synthetic-replaceable", model: "portable" } }, "D2"));
+    const entities = ["one", "two"].map(name => record("entity", { type: "project", name, aliases: [] }, "D2", [c.id]));
+    const relationship = record("relationship", { sourceEntity: entities[0]!.id, targetEntity: entities[1]!.id, relation: "related-to", confidence: 1 }, "D2");
+    const evidence = record("evidence", { relationshipId: relationship.id, description: "Owner-provided synthetic evidence" }, "D2");
+    const project = record("project", { name: "Portable project", description: "Synthetic project" }, "D2");
+    const setting = record("setting", { name: "display.preference", value: "compact" }, "D2");
+    for (const row of [c, ...messages, ...entities, relationship, evidence, project, setting]) await execute("data.record.put", "D2", row.id, row);
+    const exported = verifyPortableExport(await execute("data.export", "D4"));
+    const reconstructed = reconstructPortableExport(exported);
+    for (const row of [c, ...messages, ...entities, relationship, evidence, project, setting]) expect(reconstructed.records.get(row.id)).toEqual(row);
+    expect(reconstructed.deleted.has(memory.id)).toBe(true);
+    expect(reconstructed.records.has(memory.id)).toBe(false);
+    expect(JSON.parse(exported.files["agent-definitions/definitions.json"]!).some((value: { id: string }) => value.id === subjectId)).toBe(true);
+    expect(exported.files["agent-definitions/definitions.json"]).not.toContain("publicKey");
+    expect(JSON.parse(exported.files["lineage/links.json"]!).some((value: { derived_id: string }) => value.derived_id === evidence.id)).toBe(true);
+    expect(exported.manifest.domains).toEqual(expect.arrayContaining(["retention", "provenance", "lineage", "deletion", "agent-definitions"]));
+    await execute("data.record.forget", "D2", c.id);
+    for (const row of [c, ...messages, ...entities, relationship, evidence]) await expect(execute("data.record.read", "D2", row.id)).rejects.toThrow("DATA_NOT_FOUND");
+}, 30000);
+
+it("P: reusable migration registry requires exact current recovery evidence and one-time owner approval", async () => {
+    await pool.query("INSERT INTO recovery.migration_probe(id,owner_id,payload) VALUES($1,$2,$3)", [randomUUID(), owner.session.ownerId, cipher.encrypt("Generic migration sentinel", "probe")]);
+    const payload = { version: 1, migrationId: migrationDefinition.id, migrationHash: destructiveMigrationHash(migrationDefinition), backupId: String(randomUUID()) };
+    await expect(execute("data.migration.execute", "D4", null, payload)).rejects.toThrow("BACKUP_NOT_FOUND");
+    const fresh = await execute("data.backup.create", "D4") as { id: string; items: { sha256: string }[] };
+    payload.backupId = fresh.id;
+    await expect(execute("data.migration.execute", "D4", null, { ...payload, migrationHash: "0".repeat(64) })).rejects.toThrow("MIGRATION_DEFINITION_MISMATCH");
+    const tampered = await authorize("data.migration.execute", "D4", null, payload);
+    await expect(subject("execute", { ...tampered, transient: { ...payload, migrationId: "unreviewed.operation" } })).rejects.toThrow();
+    const exact = await authorize("data.migration.execute", "D4", null, payload);
+    expect(await subject("execute", exact)).toMatchObject({ result: { value: { verified: true, backupId: fresh.id, migrationHash: payload.migrationHash } } });
+    await expect(subject("execute", exact)).rejects.toThrow("AUTHORIZATION_REPLAY");
+    expect((await pool.query("SELECT * FROM recovery.migration_probe")).rows).toEqual([]);
+    const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'operation'='data.migration.verified'");
+    expect(audit.rows[0].record).toMatchObject({ backupId: fresh.id, verified: true });
+    expect(JSON.stringify(audit.rows)).not.toContain("Generic migration sentinel");
+}, 30000);
+
+it("P: stale, corrupt and changed-source backups cannot authorize a destructive migration", async () => {
+    const payload = { version: 1, migrationId: migrationDefinition.id, migrationHash: destructiveMigrationHash(migrationDefinition), backupId: String(randomUUID()) };
+    storageClockOffset = -600001;
+    try { payload.backupId = (await execute("data.backup.create", "D4") as { id: string }).id; }
+    finally { storageClockOffset = 0; }
+    await expect(execute("data.migration.execute", "D4", null, payload)).rejects.toThrow("CURRENT_RECOVERY_EVIDENCE_REQUIRED");
+    const fresh = await execute("data.backup.create", "D4") as { id: string; items: { sha256: string }[] };
+    await pool.query("INSERT INTO recovery.migration_probe(id,owner_id,payload) VALUES($1,$2,$3)", [randomUUID(), owner.session.ownerId, cipher.encrypt("Changed source", "probe")]);
+    await expect(execute("data.migration.execute", "D4", null, { ...payload, backupId: fresh.id })).rejects.toThrow("CURRENT_RECOVERY_EVIDENCE_REQUIRED");
+    const corrupt = await execute("data.backup.create", "D4") as { id: string; items: { sha256: string }[] };
+    await writeFile(join(dir, "backups", storageHash(owner.session.ownerId), corrupt.items[0]!.sha256), "synthetic corruption", { mode: 0o600 });
+    await expect(execute("data.migration.execute", "D4", null, { ...payload, backupId: corrupt.id })).rejects.toThrow();
+    expect((await pool.query("SELECT count(*)::int AS n FROM recovery.migration_probe")).rows[0].n).toBe(1);
 }, 30000);

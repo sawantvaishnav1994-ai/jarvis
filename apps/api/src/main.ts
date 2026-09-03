@@ -21,6 +21,7 @@ import {
     StorageHealthService,
     PrivateDataGateway,
     SecretHandleExecutor,
+    GovernedMigrations,
 } from "@jarvis/storage";
 import { identityHandler } from "./identity-http.js";
 import { developmentToolGateway } from "./tool-runtime.js";
@@ -142,6 +143,7 @@ async function main() {
             objects,
             recovery,
             secretExecutor: new SecretHandleExecutor(vault, actor.id),
+            migrations: new GovernedMigrations(recovery),
             exports: new PortableExports(records, objects, storageCipher),
             health: new StorageHealthService(
                 keys,
