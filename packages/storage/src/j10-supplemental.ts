@@ -1,0 +1,43 @@
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import type pg from "pg";
+import { canonical } from "@jarvis/identity";
+import { BoundaryError } from "@jarvis/shared";
+import { RecordCipher,type AuthorizationV3 } from "@jarvis/security";
+import { storageHash,type ObjectStorage } from "./objects.js";
+import type { StorageRecovery } from "./recovery.js";
+import { materializeRecoveryManifest,RecoveryControlPlane } from "./j10-recovery.js";
+
+const Hash=z.string().regex(/^[a-f0-9]{64}$/),Item=z.strictObject({key:Hash,size:z.number().int().positive()});
+export const SovereignSupplementDescriptorSchema=z.strictObject({version:z.literal(1),id:z.uuid(),ownerId:z.string().min(1).max(128),createdAt:z.number().int().nonnegative(),digest:Hash,rowCount:z.number().int().nonnegative(),tables:z.array(z.string()).min(1),items:z.array(Item).min(1).max(400)});
+export type SovereignSupplementDescriptor=z.infer<typeof SovereignSupplementDescriptorSchema>;
+const SupplementSchema=z.strictObject({version:z.literal(1),ownerId:z.string().min(1).max(128),tables:z.record(z.string(),z.array(z.json()))});
+const tableQueries={
+ "audit.records_v3":"SELECT to_jsonb(t) row FROM audit.records_v3 t WHERE owner_id=$1 ORDER BY project_id,stream_sequence",
+ "audit.checkpoints":"SELECT to_jsonb(t) row FROM audit.checkpoints t WHERE owner_id=$1 ORDER BY project_id,first_sequence",
+ "audit.export_manifests":"SELECT to_jsonb(t) row FROM audit.export_manifests t WHERE owner_id=$1 ORDER BY created_at,export_id",
+ "events.event_log":"SELECT to_jsonb(t) row FROM events.event_log t WHERE owner_id=$1 ORDER BY received_at,event_id",
+ "events.outbox":"SELECT to_jsonb(t) row FROM events.outbox t JOIN events.event_log e ON e.event_id=t.event_id WHERE e.owner_id=$1 ORDER BY t.event_id",
+ "events.inbox":"SELECT to_jsonb(t) row FROM events.inbox t JOIN events.event_log e ON e.event_id=t.event_id WHERE e.owner_id=$1 ORDER BY t.event_id,t.consumer_id",
+ "events.subscriptions":"SELECT to_jsonb(t) row FROM events.subscriptions t WHERE owner_id=$1 ORDER BY subscription_id",
+ "events.delivery_attempts":"SELECT to_jsonb(t) row FROM events.delivery_attempts t JOIN events.event_log e ON e.event_id=t.event_id WHERE e.owner_id=$1 ORDER BY t.attempt_id",
+ "events.dead_letters":"SELECT to_jsonb(t) row FROM events.dead_letters t JOIN events.event_log e ON e.event_id=t.event_id WHERE e.owner_id=$1 ORDER BY t.dead_letter_id",
+ "events.schedules":"SELECT to_jsonb(t) row FROM events.schedules t WHERE owner_id=$1 ORDER BY schedule_id",
+ "events.sequence_checkpoints":"SELECT to_jsonb(t) row FROM events.sequence_checkpoints t WHERE owner_id=$1 ORDER BY sequence_key"
+} as const;
+export const j10SovereignTables=Object.keys(tableQueries) as (keyof typeof tableQueries)[];
+
+export class SovereignSupplementBackup{
+ constructor(private readonly pool:pg.Pool,private readonly store:ObjectStorage,private readonly cipher:RecordCipher,private readonly clock:()=>number=Date.now){}
+ async create(ownerId:string){const tables:Record<string,unknown[]>={},maxRows=10000;let rowCount=0;for(const table of j10SovereignTables){const rows=(await this.pool.query(tableQueries[table],[ownerId])).rows;if(rows.length>maxRows)throw new BoundaryError("RECOVERY_SUPPLEMENT_ROW_LIMIT");tables[table]=rows.map(r=>r.row);rowCount+=rows.length;}const supplement=SupplementSchema.parse({version:1,ownerId,tables}),encoded=Buffer.from(canonical(supplement));if(encoded.length>10000000)throw new BoundaryError("RECOVERY_SUPPLEMENT_SIZE_LIMIT");const id=randomUUID(),items:{key:string;size:number}[]=[];for(let offset=0,index=0;offset<encoded.length;offset+=40000,index++){const plaintext=encoded.subarray(offset,offset+40000).toString("base64"),box=Buffer.from(this.cipher.encrypt({data:plaintext},`j10:supplement:${ownerId}:${id}:${index}`)),key=await this.store.put(ownerId,box);items.push({key,size:box.length});}return SovereignSupplementDescriptorSchema.parse({version:1,id,ownerId,createdAt:this.clock(),digest:storageHash(encoded),rowCount,tables:j10SovereignTables,items});}
+ async validate(ownerId:string,descriptor:SovereignSupplementDescriptor){const d=SovereignSupplementDescriptorSchema.parse(descriptor);if(d.ownerId!==ownerId)throw new BoundaryError("RECOVERY_OWNER_MISMATCH");const chunks:Buffer[]=[];for(const[index,item]of d.items.entries()){const bytes=await this.store.get(ownerId,item.key);if(bytes.length!==item.size||storageHash(bytes)!==item.key)throw new BoundaryError("RECOVERY_SUPPLEMENT_CORRUPT");const decoded=z.strictObject({data:z.string()}).parse(this.cipher.decrypt(bytes.toString("utf8"),`j10:supplement:${ownerId}:${d.id}:${index}`));chunks.push(Buffer.from(decoded.data,"base64"));}const all=Buffer.concat(chunks);if(storageHash(all)!==d.digest)throw new BoundaryError("RECOVERY_SUPPLEMENT_DIGEST_MISMATCH");const value=SupplementSchema.parse(JSON.parse(all.toString("utf8")));if(value.ownerId!==ownerId||Object.keys(value.tables).sort().join()!==[...j10SovereignTables].sort().join())throw new BoundaryError("RECOVERY_SUPPLEMENT_SCOPE_MISMATCH");const count=Object.values(value.tables).reduce((n,rows)=>n+rows.length,0);if(count!==d.rowCount)throw new BoundaryError("RECOVERY_SUPPLEMENT_TRUNCATED");return value;}
+ async restore(ownerId:string,descriptor:SovereignSupplementDescriptor,targetId:string,target:pg.Pool){if(!/^jarvis_restore_test_[a-f0-9]{16}$/.test(targetId))throw new BoundaryError("RESTORE_TARGET_NOT_ISOLATED");const data=await this.validate(ownerId,descriptor),client=await target.connect();try{await client.query("BEGIN");if((await client.query("SELECT current_database() name")).rows[0]?.name!==targetId)throw new BoundaryError("RESTORE_TARGET_MISMATCH");for(const table of j10SovereignTables){if((await client.query(`SELECT 1 FROM ${table} LIMIT 1`)).rowCount)throw new BoundaryError("RESTORE_SUPPLEMENT_TARGET_NOT_EMPTY");const rows=data.tables[table]??[];if(rows.length)await client.query(`INSERT INTO ${table} SELECT * FROM jsonb_populate_recordset(NULL::${table},$1::jsonb)`,[JSON.stringify(rows)]);}await client.query("SELECT setval('events.delivery_attempts_attempt_id_seq',GREATEST(COALESCE((SELECT max(attempt_id) FROM events.delivery_attempts),0),1))");await client.query("SELECT setval('events.dead_letters_dead_letter_id_seq',GREATEST(COALESCE((SELECT max(dead_letter_id) FROM events.dead_letters),0),1))");await client.query("COMMIT");}catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}}
+}
+
+export interface J10BundleMetadata{sourceInstallationId:string;sourceCommit:string;schemaHash:string;auditCheckpoint:{sequence:number;hash:string}|null;keyReferences:string[];vaultReferences:string[];tombstoneCount:number;deletionObligationCount:number}
+export interface J10Bundle{version:1;base:{id:string;domains:string[]};supplement:SovereignSupplementDescriptor;manifest:ReturnType<typeof materializeRecoveryManifest>}
+export class J10RecoveryBundle{
+ constructor(private readonly legacy:StorageRecovery,private readonly supplement:SovereignSupplementBackup,private readonly control:RecoveryControlPlane){}
+ async create(auth:AuthorizationV3,input:J10BundleMetadata):Promise<J10Bundle>{const base=await this.legacy.create(auth),extra=await this.supplement.create(auth.ownerId),manifest=materializeRecoveryManifest({version:2,id:randomUUID(),ownerId:auth.ownerId,projectId:null,sourceInstallationId:input.sourceInstallationId,sourceCommit:input.sourceCommit,createdAt:Date.now(),expiresAt:null,schemaVersion:14,schemaHash:input.schemaHash,storageVersion:2,encryptionVersion:1,vectorVersion:1,auditVersion:3,eventVersion:1,backupId:base.id,backupType:"FULL",parentBackupId:null,components:[{name:"j04-core-backup",digest:storageHash(canonical(base)),count:base.domains.length,required:true},{name:"j08-j09-durable-supplement",digest:extra.digest,count:extra.rowCount,required:true}],auditCheckpoint:input.auditCheckpoint,keyReferences:input.keyReferences,vaultReferences:input.vaultReferences,tombstoneCount:input.tombstoneCount,deletionObligationCount:input.deletionObligationCount,secretsIncluded:false});await this.control.persistManifest(auth,manifest);return{version:1,base,supplement:extra,manifest};}
+ async restoreIsolated(auth:AuthorizationV3,bundle:J10Bundle,targetId:string,targetPool:pg.Pool){if(bundle.manifest.ownerId!==auth.ownerId||bundle.manifest.backupId!==bundle.base.id||bundle.manifest.components[1]?.digest!==bundle.supplement.digest)throw new BoundaryError("RECOVERY_BUNDLE_MISMATCH");const legacyJob=await this.legacy.restore(auth,bundle.base.id);await this.supplement.restore(auth.ownerId,bundle.supplement,targetId,targetPool);return{legacyJob,supplementVerified:true,targetId};}
+}
