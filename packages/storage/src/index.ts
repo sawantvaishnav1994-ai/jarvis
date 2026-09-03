@@ -150,3 +150,4 @@ export * from "./storage-health.js";
 export * from "./retention.js";
 export * from "./secret-executor.js";
 export * from "./memory-lifecycle.js";
+export * from "./memory-retrieval.js";
