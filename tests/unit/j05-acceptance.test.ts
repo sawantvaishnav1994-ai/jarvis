@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import {
   ContextAssembler, OwnerMemoryControl, PrivateSemanticRetriever, decideMemoryAdmission,
-  admissionDecisionHash, rankHybridMemoryCandidates, resolveTruth,
+  admissionDecisionHash, rankHybridMemoryCandidates, resolveTruth, MemoryCandidateSchema,
   type PrivateSemanticRecord, type MemoryAuditEvent,
 } from "@jarvis/memory";
 import { KnowledgeEvidenceEngine, type Entity, type KnowledgeRelationship, type RelationshipEvidence } from "@jarvis/knowledge";
@@ -23,7 +23,7 @@ describe("J0.5 A-T acceptance",()=>{
  it("J0.5 C: does not promote an ineligible conversation into durable memory",()=>{const p=policy();p.consent.createMemory=false;expect(decideMemoryAdmission(candidate({policy:p}),[]).decision).toBe("REJECT");});
  it("J0.5 D: preserves model inference as non-owner assertion",()=>{const d=decideMemoryAdmission(candidate({assertion:"MODEL_INFERRED",confidence:.6}),[]);expect(d.decision).toBe("ACCEPT");expect(candidate({assertion:"MODEL_INFERRED"}).assertion).toBe("MODEL_INFERRED");});
  it("J0.5 E: rejects NEVER_STORE and D5 generic memory without derived persistence",()=>{const never=policy({retention:{mode:"never-store"}}),secret=policy({classification:"D5",privacy:"local-only"});expect(decideMemoryAdmission(candidate({policy:never}),[]).decision).toBe("REJECT");expect(decideMemoryAdmission(candidate({policy:secret}),[]).decision).toBe("REJECT");});
- it("J0.5 F: admission replay is idempotent and canonical",()=>{const c=candidate(),d1=decideMemoryAdmission(c,[]),d2=decideMemoryAdmission(c,[]);expect(d1).toEqual(d2);expect(admissionDecisionHash(c as any,d1)).toBe(admissionDecisionHash(c as any,d2));});
+ it("J0.5 F: admission replay is idempotent and canonical",()=>{const c=MemoryCandidateSchema.parse(candidate()),d1=decideMemoryAdmission(c,[]),d2=decideMemoryAdmission(c,[]);expect(d1).toEqual(d2);expect(admissionDecisionHash(c,d1)).toBe(admissionDecisionHash(c,d2));});
  it("J0.5 H: hybrid retrieval favors stronger structured evidence over weak similarity",()=>{const strong=randomUUID(),weak=randomUUID();const ranked=rankHybridMemoryCandidates([{memoryId:strong,lifecycle:"ACTIVE",assertion:"OWNER_ASSERTED",confidence:1,semanticScore:.6,lexicalScore:1,temporalScore:1,projectMatch:true},{memoryId:weak,lifecycle:"ACTIVE",assertion:"MODEL_INFERRED",confidence:.3,semanticScore:.9,lexicalScore:0,temporalScore:.2}],2);expect(ranked[0]?.memoryId).toBe(strong);});
  it("J0.5 I: temporal supersession preserves history and returns current truth",()=>{const old=randomUUID(),fresh=randomUUID();const r=resolveTruth({existing:[{memoryId:old,assertion:"OBSERVED",validFrom:"2026-01-01T00:00:00.000Z",content:"old"}],incoming:{memoryId:fresh,assertion:"OBSERVED",validFrom:"2026-09-01T00:00:00.000Z",content:"new"},ownerConfirmed:false});expect(r).toMatchObject({state:"SUPERSEDE",current:fresh,superseded:[old]});});
  it("J0.5 J: contradictory active propositions produce deterministic conflict state",()=>{const existing={memoryId:randomUUID(),ownerId:"owner",projectId:"jarvis",semanticKey:"x",content:"A",assertion:"IMPORTED",confidence:.8,lifecycle:"ACTIVE",validFrom:null,validUntil:null};expect(decideMemoryAdmission(candidate({semanticKey:"x",content:"B",assertion:"IMPORTED",confidence:.8,temporal:{...temporal,validFrom:null}}),[existing]).decision).toBe("MARK_CONFLICT");});
