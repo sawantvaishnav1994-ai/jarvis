@@ -29,7 +29,7 @@ import {
     type DatabasePool,
 } from "@jarvis/storage";
 import { canonical, digest } from "@jarvis/identity";
-import { StorageRecordSchema, type StorageRecord } from "@jarvis/shared";
+import { StorageRecordSchema, RetentionCleanupPlanSchema, type StorageRecord } from "@jarvis/shared";
 import { AuthorizedMockToolGateway } from "@jarvis/tools";
 import {
     fixture,
@@ -54,6 +54,7 @@ let f: ReturnType<typeof fixture>,
     subjectId: string;
 const subjectDevice = new TestDevice();
 const cipher = new RecordCipher(randomBytes(32));
+let storageClockOffset = 0;
 let records: PrivateRecords,
     liveObjects: LocalEncryptedObjects,
     backupStore: LocalEncryptedObjects,
@@ -63,6 +64,7 @@ let subject: (command: string, data: unknown) => Promise<unknown>;
 const capabilities = [
     "data.read",
     "data.write",
+    "data.retention.modify",
     "data.delete",
     "data.export",
     "data.inventory",
@@ -156,7 +158,7 @@ beforeAll(async () => {
         new Set(["development/storage/kek/k1", "development/storage/kek/k2"]),
     );
     const keys = new DataKeys(vault, actor.id, cipher);
-    records = new PrivateRecords((ownerId) => keys.cipher(ownerId));
+    records = new PrivateRecords((ownerId) => keys.cipher(ownerId), () => Date.now() + storageClockOffset);
     liveObjects = new LocalEncryptedObjects(join(dir, "objects"));
     const objects = new PrivateObjects(
         liveObjects,
@@ -1043,4 +1045,86 @@ it("recovers an interrupted unlinked-object purge without restoring active acces
     await expect(
         execute("data.deletion.purge", "D4", randomUUID()),
     ).rejects.toThrow("DELETION_NOT_FOUND");
+}, 30000);
+
+it("retention: ordinary approved writes cannot change retention or reset creation time", async () => {
+    const original = record("conversation", {
+        title: "Retention fixture", participants: [owner.session.ownerId], archived: false,
+    });
+    await execute("data.record.put", "D2", original.id, original);
+    const expiresAt = Date.now() + 60000;
+    const retention = { ...original.retention, revision: 2,
+        mode: "KEEP_UNTIL_DATE" as const, expiresAt };
+    const update = { ...original, revision: 2, previousRevision: 1,
+        updatedAt: Date.now(), retention,
+        policy: { ...original.policy, retention: { mode: "until" as const,
+            expiresAt: new Date(expiresAt).toISOString() } } };
+    await expect(execute("data.record.put", "D4", original.id, update))
+        .rejects.toThrow("RETENTION_OWNER_APPROVAL_REQUIRED");
+    await expect(execute("data.record.put", "D2", original.id, {
+        ...original, revision: 2, previousRevision: 1,
+        createdAt: original.createdAt - 1, updatedAt: Date.now(),
+    })).rejects.toThrow("DATA_CREATED_TIME_IMMUTABLE");
+    expect(await execute("data.record.read", "D2", original.id))
+        .toMatchObject({ revision: 1, retention: original.retention });
+    expect(await execute("data.retention.change", "D4", original.id, {
+        version: 1, expectedRevision: 1, retention,
+    })).toMatchObject({ revision: 2, stored: true });
+    expect(await execute("data.record.read", "D2", original.id))
+        .toMatchObject({ revision: 2, retention, createdAt: original.createdAt });
+    await expect(execute("data.retention.change", "D4", original.id, {
+        version: 1, expectedRevision: 1, retention,
+    })).rejects.toThrow("RETENTION_VERSION_CONFLICT");
+    await expect(execute("data.retention.plan", "D4", original.id))
+        .rejects.toThrow("RETENTION_NOT_DUE");
+}, 30000);
+
+it("retention: exact expired cleanup purges derived vectors, rejects altered plans and replay", async () => {
+    const source = record("memory", {
+        kind: "project", subject: "retention", content: "Expiry synthetic payload",
+        confidence: 1, lastVerifiedAt: null,
+    }, "D3");
+    const expiresAt = Date.now() + 60000;
+    source.retention = { ...source.retention, mode: "KEEP_UNTIL_DATE", expiresAt };
+    source.policy.retention = { mode: "until", expiresAt: new Date(expiresAt).toISOString() };
+    await execute("data.record.put", "D3", source.id, source);
+    const vector = record("embedding", {
+        memoryId: source.id, provider: "synthetic", model: "expiry-vector",
+        dimensions: 3, values: [1, 0, 0], sourceVersion: 1,
+    }, "D3");
+    await execute("data.record.put", "D3", vector.id, vector);
+    try {
+        storageClockOffset = 120000;
+        await expect(execute("data.record.read", "D3", source.id))
+            .rejects.toThrow("DATA_EXPIRED");
+        await expect(execute("data.record.put", "D4", source.id, {
+            ...source, revision: 2, previousRevision: 1,
+            retention: { ...source.retention, revision: 2, mode: "KEEP_FOREVER", expiresAt: null },
+            policy: { ...source.policy, retention: { mode: "keep" } },
+        })).rejects.toThrow("DATA_EXPIRED");
+        const plan = RetentionCleanupPlanSchema.parse(
+            await execute("data.retention.plan", "D4", source.id),
+        );
+        expect(plan.affected.map(row => row.id).sort()).toEqual([source.id, vector.id].sort());
+        await expect(execute("data.retention.execute", "D4", source.id, {
+            ...plan, affected: plan.affected.filter(row => row.id !== vector.id),
+        })).rejects.toThrow("RETENTION_PLAN_STALE");
+        expect((await pool.query("SELECT id FROM memory.embeddings WHERE id=$1", [vector.id])).rowCount).toBe(1);
+        storageClockOffset = 480000;
+        await expect(execute("data.retention.execute", "D4", source.id, plan))
+            .rejects.toThrow("RETENTION_PLAN_BINDING_OR_EXPIRY_INVALID");
+        storageClockOffset = 120000;
+        const exact = await authorize("data.retention.execute", "D4", source.id, plan);
+        expect(await subject("execute", exact)).toMatchObject({ result: { value: {
+            state: "PURGED", backupExpiryRequired: true,
+        } } });
+        await expect(subject("execute", exact)).rejects.toThrow();
+        expect((await pool.query("SELECT id FROM memory.embeddings WHERE id=$1", [vector.id])).rowCount).toBe(0);
+        expect((await pool.query("SELECT record_id FROM storage.deletion_tombstones WHERE record_id=ANY($1::uuid[])", [[source.id, vector.id]])).rowCount).toBe(2);
+        await expect(execute("data.record.read", "D3", source.id)).rejects.toThrow("DATA_NOT_FOUND");
+        const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'recordId'=$1", [source.id]);
+        expect(JSON.stringify(audit.rows)).not.toContain("Expiry synthetic payload");
+    } finally {
+        storageClockOffset = 0;
+    }
 }, 30000);
