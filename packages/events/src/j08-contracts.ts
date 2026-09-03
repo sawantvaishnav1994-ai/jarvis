@@ -6,6 +6,7 @@ export const J08ProducerTypeSchema = z.enum(["INTERNAL","EXTERNAL","SCHEDULED","
 export const J08ConsumerBoundarySchema = z.enum(["LOCAL","PRIVATE_INFRA","EXTERNAL_SERVICE"]);
 export const J08DeliveryStateSchema = z.enum(["PENDING","CLAIMED","PROCESSING","COMPLETED","RETRY_SCHEDULED","DEAD_LETTERED","CANCELLED"]);
 export const J08ReplayPolicySchema = z.enum(["DENY","OWNER_ONLY","AUTHORIZED"]);
+export const J08DurableDataClassSchema = z.enum(["D0","D1","D2","D3","D4"]);
 
 export const JarvisEventEnvelopeSchema = z.strictObject({
   eventId: z.uuid(), eventType: J08EventTypeSchema, schemaVersion: z.number().int().positive(),
@@ -26,7 +27,7 @@ export type JarvisEventEnvelope = z.infer<typeof JarvisEventEnvelopeSchema>;
 
 export const EventTypeDefinitionSchema = z.strictObject({
   eventType: J08EventTypeSchema, schemaVersion: z.number().int().positive(), payloadSchema: z.custom<z.ZodType>(),
-  allowedProducerTypes: z.array(J08ProducerTypeSchema).min(1), maxClassification: DataClassSchema,
+  allowedProducerTypes: z.array(J08ProducerTypeSchema).min(1), maxClassification: J08DurableDataClassSchema,
   replayPolicy: J08ReplayPolicySchema, maxPayloadBytes: z.number().int().positive().max(1_048_576),
 });
 export type EventTypeDefinition = z.infer<typeof EventTypeDefinitionSchema>;
@@ -49,7 +50,7 @@ export type ExternalIngressRequest = z.infer<typeof ExternalIngressRequestSchema
 export const EventScheduleSchema = z.strictObject({
   scheduleId: z.string().min(1).max(128), ownerId: z.string().min(1).max(128), projectId: z.string().min(1).max(128).optional(),
   eventType: J08EventTypeSchema, schemaVersion: z.number().int().positive(), subject: z.string().min(1).max(256), payload: z.record(z.string(),z.json()),
-  classification: DataClassSchema, privacy: PrivacySchema, timezone: z.string().min(1).max(80), nextDueAt: z.iso.datetime(),
+  classification: J08DurableDataClassSchema, privacy: PrivacySchema, timezone: z.string().min(1).max(80), nextDueAt: z.iso.datetime(),
   intervalSeconds: z.number().int().positive().max(31_536_000).optional(), enabled: z.boolean(), occurrence: z.number().int().nonnegative(),
 });
 export type EventSchedule = z.infer<typeof EventScheduleSchema>;
