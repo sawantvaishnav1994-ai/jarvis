@@ -28,7 +28,10 @@ jobs:
       - name: Fresh checkout setup
         run: npm run setup
       - name: J0.11 acceptance formatting
-        run: npx prettier --check tests/acceptance/j11-gates.json
+        shell: bash
+        run: |
+          npx prettier tests/acceptance/j11-gates.json > /tmp/j11-gates.formatted.json
+          diff -u tests/acceptance/j11-gates.json /tmp/j11-gates.formatted.json
       - name: Static and contract checks
         run: npm run check
       - name: J0.11 critical security repeatability
