@@ -1327,11 +1327,11 @@ it("R: schema, vector, vault and object failures deny protected operations and r
         expect(await execute("data.health", "D4")).toMatchObject({ migrations: false, status: "unavailable" });
         await expect(execute("data.record.read", "D3", conversation.id)).rejects.toThrow("STORAGE_SCHEMA_INCOMPATIBLE");
     } finally { await sourceAdmin.query("UPDATE settings.schema_migrations SET checksum=$1 WHERE version=7", [prior]); }
-    await sourceAdmin.query("ALTER FUNCTION vector_dims(vector) RENAME TO vector_dims_failure_test");
+    await sourceAdmin.query("REVOKE EXECUTE ON FUNCTION vector_dims(vector) FROM PUBLIC");
     try {
         expect(await execute("data.health", "D4")).toMatchObject({ pgvector: false });
         await expect(execute("data.record.read", "D3", conversation.id)).rejects.toThrow();
-    } finally { await sourceAdmin.query("ALTER FUNCTION vector_dims_failure_test(vector) RENAME TO vector_dims"); }
+    } finally { await sourceAdmin.query("GRANT EXECUTE ON FUNCTION vector_dims(vector) TO PUBLIC"); }
     const lease = secretVault.lease;
     secretVault.lease = async () => { throw new Error("synthetic unavailable vault"); };
     try {
@@ -1393,6 +1393,10 @@ it("E-K: encrypted objects keep canonical identity when the storage adapter dest
     await execute("data.record.put", "D3", parent.id, parent);
     const attachment = record("attachment", { messageId: parent.id, objectId: id }, "D3");
     await execute("data.record.put", "D3", attachment.id, attachment);
+    const reconstructed = reconstructPortableExport(await execute("data.export", "D4"));
+    expect(reconstructed.objects.get(id)).toEqual(original);
+    expect(reconstructed.objects.get(id)?.metadata.id).toBe(id);
+    expect(reconstructed.records.get(attachment.id)?.payload).toEqual({ messageId: parent.id, objectId: id });
     const key = (await pool.query("SELECT object_key FROM storage.objects WHERE id=$1", [id])).rows[0].object_key;
     const alternate = new LocalEncryptedObjects(join(dir, "alternate-provider"));
     expect(await alternate.put(owner.session.ownerId, await liveObjects.get(owner.session.ownerId, key))).toBe(key);
@@ -1400,10 +1404,6 @@ it("E-K: encrypted objects keep canonical identity when the storage adapter dest
     liveObjects.get = (ownerId, objectKey) => alternate.get(ownerId, objectKey);
     try { expect(await execute("data.object.get", "D2", id)).toEqual(original); }
     finally { liveObjects.get = get; }
-    const reconstructed = reconstructPortableExport(await execute("data.export", "D4"));
-    expect(reconstructed.objects.get(id)).toEqual(original);
-    expect(reconstructed.objects.get(id)?.metadata.id).toBe(id);
-    expect(reconstructed.records.get(attachment.id)?.payload).toEqual({ messageId: parent.id, objectId: id });
 });
 
 it("P: a pending unapproved migration cannot obtain execution authorization", async () => {
