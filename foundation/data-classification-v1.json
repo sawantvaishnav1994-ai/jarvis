@@ -1,12 +1,43 @@
 {
     "version": 1,
     "classes": [
-        {"id":"D0","description":"public or intentionally non-sensitive data","externalModelEligibility":"policy-and-consent-controlled","durableStorage":"policy-controlled"},
-        {"id":"D1","description":"low-sensitivity private data","externalModelEligibility":"policy-and-consent-controlled","durableStorage":"policy-controlled"},
-        {"id":"D2","description":"private data eligible for approved external AI only with explicit policy and consent","externalModelEligibility":"approved-provider-and-region-only","durableStorage":"policy-controlled"},
-        {"id":"D3","description":"sensitive private data","externalModelEligibility":"not-eligible-under-Foundation-v1-external-disclosure-rule","durableStorage":"encrypted-and-policy-controlled"},
-        {"id":"D4","description":"highly sensitive private data","externalModelEligibility":"not-eligible-under-Foundation-v1-external-disclosure-rule","durableStorage":"encrypted-and-strictly-policy-controlled"},
-        {"id":"D5","description":"secret material","externalModelEligibility":"never","durableStorage":"never-through-general-durable-data-path","privacy":"local-only"}
+        {
+            "id": "D0",
+            "description": "public or intentionally non-sensitive data",
+            "externalModelEligibility": "policy-and-consent-controlled",
+            "durableStorage": "policy-controlled"
+        },
+        {
+            "id": "D1",
+            "description": "low-sensitivity private data",
+            "externalModelEligibility": "policy-and-consent-controlled",
+            "durableStorage": "policy-controlled"
+        },
+        {
+            "id": "D2",
+            "description": "private data eligible for approved external AI only with explicit policy and consent",
+            "externalModelEligibility": "approved-provider-and-region-only",
+            "durableStorage": "policy-controlled"
+        },
+        {
+            "id": "D3",
+            "description": "sensitive private data",
+            "externalModelEligibility": "not-eligible-under-Foundation-v1-external-disclosure-rule",
+            "durableStorage": "encrypted-and-policy-controlled"
+        },
+        {
+            "id": "D4",
+            "description": "highly sensitive private data",
+            "externalModelEligibility": "not-eligible-under-Foundation-v1-external-disclosure-rule",
+            "durableStorage": "encrypted-and-strictly-policy-controlled"
+        },
+        {
+            "id": "D5",
+            "description": "secret material",
+            "externalModelEligibility": "never",
+            "durableStorage": "never-through-general-durable-data-path",
+            "privacy": "local-only"
+        }
     ],
     "privacyModes": ["local-only", "private-cloud", "ai-allow"],
     "retentionModes": ["keep", "until", "session", "never-store"],

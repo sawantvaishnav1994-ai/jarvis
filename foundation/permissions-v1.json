@@ -5,7 +5,11 @@
             "id": "P0",
             "name": "Observe",
             "allowed": ["read-authorized-state", "inspect-authorized-audit"],
-            "prohibited": ["prepare-side-effect", "execute-side-effect", "grant-authority"],
+            "prohibited": [
+                "prepare-side-effect",
+                "execute-side-effect",
+                "grant-authority"
+            ],
             "freshAuth": false,
             "approval": "none-beyond-session-policy",
             "delegation": "bounded-read-only",
@@ -25,7 +29,10 @@
             "id": "P2",
             "name": "Prepare",
             "allowed": ["P1", "prepare-proposal", "prepare-draft"],
-            "prohibited": ["execute-side-effect-without-governed-permit", "grant-authority"],
+            "prohibited": [
+                "execute-side-effect-without-governed-permit",
+                "grant-authority"
+            ],
             "freshAuth": false,
             "approval": "required-before-sensitive-execution",
             "delegation": "bounded-prepare-only",
@@ -34,8 +41,15 @@
         {
             "id": "P3",
             "name": "Execute Safe Actions",
-            "allowed": ["P2", "execute-policy-classified-safe-action-through-gateway"],
-            "prohibited": ["sensitive-action-without-step-up", "critical-owner-action", "grant-authority"],
+            "allowed": [
+                "P2",
+                "execute-policy-classified-safe-action-through-gateway"
+            ],
+            "prohibited": [
+                "sensitive-action-without-step-up",
+                "critical-owner-action",
+                "grant-authority"
+            ],
             "freshAuth": "policy-dependent",
             "approval": "policy-dependent",
             "delegation": "recipient-and-scope-bound",
@@ -44,8 +58,14 @@
         {
             "id": "P4",
             "name": "Execute Sensitive Actions",
-            "allowed": ["P3", "execute-sensitive-action-with-valid-fresh-approval-and-permit"],
-            "prohibited": ["critical-owner-action-without-P5-conditions", "grant-authority-to-self"],
+            "allowed": [
+                "P3",
+                "execute-sensitive-action-with-valid-fresh-approval-and-permit"
+            ],
+            "prohibited": [
+                "critical-owner-action-without-P5-conditions",
+                "grant-authority-to-self"
+            ],
             "freshAuth": true,
             "approval": "required-and-one-shot-where-policy-requires",
             "delegation": "short-lived-recipient-bound-and-policy-limited",
@@ -54,8 +74,16 @@
         {
             "id": "P5",
             "name": "Critical Owner Actions",
-            "allowed": ["P4", "critical-owner-action-with-privileged-device-and-fresh-owner-verification"],
-            "prohibited": ["self-grant", "model-grant", "agent-grant", "tool-grant"],
+            "allowed": [
+                "P4",
+                "critical-owner-action-with-privileged-device-and-fresh-owner-verification"
+            ],
+            "prohibited": [
+                "self-grant",
+                "model-grant",
+                "agent-grant",
+                "tool-grant"
+            ],
             "freshAuth": true,
             "approval": "root-owner-controlled",
             "delegation": "not-implicitly-delegable",
