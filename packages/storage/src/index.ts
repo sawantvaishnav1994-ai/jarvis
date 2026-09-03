@@ -1,35 +1,18 @@
 import pg from "pg";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import {
-    MemoryRecordSchema,
-    type MemoryRecord,
-    type MemoryRepository,
-} from "@jarvis/memory";
-import {
-    EventSchema,
-    type JarvisEvent,
-    type EventPublisher,
-} from "@jarvis/events";
+import { MemoryRecordSchema, type MemoryRecord, type MemoryRepository } from "@jarvis/memory";
+import { EventSchema, type JarvisEvent, type EventPublisher } from "@jarvis/events";
 import { RecordCipher } from "@jarvis/security";
 import { BoundaryError } from "@jarvis/shared";
 import type { JarvisConfig } from "@jarvis/config";
 import { memories,eventRecords,auditRecords,policyAuditRecords } from "./schema.js";
 export { memories, eventRecords, auditRecords } from "./schema.js";
 export type DatabasePool = pg.Pool;
-export function databasePool(config: JarvisConfig["storage"]["postgres"],password: string,migrator = false): pg.Pool {
-    const pool = new pg.Pool({host:config.host,port:config.port,database:config.database,user:migrator?config.migratorUser:config.runtimeUser,password,max:4,connectionTimeoutMillis:1500,idleTimeoutMillis:10000,query_timeout:5000,statement_timeout:5000});
-    pool.on("error",()=>{}); return pool;
-}
-export class PostgresMemoryRepository implements MemoryRepository {
-    private readonly db;
-    constructor(pool: pg.Pool,private readonly cipher: RecordCipher){this.db=drizzle(pool);}
-    async save(input: MemoryRecord): Promise<void> {const record=MemoryRecordSchema.parse(input);if(record.retention==="never-store")throw new BoundaryError("NEVER_STORE");await this.db.insert(memories).values({id:record.id,ownerId:record.ownerId,projectId:record.projectId,version:1,payload:this.cipher.encrypt(record,"memory:"+record.ownerId+":"+record.id),createdAt:new Date(record.createdAt)});}
-    async find(ownerId:string,projectId:string):Promise<MemoryRecord[]>{const rows=await this.db.select().from(memories).where(and(eq(memories.ownerId,ownerId),eq(memories.projectId,projectId)));return rows.map(row=>MemoryRecordSchema.parse(this.cipher.decrypt(row.payload,"memory:"+row.ownerId+":"+row.id)));}
-    async delete(ownerId:string,id:string):Promise<boolean>{const rows=await this.db.delete(memories).where(and(eq(memories.ownerId,ownerId),eq(memories.id,id))).returning({id:memories.id});return rows.length===1;}
-}
+export function databasePool(config: JarvisConfig["storage"]["postgres"],password: string,migrator = false): pg.Pool {const pool=new pg.Pool({host:config.host,port:config.port,database:config.database,user:migrator?config.migratorUser:config.runtimeUser,password,max:4,connectionTimeoutMillis:1500,idleTimeoutMillis:10000,query_timeout:5000,statement_timeout:5000});pool.on("error",()=>{});return pool;}
+export class PostgresMemoryRepository implements MemoryRepository {private readonly db;constructor(pool:pg.Pool,private readonly cipher:RecordCipher){this.db=drizzle(pool);}async save(input:MemoryRecord):Promise<void>{const record=MemoryRecordSchema.parse(input);if(record.retention==="never-store")throw new BoundaryError("NEVER_STORE");await this.db.insert(memories).values({id:record.id,ownerId:record.ownerId,projectId:record.projectId,version:1,payload:this.cipher.encrypt(record,"memory:"+record.ownerId+":"+record.id),createdAt:new Date(record.createdAt)});}async find(ownerId:string,projectId:string):Promise<MemoryRecord[]>{const rows=await this.db.select().from(memories).where(and(eq(memories.ownerId,ownerId),eq(memories.projectId,projectId)));return rows.map(row=>MemoryRecordSchema.parse(this.cipher.decrypt(row.payload,"memory:"+row.ownerId+":"+row.id)));}async delete(ownerId:string,id:string):Promise<boolean>{const rows=await this.db.delete(memories).where(and(eq(memories.ownerId,ownerId),eq(memories.id,id))).returning({id:memories.id});return rows.length===1;}}
 export class PostgresEventPublisher implements EventPublisher {private readonly db;constructor(pool:pg.Pool,private readonly cipher:RecordCipher){this.db=drizzle(pool);}async publish(input:JarvisEvent):Promise<void>{const e=EventSchema.parse(input);await this.db.insert(eventRecords).values({id:e.id,type:e.type,environment:e.environment,actorId:e.actor.id,correlationId:e.correlationId,payload:this.cipher.encrypt(e,"event:"+e.environment+":"+e.id),occurredAt:new Date(e.timestamp)});}}
-export class PostgresAuditSink {private readonly db;constructor(pool:pg.Pool){this.db=drizzle(pool);}async append(record:unknown):Promise<void>{const { StoredAuditRecordSchema }=await import("@jarvis/audit");const validated=StoredAuditRecordSchema.parse(record);await this.db.insert(validated.version===2?policyAuditRecords:auditRecords).values({id:validated.id,record:validated,createdAt:new Date(validated.timestamp)});}}
+export class PostgresAuditSink {private readonly db;constructor(pool:pg.Pool){this.db=drizzle(pool);}async append(record:unknown):Promise<void>{const{StoredAuditRecordSchema}=await import("@jarvis/audit");const validated=StoredAuditRecordSchema.parse(record);await this.db.insert(validated.version===2?policyAuditRecords:auditRecords).values({id:validated.id,record:validated,createdAt:new Date(validated.timestamp)});}}
 export * from "./migrations.js";
 export * from "./identity.js";
 export * from "./classified-codec.js";
@@ -47,3 +30,4 @@ export * from "./secret-executor.js";
 export * from "./memory-lifecycle.js";
 export * from "./memory-retrieval.js";
 export * from "./memory-controls.js";
+export * from "./event-store.js";
