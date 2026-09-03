@@ -33,6 +33,7 @@ export const DataRequestInputSchema = z.strictObject({
         .nullable(),
 });
 const operations = {
+    "data.attachment.reconcile": { capability: "data.write", permission: "P4" },
     "data.secret.use": { capability: "secrets.handle.use", permission: "P4" },
     "data.record.put": { capability: "data.write", permission: "P3" },
     "data.record.read": { capability: "data.read", permission: "P0" },
@@ -95,6 +96,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
         const level = Number(input.classification.slice(1));
         if (
             ([
+                "data.attachment.reconcile",
                 "data.secret.use",
                 "data.keys.rotate",
                 "data.export",
@@ -260,6 +262,9 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                                   );
                         break;
                 }
+            } else if (request.toolId === "data.attachment.reconcile") {
+                if (!input.recordId || transient !== undefined) throw new BoundaryError("ATTACHMENT_INPUT_INVALID");
+                value = await this.records.reconcileAttachment(authorization, input.recordId);
             } else if (request.toolId === "data.secret.use") {
                 if (input.recordId !== null || !this.services?.secretExecutor)
                     throw new BoundaryError("SECRET_EXECUTOR_UNAVAILABLE");

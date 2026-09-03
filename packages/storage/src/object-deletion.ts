@@ -4,6 +4,7 @@ import { BoundaryError, DeletionRequestSchema } from "@jarvis/shared";
 import type { AuthorizationV3 } from "@jarvis/security";
 import { currentDataTransaction } from "./transaction.js";
 import type { ObjectStorage } from "./objects.js";
+import { linkBackupDeletion } from "./backup-retention.js";
 
 /** Trusted, transaction-only primitive. Call after the J0.3 permit is consumed. */
 export async function retireObjects(
@@ -104,6 +105,7 @@ export class ObjectDeletion {
             [deletion.id, auth.ownerId, JSON.stringify(deletion)],
         );
         await retireObjects(auth, deletion.id, [objectId]);
+        await linkBackupDeletion(auth.ownerId, deletion.id, [objectId], Date.now());
         return deletion;
     }
     async purge(auth: AuthorizationV3, deletionId: string) {

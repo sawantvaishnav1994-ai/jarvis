@@ -18,6 +18,7 @@ import {
 } from "@jarvis/security";
 import { currentDataTransaction } from "./transaction.js";
 import { retireObjects } from "./object-deletion.js";
+import { linkBackupDeletion } from "./backup-retention.js";
 import { validateRecordRetention, validateRetentionUpdate } from "./retention.js";
 
 const U = z.uuid(),
@@ -530,19 +531,52 @@ export class PrivateRecords {
         ).rows;
         if (links.length !== attachmentIds.length)
             throw new BoundaryError("ATTACHMENT_LINKAGE_MIGRATION_REQUIRED");
-        const objectIds = [...new Set(links.map((r) => r.object_id))];
-        if (
-            (
-                await tx.query(
-                    "SELECT 1 FROM storage.attachment_objects WHERE owner_id=$1 AND object_id=ANY($2::uuid[]) AND NOT(attachment_id=ANY($3::uuid[])) LIMIT 1",
-                    [auth.ownerId, objectIds, attachmentIds],
-                )
-            ).rowCount
-        )
-            throw new BoundaryError(
-                "SHARED_OBJECT_DELETE_REQUIRES_BROADER_SCOPE",
-            );
+        for (const link of links) {
+            // Lifecycle indexes must agree with authenticated canonical ciphertext.
+            // Internal load permits expiry cleanup without returning expired content.
+            const attachment = await this.load(auth.ownerId, link.attachment_id);
+            if (Payloads.attachment.parse(attachment.payload).objectId !== link.object_id)
+                throw new BoundaryError("ATTACHMENT_LINKAGE_MISMATCH");
+        }
+        const candidates = [...new Set(links.map((r) => r.object_id))];
+        // Reference rows, not caller-supplied counts, determine final ownership.
+        // The identity transaction serializes writes; retireObjects rechecks before purge.
+        const shared = new Set((await tx.query<{ object_id: string }>(
+            "SELECT DISTINCT object_id FROM storage.attachment_objects WHERE owner_id=$1 AND object_id=ANY($2::uuid[]) AND NOT(attachment_id=ANY($3::uuid[]))",
+            [auth.ownerId, candidates, attachmentIds],
+        )).rows.map(row => row.object_id));
+        const objectIds = candidates.filter(objectId => !shared.has(objectId));
         return { rows, ids, attachmentIds, objectIds };
+    }
+    async reconcileAttachment(auth: AuthorizationV3, id: string) {
+        if (auth.capability !== "data.write" || !auth.approvalId || auth.assurance !== "A3" || auth.zone !== "Z4")
+            throw new BoundaryError("ATTACHMENT_RECONCILIATION_APPROVAL_REQUIRED");
+        const record = await this.read(auth.ownerId, id);
+        if (record.domain !== "attachment") throw new BoundaryError("ATTACHMENT_REQUIRED");
+        const payload = Payloads.attachment.parse(record.payload);
+        const parent = await this.read(auth.ownerId, payload.messageId);
+        if (parent.domain !== "message") throw new BoundaryError("ATTACHMENT_PARENT_INVALID");
+        const tx = currentDataTransaction();
+        const object = (await tx.query<{ data_class: string }>(
+            "SELECT data_class FROM storage.objects WHERE owner_id=$1 AND id=$2 AND deleted=false FOR UPDATE",
+            [auth.ownerId, payload.objectId],
+        )).rows[0];
+        if (!object || Number(object.data_class.slice(1)) > Number(record.policy.classification.slice(1)))
+            throw new BoundaryError("ATTACHMENT_SCOPE_OR_CLASS_DENIED");
+        if (!(await tx.query(
+            "SELECT 1 FROM storage.data_lineage WHERE owner_id=$1 AND source_id=$2 AND derived_id=$3",
+            [auth.ownerId, payload.messageId, id],
+        )).rowCount) throw new BoundaryError("ATTACHMENT_PROVENANCE_INVALID");
+        const prior = (await tx.query<{ object_id: string }>(
+            "SELECT object_id FROM storage.attachment_objects WHERE owner_id=$1 AND attachment_id=$2",
+            [auth.ownerId, id],
+        )).rows[0];
+        if (prior && prior.object_id !== payload.objectId) throw new BoundaryError("ATTACHMENT_LINKAGE_MISMATCH");
+        await tx.query(
+            "INSERT INTO storage.attachment_objects(owner_id,attachment_id,object_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",
+            [auth.ownerId, id, payload.objectId],
+        );
+        return { id, objectId: payload.objectId, reconciled: true };
     }
     async forget(auth: AuthorizationV3, id: string) {
         const tx = currentDataTransaction(),
@@ -601,6 +635,7 @@ export class PrivateRecords {
             [deletionId, auth.ownerId, JSON.stringify(result)],
         );
         await retireObjects(auth, deletionId, objectIds);
+        await linkBackupDeletion(auth.ownerId, deletionId, [...ids, ...objectIds], this.clock());
         return result;
     }
 }

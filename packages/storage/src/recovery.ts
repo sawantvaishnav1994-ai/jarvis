@@ -9,6 +9,7 @@ import {
     identityDataTransaction,
 } from "./transaction.js";
 import { storageHash, type ObjectStorage } from "./objects.js";
+import { DEVELOPMENT_BACKUP_RETENTION_MS, requireRestorableBackup } from "./backup-retention.js";
 
 // Fixed repository-owned tables; no SQL identifiers are accepted from an artifact.
 export const recoveryTables = [
@@ -83,6 +84,7 @@ export class StorageRecovery {
         private readonly liveObjects: ObjectStorage,
         private readonly backupCipher: RecordCipher,
         private readonly target: IsolatedRestoreTarget | null,
+        private readonly clock: () => number = Date.now,
     ) {}
     async create(auth: AuthorizationV3) {
         if (
@@ -145,7 +147,7 @@ export class StorageRecovery {
             version: 1,
             id,
             ownerId: auth.ownerId,
-            createdAt: Date.now(),
+            createdAt: this.clock(),
             sourceVersion: "j0.4",
             schemaHash: snapshot.schemaHash,
             domains: Object.keys(tables),
@@ -159,7 +161,7 @@ export class StorageRecovery {
         });
         await this.readSnapshot(manifest);
         manifest.state = "VALID";
-        manifest.validatedAt = Date.now();
+        manifest.validatedAt = this.clock();
         await tx.query(
             "INSERT INTO storage.backups(id,owner_id,payload) VALUES($1,$2,$3)",
             [
@@ -167,6 +169,10 @@ export class StorageRecovery {
                 auth.ownerId,
                 this.backupCipher.encrypt(manifest, "backup:manifest:" + id),
             ],
+        );
+        await tx.query(
+            "INSERT INTO storage.backup_retention(owner_id,backup_id,expires_at) VALUES($1,$2,$3)",
+            [auth.ownerId, id, new Date(manifest.createdAt + DEVELOPMENT_BACKUP_RETENTION_MS)],
         );
         for (const item of items)
             await tx.query(
@@ -231,6 +237,7 @@ export class StorageRecovery {
             )
         ).rows[0];
         if (!row) throw new BoundaryError("BACKUP_NOT_FOUND");
+        await requireRestorableBackup(ownerId, id, this.clock());
         const manifest = BackupManifestSchema.parse(
             this.backupCipher.decrypt(row.payload, "backup:manifest:" + id),
         );

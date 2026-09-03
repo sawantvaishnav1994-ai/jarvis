@@ -190,6 +190,7 @@ beforeAll(async () => {
                 }
             },
         ),
+        () => Date.now() + storageClockOffset,
     );
     repository = new PostgresIdentityRepository(pool, cipher);
     f = fixture(
@@ -1150,7 +1151,7 @@ it("H: exact owner-approved tool consumes a vault handle without returning or au
         await expect(subject("execute", issued)).rejects.toThrow("AUTHORIZATION_REPLAY");
         const audit = await pool.query("SELECT record FROM security.data_access_events WHERE record->>'requestId'=$1", [issued.request.id]);
         expect(audit.rowCount).toBe(1);
-        expect(audit.rows[0].record).toMatchObject({ operation: "data.secret.use", result: "allowed" });
+        expect(audit.rows[0].record).toMatchObject({ operation: "data.secret.use", result: "success" });
         expect(JSON.stringify(audit.rows)).not.toContain(lease.value.toString());
         expect(JSON.stringify(await repository.audit(1000))).not.toContain(lease.value.toString());
     } finally { lease.destroy(); }
@@ -1174,3 +1175,46 @@ it("H: different handles, revoked authorizations and modified execution inputs c
     try { await expect(subject("execute", expired)).rejects.toThrow("AUTHORIZATION_EXPIRED"); }
     finally { f.advance(-120000); }
 });
+
+it("L-N: deletion links recovery obligations and expired snapshots cannot restore", async () => {
+    const retained = record("memory", { kind: "semantic", subject: "Recovery deletion", content: "Recovery deletion sentinel", confidence: 1, lastVerifiedAt: null }, "D2");
+    await execute("data.record.put", "D2", retained.id, retained);
+    const prior = await execute("data.backup.create", "D4") as { id: string };
+    await execute("data.record.forget", "D2", retained.id);
+    const obligations = await pool.query("SELECT * FROM storage.backup_deletion_obligations WHERE owner_id=$1 AND backup_id=$2 AND record_id=$3", [owner.session.ownerId, prior.id, retained.id]);
+    expect(obligations.rowCount).toBe(1);
+    expect(obligations.rows[0].purge_eligible_at.getTime()).toBeLessThanOrEqual(Date.now());
+    expect(JSON.stringify(obligations.rows)).not.toContain("Recovery deletion sentinel");
+    await expect(execute("data.backup.restore", "D4", prior.id)).rejects.toThrow("BACKUP_PREDATES_DELETION");
+    await expect(pool.query("DELETE FROM storage.backup_deletion_obligations WHERE backup_id=$1", [prior.id])).rejects.toThrow();
+    const fresh = await execute("data.backup.create", "D4") as { id: string };
+    storageClockOffset = 31 * 24 * 60 * 60 * 1000;
+    try { await expect(execute("data.backup.restore", "D4", fresh.id)).rejects.toThrow("BACKUP_EXPIRED"); }
+    finally { storageClockOffset = 0; }
+    // Time advancement changes eligibility only; no claim of physical byte erasure.
+    expect((await pool.query("SELECT count(*)::int AS n FROM storage.backup_items WHERE backup_id=$1", [fresh.id])).rows[0].n).toBeGreaterThan(0);
+}, 30000);
+
+it("E-L: shared canonical objects survive one unlink, legacy links reconcile, final unlink permits purge", async () => {
+    const id = randomUUID(), policy = dataPolicy(); policy.consent.keepAttachments = true;
+    await execute("data.object.put", "D2", id, { id, filename: "shared.txt", mimeType: "text/plain", contentBase64: Buffer.from("Shared synthetic attachment").toString("base64"), policy });
+    const parent = record("message", { conversationId: conversation.id, authorId: owner.session.ownerId, content: "Shared parent", contentType: "text/plain", model: null }, "D3");
+    await execute("data.record.put", "D3", parent.id, parent);
+    const a = record("attachment", { messageId: parent.id, objectId: id }, "D3");
+    const b = record("attachment", { messageId: parent.id, objectId: id }, "D3");
+    await execute("data.record.put", "D3", a.id, a);
+    await execute("data.record.put", "D3", b.id, b);
+    const wrongOwner = { ...record("attachment", { messageId: parent.id, objectId: id }, "D3"), ownerId: "owner-unrelated" };
+    await expect(execute("data.record.put", "D3", wrongOwner.id, wrongOwner)).rejects.toThrow();
+    const before = await execute("data.object.get", "D2", id);
+    await execute("data.record.forget", "D3", a.id);
+    expect(await execute("data.object.get", "D2", id)).toEqual(before);
+    await expect(execute("data.object.forget", "D2", id)).rejects.toThrow("OBJECT_STILL_REFERENCED");
+    // Synthetic pre-0006 legacy record: canonical ciphertext remains untouched.
+    await pool.query("DELETE FROM storage.attachment_objects WHERE attachment_id=$1", [b.id]);
+    await expect(execute("data.record.forget", "D3", b.id)).rejects.toThrow("ATTACHMENT_LINKAGE_MIGRATION_REQUIRED");
+    expect(await execute("data.attachment.reconcile", "D4", b.id)).toMatchObject({ id: b.id, objectId: id, reconciled: true });
+    const deletion = await execute("data.record.forget", "D3", b.id) as { id: string };
+    await expect(execute("data.object.get", "D2", id)).rejects.toThrow("OBJECT_NOT_FOUND");
+    expect(await execute("data.deletion.purge", "D4", deletion.id)).toMatchObject({ state: "PURGED" });
+}, 30000);

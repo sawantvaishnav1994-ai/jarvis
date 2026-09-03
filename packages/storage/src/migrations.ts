@@ -180,6 +180,9 @@ export async function migrate(
             "REVOKE DELETE ON storage.backups,storage.backup_items FROM jarvis_development_runtime",
         );
         await client.query(
+            "REVOKE UPDATE,DELETE ON storage.backup_retention,storage.backup_deletion_obligations FROM jarvis_development_runtime",
+        );
+        await client.query(
             "GRANT SELECT,INSERT,DELETE ON recovery.migration_probe TO jarvis_development_runtime",
         );
         await client.query("COMMIT");

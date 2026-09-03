@@ -34,5 +34,11 @@
         "file": "0006_object_deletion.sql",
         "sha256": "8eac0785d342f80ba92f6ae0706c70efabf7672357971bec8bd5b3a3c8ac81d1",
         "destructive": false
+    },
+    {
+        "version": 7,
+        "file": "0007_backup_obligations.sql",
+        "sha256": "be64f2845be18cfd5ee03d60a7fd0d7c095dc3c37619511700a480a766e2a6af",
+        "destructive": false
     }
 ]

@@ -222,7 +222,7 @@ it.each([
         }),
     ).toThrow();
 });
-it.each(["data.record.read", "data.object.forget", "data.deletion.purge", "data.retention.plan", "data.retention.change", "data.retention.execute", "data.secret.use"])(
+it.each(["data.record.read", "data.object.forget", "data.deletion.purge", "data.retention.plan", "data.retention.change", "data.retention.execute", "data.secret.use", "data.attachment.reconcile"])(
     "rejects direct bypass with a forged authorization: %s",
     async (toolId) => {
         const gateway = new PrivateDataGateway(
@@ -261,6 +261,7 @@ it("cannot understate export or inventory classification", () => {
         "data.retention.change",
         "data.retention.execute",
         "data.secret.use",
+        "data.attachment.reconcile",
     ])
         expect(() =>
             gateway.describe(
