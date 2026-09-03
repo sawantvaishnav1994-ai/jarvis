@@ -1,5 +1,5 @@
 import { describe,expect,it,vi } from "vitest";
-import { J03ToolAuthorizationBridge,J04CredentialBroker,MemoryToolExecutionStore,ResourceLockManager,SyntheticToolAdapter,ToolLifecycle,UniversalToolGateway,UniversalToolRegistry,syntheticTool,type CredentialBroker,type ToolAuditEvent,type ToolRequest } from "@jarvis/tools";
+import { J03ToolAuthorizationBridge,J04CredentialBroker,MemoryToolExecutionStore,ResourceLockManager,ToolLifecycle,UniversalToolGateway,UniversalToolRegistry,syntheticTool,type CredentialBroker,type ToolAuditEvent,type ToolRequest } from "@jarvis/tools";
 import { DeterministicPolicy,type ApprovalBindingV2,type SecretManager } from "@jarvis/security";
 import { policyContext,policyControls,policyDocument,policyNow } from "../fixtures/policy.js";
 const req=(over:Partial<ToolRequest>={}):ToolRequest=>({requestId:"request-test",correlationId:"cor-1",actor:{ownerId:"owner-test",actorId:"agent-test",role:"AGENT"},projectId:"jarvis",source:"AGENT",toolId:"mock.repository.read",toolVersion:1,operation:"run",input:{key:"k",value:"v"},resource:"repository-x",privacyClass:"D0",requestedMode:"EXECUTE",deadlineEpochMs:policyNow+5000,maxCostMinor:10,metadata:{},...over});
