@@ -4,6 +4,11 @@ import {
     ContractVersionSchema,
     PrivacySchema,
 } from "@jarvis/shared";
+
+export * from "./j06-contracts.js";
+export * from "./router.js";
+export * from "./synthetic-adapter.js";
+
 export const ModelRequestSchema = z.strictObject({
     version: ContractVersionSchema,
     messages: z
