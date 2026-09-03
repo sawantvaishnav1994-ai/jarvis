@@ -32,162 +32,50 @@ const authority: Record<z.infer<typeof MemoryAssertionStatusSchema>, number> = {
 };
 
 function sameScope(candidate: MemoryCandidate, existing: ExistingMemoryFact): boolean {
-    return (
-        candidate.ownerId === existing.ownerId &&
-        candidate.projectId === existing.projectId
-    );
+    return candidate.ownerId === existing.ownerId && candidate.projectId === existing.projectId;
 }
-
 function active(existing: ExistingMemoryFact): boolean {
     return existing.lifecycle === "ACTIVE" || existing.lifecycle === "DISPUTED";
 }
-
 function temporalSuccessor(candidate: MemoryCandidate, existing: ExistingMemoryFact): boolean {
     const incoming = candidate.temporal.validFrom ?? candidate.temporal.observedAt ?? candidate.temporal.capturedAt;
-    const current = existing.validFrom;
-    return current !== null && Date.parse(incoming) > Date.parse(current);
+    return existing.validFrom !== null && Date.parse(incoming) > Date.parse(existing.validFrom);
 }
-
-function decision(
-    value: MemoryAdmissionDecision,
-): MemoryAdmissionDecision {
+function decision(value: MemoryAdmissionDecision): MemoryAdmissionDecision {
     return MemoryAdmissionDecisionSchema.parse(value);
 }
-
-export function admissionDecisionHash(
-    candidate: MemoryCandidate,
-    result: MemoryAdmissionDecision,
-): string {
-    const material = JSON.stringify({ candidate, result });
-    return createHash("sha256").update(material).digest("hex");
+export function admissionDecisionHash(candidate: MemoryCandidate, result: MemoryAdmissionDecision): string {
+    return createHash("sha256").update(JSON.stringify({ candidate, result })).digest("hex");
 }
 
-/**
- * Deterministic admission policy. This function performs no IO and grants no
- * authorization. Callers must apply J0.3 authorization and J0.4 persistence.
- */
-export function decideMemoryAdmission(
-    input: unknown,
-    existingInput: readonly unknown[],
-): MemoryAdmissionDecision {
+export function decideMemoryAdmission(input: unknown, existingInput: readonly unknown[]): MemoryAdmissionDecision {
     const candidate = MemoryCandidateSchema.parse(input);
     const existing = existingInput.map((item) => ExistingMemoryFactSchema.parse(item));
+    if (candidate.policy.classification === "D5") return decision({version:1,decision:"REJECT",canonicalMemoryId:null,relatedMemoryIds:[],reasonCodes:["D5_REQUIRES_VAULT"]});
+    if (!candidate.policy.consent.createMemory) return decision({version:1,decision:"REJECT",canonicalMemoryId:null,relatedMemoryIds:[],reasonCodes:["MEMORY_CONSENT_REQUIRED"]});
+    if (candidate.policy.retention.mode === "never-store") return decision({version:1,decision:"REJECT",canonicalMemoryId:null,relatedMemoryIds:[],reasonCodes:["NEVER_STORE"]});
+    if (candidate.policy.retention.mode === "session" || candidate.kind === "working") return decision({version:1,decision:"ACCEPT_EPHEMERAL",canonicalMemoryId:null,relatedMemoryIds:[],reasonCodes:["EPHEMERAL_MEMORY"]});
 
-    if (candidate.policy.classification === "D5") {
-        return decision({
-            version: 1,
-            decision: "REJECT",
-            canonicalMemoryId: null,
-            relatedMemoryIds: [],
-            reasonCodes: ["D5_REQUIRES_VAULT"],
-        });
-    }
-    if (!candidate.policy.consent.createMemory) {
-        return decision({
-            version: 1,
-            decision: "REJECT",
-            canonicalMemoryId: null,
-            relatedMemoryIds: [],
-            reasonCodes: ["MEMORY_CONSENT_REQUIRED"],
-        });
-    }
-    if (candidate.policy.retention.mode === "never-store") {
-        return decision({
-            version: 1,
-            decision: "REJECT",
-            canonicalMemoryId: null,
-            relatedMemoryIds: [],
-            reasonCodes: ["NEVER_STORE"],
-        });
-    }
-    if (candidate.policy.retention.mode === "session" || candidate.kind === "working") {
-        return decision({
-            version: 1,
-            decision: "ACCEPT_EPHEMERAL",
-            canonicalMemoryId: null,
-            relatedMemoryIds: [],
-            reasonCodes: ["EPHEMERAL_MEMORY"],
-        });
-    }
-
-    const comparable = existing.filter(
-        (item) =>
-            sameScope(candidate, item) &&
-            active(item) &&
-            candidate.semanticKey !== null &&
-            item.semanticKey === candidate.semanticKey,
-    );
-
+    const comparable = existing.filter((item) => sameScope(candidate,item) && active(item) && candidate.semanticKey !== null && item.semanticKey === candidate.semanticKey);
     const exact = comparable.find((item) => item.content === candidate.content);
-    if (exact) {
-        return decision({
-            version: 1,
-            decision: "MERGE_WITH_EXISTING",
-            canonicalMemoryId: exact.memoryId,
-            relatedMemoryIds: [exact.memoryId],
-            reasonCodes: ["IDEMPOTENT_SEMANTIC_MATCH"],
-        });
-    }
+    if (exact) return decision({version:1,decision:"MERGE_WITH_EXISTING",canonicalMemoryId:exact.memoryId,relatedMemoryIds:[exact.memoryId],reasonCodes:["IDEMPOTENT_SEMANTIC_MATCH"]});
+    if (comparable.length === 0) return decision({version:1,decision:"ACCEPT",canonicalMemoryId:null,relatedMemoryIds:[],reasonCodes:[candidate.semanticKey === null ? "NEW_UNKEYED_MEMORY" : "NEW_SEMANTIC_FACT"]});
 
-    if (comparable.length === 0) {
-        return decision({
-            version: 1,
-            decision: "ACCEPT",
-            canonicalMemoryId: null,
-            relatedMemoryIds: [],
-            reasonCodes: [candidate.semanticKey === null ? "NEW_UNKEYED_MEMORY" : "NEW_SEMANTIC_FACT"],
-        });
-    }
-
-    const strongest = comparable.reduce((best, item) => {
-        const itemAuthority = authority[item.assertion];
-        const bestAuthority = authority[best.assertion];
-        if (itemAuthority !== bestAuthority) return itemAuthority > bestAuthority ? item : best;
+    const strongest = comparable.reduce((best,item) => {
+        const ia=authority[item.assertion], ba=authority[best.assertion];
+        if (ia !== ba) return ia > ba ? item : best;
         if (item.confidence !== best.confidence) return item.confidence > best.confidence ? item : best;
         return item.memoryId.localeCompare(best.memoryId) < 0 ? item : best;
     });
-    const candidateAuthority = authority[candidate.assertion];
-    const existingAuthority = authority[strongest.assertion];
-
-    if (candidate.assertion === "OWNER_ASSERTED" && strongest.assertion === "OWNER_ASSERTED") {
-        return decision({
-            version: 1,
-            decision: "REQUIRE_OWNER_CONFIRMATION",
-            canonicalMemoryId: strongest.memoryId,
-            relatedMemoryIds: comparable.map((item) => item.memoryId).sort(),
-            reasonCodes: ["CONFLICTING_OWNER_ASSERTIONS"],
-        });
+    const ca=authority[candidate.assertion], ea=authority[strongest.assertion];
+    if (candidate.assertion === "OWNER_ASSERTED" && strongest.assertion === "OWNER_ASSERTED") return decision({version:1,decision:"REQUIRE_OWNER_CONFIRMATION",canonicalMemoryId:strongest.memoryId,relatedMemoryIds:comparable.map(i=>i.memoryId).sort(),reasonCodes:["CONFLICTING_OWNER_ASSERTIONS"]});
+    if (ca < ea) return decision({version:1,decision:"REJECT",canonicalMemoryId:strongest.memoryId,relatedMemoryIds:[strongest.memoryId],reasonCodes:["LOWER_AUTHORITY_CONFLICT"]});
+    const temporal = temporalSuccessor(candidate,strongest);
+    if (temporal || ca > ea) {
+        const reasons: string[] = [];
+        if (temporal) reasons.push("NEWER_TEMPORAL_FACT");
+        if (ca > ea) reasons.push("HIGHER_AUTHORITY_FACT");
+        return decision({version:1,decision:"SUPERSEDE_EXISTING",canonicalMemoryId:strongest.memoryId,relatedMemoryIds:comparable.map(i=>i.memoryId).sort(),reasonCodes:reasons});
     }
-
-    if (candidateAuthority < existingAuthority) {
-        return decision({
-            version: 1,
-            decision: "REJECT",
-            canonicalMemoryId: strongest.memoryId,
-            relatedMemoryIds: [strongest.memoryId],
-            reasonCodes: ["LOWER_AUTHORITY_CONFLICT"],
-        });
-    }
-
-    if (temporalSuccessor(candidate, strongest) || candidateAuthority > existingAuthority) {
-        return decision({
-            version: 1,
-            decision: "SUPERSEDE_EXISTING",
-            canonicalMemoryId: strongest.memoryId,
-            relatedMemoryIds: comparable.map((item) => item.memoryId).sort(),
-            reasonCodes: [
-                temporalSuccessor(candidate, strongest)
-                    ? "NEWER_TEMPORAL_FACT"
-                    : "HIGHER_AUTHORITY_FACT",
-            ],
-        });
-    }
-
-    return decision({
-        version: 1,
-        decision: "MARK_CONFLICT",
-        canonicalMemoryId: strongest.memoryId,
-        relatedMemoryIds: comparable.map((item) => item.memoryId).sort(),
-        reasonCodes: ["UNRESOLVED_SEMANTIC_CONFLICT"],
-    });
+    return decision({version:1,decision:"MARK_CONFLICT",canonicalMemoryId:strongest.memoryId,relatedMemoryIds:comparable.map(i=>i.memoryId).sort(),reasonCodes:["UNRESOLVED_SEMANTIC_CONFLICT"]});
 }
