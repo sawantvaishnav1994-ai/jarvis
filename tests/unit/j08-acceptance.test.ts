@@ -1,12 +1,12 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe,expect,it,vi } from "vitest";
-import { EventRouter,EventScheduler,EventSystem,EventSystemError,EventTypeRegistry,ExternalEventIngress,HmacIngressAuthenticator,MemoryEventStore,MemoryIngressReceipts,jsonPayload,safeEventMetadata,type ConsumerAuthorizationPort,type EventEvidence,type EventSchedule,type EventSubscription,type JarvisEventEnvelope } from "@jarvis/events";
+import { EventRouter,EventScheduler,EventSystem,EventSystemError,EventTypeRegistry,ExternalEventIngress,HmacIngressAuthenticator,MemoryEventStore,MemoryIngressReceipts,jsonPayload,safeEventMetadata,type ConsumerAuthorizationPort,type EventEvidence,type EventSchedule,type EventSubscription,type EventTypeDefinition,type JarvisEventEnvelope } from "@jarvis/events";
 import { GovernedEventToolConsumer } from "@jarvis/core";
 import { SyntheticToolAdapter,UniversalToolGateway,UniversalToolRegistry,syntheticTool,type AuthorizationDecision,type CredentialBroker,type ToolAuthorizationPort,type ToolRequest } from "@jarvis/tools";
 
 const now="2026-09-03T15:00:00.000Z",owner="owner-j08",project="jarvis";
-const definition=(eventType="system.test")=>({eventType,schemaVersion:1,payloadSchema:jsonPayload,allowedProducerTypes:["INTERNAL","EXTERNAL","SCHEDULED","SYSTEM"] as const,maxClassification:"D4" as const,replayPolicy:"OWNER_ONLY" as const,maxPayloadBytes:8192});
+const definition=(eventType="system.test"):EventTypeDefinition=>({eventType,schemaVersion:1,payloadSchema:jsonPayload,allowedProducerTypes:["INTERNAL","EXTERNAL","SCHEDULED","SYSTEM"],maxClassification:"D4",replayPolicy:"OWNER_ONLY",maxPayloadBytes:8192});
 const event=(over:Partial<JarvisEventEnvelope>={}):JarvisEventEnvelope=>({eventId:randomUUID(),eventType:"system.test",schemaVersion:1,occurredAt:now,receivedAt:now,ownerId:owner,projectId:project,correlationId:"corr-j08",producerId:"jarvis.system",producerType:"SYSTEM",subject:"test",payload:{value:"ok"},payloadClassification:"D1",privacy:"private-cloud",chainDepth:0,...over});
 class Evidence{events:EventEvidence[]=[];async append(e:EventEvidence){this.events.push(e);}}
 class ConsumerAuth implements ConsumerAuthorizationPort{allow=true;async authorize(s:EventSubscription,e:JarvisEventEnvelope){return this.allow&&s.ownerId===e.ownerId&&(s.projectId===undefined||s.projectId===e.projectId);}}
