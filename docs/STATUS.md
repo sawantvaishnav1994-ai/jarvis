@@ -39,7 +39,7 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | J0.1 | All 24 artifact categories implemented; fresh Linux checkout/Docker CI acceptance passed | Accepted for development |
 | J0.2 | Real passkeys, device proof, sessions, signed approvals, restricted delegation, identity recovery and console; full development GO flow passed | Accepted for local development; physical-device validation, hardware A4/remote production and full disaster recovery are not claimed |
 | J0.3 | Full development policy/risk/approval/authorization, budgets, persisted controls, audit and A–N GO passed on exact merged source and CI | Accepted for development; real connectors, hardware A4 and production containment remain later gates |
-| J0.4 | Classified PostgreSQL repositories, envelope crypto/rotation, objects, lineage, exports, isolated backup/restore and health; real-stack checkpoint passed | Secret lifecycle, full retention/object deletion/recovery and complete A–S GO; see current report |
+| J0.4 | Complete development implementation and explicit A–S acceptance passed on the private validation branch | Accepted for development; production custody, immutable/offline recovery, PITR and hostile-process containment remain later gates |
 | J0.5 | Memory schema/service/adapter and retention rules | Full memory provenance, expiry maintenance, authenticated data interfaces |
 | J0.6 | Model port, privacy checks, swap conformance, bounded wait | Real/local adapters, enforced preflight budgets and process isolation |
 | J0.7 | Tool contract and gateway tested with synthetic echo | Real connector scopes, idempotency/cancellation/reconciliation |
@@ -118,3 +118,39 @@ attachments fail closed. This checkpoint is verified on main source
 210 TypeScript, 35 real PostgreSQL, 5 browser scenarios, 68 Python and all lifecycle
 checks passed. J0.1/J0.2/J0.3 remain regression-free. The complete J0.4 A–S GO is
 still NOT ISSUED; see the detailed report's coverage map and development gaps.
+
+## J0.4 development acceptance — 2026-09-03
+
+**J0.4 — Private Data, Database, Encryption, Secrets & Storage Architecture:
+COMPLETE for development. Development GO is issued.** Main has not been changed or
+merged by this validation. The accepted implementation candidate is validation-branch
+source `db6e3e48c33af2944a319815c4d0729924b3a718`, verified by
+[GitHub Actions run 33731571717](https://github.com/sawantvaishnav1994-ai/jarvis/actions/runs/33731571717).
+
+The exact run passed package compilation, lint, architecture boundaries, TypeScript
+types, the Next.js production build, 246 unit/contract/security tests, 50 real
+PostgreSQL/pgvector tests, five browser scenarios, 68 Python regressions, disposable
+PostgreSQL and Redis setup, startup/readiness and queue round-trip, PostgreSQL/Redis
+outage and recovery, and verified service shutdown. The machine-readable J0.4 gate
+reported `A-S_PASS`, with non-empty passing assertions for every phase A through S.
+
+Accepted development behavior includes exact J0.3-governed synthetic secret-handle
+use without returning D5 plaintext, envelope encryption and key rotation, shared and
+legacy attachment lifecycle checks, NEVER_STORE, provider-independent checked export,
+derived-data deletion and backup-expiry obligations, encrypted backup and isolated
+restore, corrupt-backup rejection, reviewed and recovery-backed destructive migration
+governance, deterministic external-context minimization, storage-health fault handling,
+and payload-free append-only audit evidence. Migration 0007 adds backup retention and
+deletion-obligation metadata; migrations 0001–0006 remain unchanged.
+
+No production credentials or owner data were introduced. Normal exports exclude D5.
+The default production destructive-migration registry remains empty and unsupported
+operations fail closed. Development limits remain bounded record/object/export and
+backup sizes, and backup purge eligibility is deterministic metadata—not a claim that
+an independent physical copy has been erased.
+
+Production validation remains pending for HSM/KMS custody, physical A4 ceremonies,
+independently immutable/offline backups, PostgreSQL PITR, multi-region disaster
+recovery, hostile-process containment, real connector credential rotation, secure
+enclave validation and regulatory retention. J0 Foundation v1 GO remains NOT ISSUED,
+and J1/J0.5 have not been started. Any merge to main requires a separate owner decision.
