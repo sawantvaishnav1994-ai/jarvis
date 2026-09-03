@@ -83,7 +83,7 @@ export interface ToolAuthorizationPort {
   revalidate(request: ToolRequest, decision: AuthorizationDecision, inputHash: string): Promise<boolean>;
 }
 export interface ToolAuditSink { append(event: ToolAuditEvent): Promise<void>; }
-export interface ToolAdapterContext { request: ToolRequest; signal: AbortSignal; credential?: CredentialLease; }
+export interface ToolAdapterContext { request: ToolRequest; signal: AbortSignal; credential?: CredentialLease | undefined; }
 export interface ToolAdapter<I = unknown, O = unknown> {
   execute(input: I, context: ToolAdapterContext): Promise<O>;
   simulate?(input: I, context: ToolAdapterContext): Promise<unknown>;
