@@ -192,7 +192,7 @@ describe("J0.6 model abstraction router", () => {
         const records: ModelAuditRecord[] = [];
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
-        const router = new ModelRouter(registry, { append: (record) => records.push(record) });
+        const router = new ModelRouter(registry, { append: (record) => { records.push(record); } });
         await router.execute(request(), routePolicy(), new AbortController().signal);
         expect(records.length).toBeGreaterThan(0);
         const serialized = JSON.stringify(records);
@@ -220,7 +220,7 @@ describe("J0.6 model abstraction router", () => {
 
     it("synthetic streaming preserves sequence and honors cancellation", async () => {
         const adapter = new SyntheticModelAdapter(descriptor(), { responseText: "one two three" });
-        const chunks = [];
+        const chunks: Array<{ sequence: number; text: string; done: boolean }> = [];
         for await (const chunk of adapter.stream!(request({ requiredCapabilities: ["streaming"] }), new AbortController().signal)) chunks.push(chunk);
         expect(chunks.map((x) => x.sequence)).toEqual([0, 1, 2]);
         expect(chunks.at(-1)?.done).toBe(true);
