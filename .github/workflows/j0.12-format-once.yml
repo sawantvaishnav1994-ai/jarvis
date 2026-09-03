@@ -1,0 +1,41 @@
+name: J0.12 one-time freeze formatter
+
+on:
+  push:
+    branches:
+      - validation/j0.12-foundation-v1-freeze-20260904
+    paths:
+      - .github/workflows/j0.12-format-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: validation/j0.12-foundation-v1-freeze-20260904
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Format only J0.12 freeze artifacts
+        shell: bash
+        run: |
+          npx prettier --write foundation/*.json tests/acceptance/j12-gates.json tests/unit/j12-acceptance.test.ts scripts/j12-foundation-v1-go.mjs
+          changed="$(git diff --name-only | sort)"
+          allowed="$(printf '%s\n' foundation/data-classification-v1.json foundation/foundation-v1.manifest.json foundation/operating-modes-v1.json foundation/permissions-v1.json foundation/schema-v1.json scripts/j12-foundation-v1-go.mjs tests/acceptance/j12-gates.json tests/unit/j12-acceptance.test.ts | sort)"
+          test -n "$changed"
+          comm -23 <(printf '%s\n' "$changed") <(printf '%s\n' "$allowed") | test ! -s /dev/stdin
+      - name: Commit deterministic formatting only
+        shell: bash
+        run: |
+          git config user.name 'jarvis-validation-bot'
+          git config user.email 'jarvis-validation-bot@users.noreply.github.com'
+          git add foundation/*.json tests/acceptance/j12-gates.json tests/unit/j12-acceptance.test.ts scripts/j12-foundation-v1-go.mjs
+          git commit -m 'style(j0.12): format Foundation v1 freeze artifacts'
+          git push origin HEAD:validation/j0.12-foundation-v1-freeze-20260904
