@@ -5,8 +5,8 @@ export interface EventTransportPort { publish(event:JarvisEventEnvelope):Promise
 export interface OutboxStorePort { claimOutbox(limit?:number):Promise<string[]>; load(eventId:string):Promise<JarvisEventEnvelope|undefined>; markPublished(eventId:string):Promise<void>; releaseOutbox(eventId:string,code:string,delayMs:number):Promise<void>; }
 
 export class OutboxDispatcher{
-  constructor(private store:OutboxStorePort,private transport:EventTransportPort,private maxAttempts=8){}
-  async dispatch(limit=100){const ids=await this.store.claimOutbox(limit),result={published:0,released:0};for(const id of ids){const event=await this.store.load(id);if(!event){await this.store.releaseOutbox(id,"EVENT_NOT_FOUND",60_000);result.released++;continue;}try{await this.transport.publish(event);await this.store.markPublished(id);result.published++;}catch(error){const code=error instanceof EventSystemError?error.code:"TRANSPORT_UNAVAILABLE";await this.store.releaseOutbox(id,code,Math.min(250*2**Math.min(this.maxAttempts,7),60_000));result.released++;}}return result;}
+  constructor(private store:OutboxStorePort,private transport:EventTransportPort,private retryDelayMs=250){}
+  async dispatch(limit=100){const ids=await this.store.claimOutbox(limit),result={published:0,released:0};for(const id of ids){const event=await this.store.load(id);if(!event){await this.store.releaseOutbox(id,"EVENT_NOT_FOUND",60_000);result.released++;continue;}try{await this.transport.publish(event);await this.store.markPublished(id);result.published++;}catch(error){const code=error instanceof EventSystemError?error.code:"TRANSPORT_UNAVAILABLE";await this.store.releaseOutbox(id,code,this.retryDelayMs);result.released++;}}return result;}
 }
 
 export class MemoryEventTransport implements EventTransportPort{
