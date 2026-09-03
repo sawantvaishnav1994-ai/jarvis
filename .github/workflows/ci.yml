@@ -41,6 +41,8 @@ jobs:
           node scripts/wait-ready.mjs
       - name: Queue and health smoke
         run: npm run smoke
+      - name: J0.8 Redis/BullMQ event transport
+        run: node scripts/j08-queue-smoke.mjs
       - name: Browser installation
         run: npx playwright install --with-deps chromium
       - name: Browser acceptance
