@@ -140,14 +140,13 @@ export class PortableExports {
             secrets: "separate-recovery-only",
             migrations: (await tx.query("SELECT version,checksum FROM settings.schema_migrations ORDER BY version")).rows,
         });
-        files["audit-metadata/storage.json"] = canonical(
-            (
-                await tx.query(
-                    "SELECT record FROM security.data_access_events WHERE record->>'ownerId'=$1 ORDER BY id LIMIT 1000",
-                    [auth.ownerId],
-                )
-            ).rows,
-        );
+        const auditRows = (await tx.query(
+            "SELECT record FROM security.data_access_events WHERE record->>'ownerId'=$1 ORDER BY id LIMIT 10001", [auth.ownerId],
+        )).rows;
+        if (auditRows.length > 10000) throw new BoundaryError("EXPORT_SIZE_LIMIT");
+        files["audit-metadata/storage.json"] = canonical(auditRows);
+        if (Object.values(files).reduce((sum, value) => sum + Buffer.byteLength(value), 0) > 10000000)
+            throw new BoundaryError("EXPORT_SIZE_LIMIT");
         const manifest = ExportManifestSchema.parse({
             version: 1,
             id: randomUUID(),

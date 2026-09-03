@@ -58,6 +58,12 @@ jobs:
       - name: Safe service diagnostics
         if: failure()
         run: cat /tmp/jarvis-services.log 2>/dev/null || true
+      - name: Explicit J0.4 A-S acceptance
+        if: success()
+        run: npm run test:j04:go
+      - name: J0.4 evidence on failure
+        if: failure()
+        run: npm run test:j04:go
       - name: Cleanup
         if: always()
         run: |

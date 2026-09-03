@@ -10,6 +10,7 @@ import {
     GovernanceEngine,
     initializeDevelopmentVault,
     ensureStorageSecrets,
+    requireExternalContext,
 } from "@jarvis/security";
 import {
     databasePool,
@@ -197,6 +198,13 @@ beforeAll(async () => {
                     const row = entry as { id: string; deleted: boolean };
                     if (!row.deleted)
                         await records.read(snapshot.ownerId, row.id);
+                }
+                for (const [key, encoded] of Object.entries(snapshot.objects)) {
+                    const restored = await restoreObjects.get(snapshot.ownerId, key);
+                    expect(restored).toEqual(Buffer.from(encoded, "base64"));
+                    const box = JSON.parse(restored.toString());
+                    const value = await (await keys.cipher(snapshot.ownerId)).decrypt(box.envelope, box.binding) as { contentBase64: string };
+                    expect(value.contentBase64).toBe(Buffer.from("Retained recovery object").toString("base64"));
                 }
             },
         ),
@@ -401,7 +409,7 @@ async function execute(
 function record(
     domain: StorageRecord["domain"],
     payload: StorageRecord["payload"],
-    classification: "D0" | "D2" | "D3" = "D2",
+    classification: "D0" | "D1" | "D2" | "D3" = "D2",
     sources: string[] = [],
 ) {
     const policy = dataPolicy();
@@ -702,6 +710,9 @@ it("L: forget removes memory, private embedding and derived entity, retaining mi
     ).toHaveLength(1);
 }, 30000);
 it("M-N: validates encrypted backup and restores into a named isolated database without old sessions", async () => {
+    const retainedId = randomUUID(), retainedPolicy = dataPolicy(); retainedPolicy.consent.keepAttachments = true;
+    await execute("data.object.put", "D2", retainedId, { id: retainedId, filename: "retained-recovery.txt", mimeType: "text/plain", contentBase64: Buffer.from("Retained recovery object").toString("base64"), policy: retainedPolicy });
+    const retainedKey = (await pool.query("SELECT object_key FROM storage.objects WHERE id=$1", [retainedId])).rows[0].object_key;
     backup = (await execute("data.backup.create", "D4")) as typeof backup;
     expect(backup.id).toBeTruthy();
     await execute("data.backup.restore", "D4", backup.id);
@@ -740,7 +751,7 @@ it("M-N: validates encrypted backup and restores into a named isolated database 
             )
         ).rows[0]?.deleted,
     ).toBe(true);
-    expect(await restoreObjects.list(owner.session.ownerId)).toEqual([]);
+    expect(await restoreObjects.list(owner.session.ownerId)).toEqual([retainedKey]);
     expect(
         (
             await targetAdmin.query(
@@ -1262,7 +1273,10 @@ it("B-G-K: reconstructs provider-independent conversation, graph, settings and s
     for (const row of [c, ...messages, ...entities, relationship, evidence, project, setting]) await execute("data.record.put", "D2", row.id, row);
     const exported = verifyPortableExport(await execute("data.export", "D4"));
     const reconstructed = reconstructPortableExport(exported);
-    for (const row of [c, ...messages, ...entities, relationship, evidence, project, setting]) expect(reconstructed.records.get(row.id)).toEqual(row);
+    for (const row of [c, ...messages, ...entities, relationship, evidence, project, setting]) {
+        const implicit = row.domain === "message" ? [c.id] : row.domain === "relationship" ? entities.map(entity => entity.id) : row.domain === "evidence" ? [relationship.id] : [];
+        expect(reconstructed.records.get(row.id)).toEqual({ ...row, sources: [...new Set([...row.sources, ...implicit])] });
+    }
     expect(reconstructed.deleted.has(memory.id)).toBe(true);
     expect(reconstructed.records.has(memory.id)).toBe(false);
     expect(JSON.parse(exported.files["agent-definitions/definitions.json"]!).some((value: { id: string }) => value.id === subjectId)).toBe(true);
@@ -1305,3 +1319,99 @@ it("P: stale, corrupt and changed-source backups cannot authorize a destructive 
     await expect(execute("data.migration.execute", "D4", null, { ...payload, backupId: corrupt.id })).rejects.toThrow();
     expect((await pool.query("SELECT count(*)::int AS n FROM recovery.migration_probe")).rows[0].n).toBe(1);
 }, 30000);
+
+it("R: schema, vector, vault and object failures deny protected operations and recover", async () => {
+    const prior = (await sourceAdmin.query("SELECT checksum FROM settings.schema_migrations WHERE version=7")).rows[0].checksum;
+    await sourceAdmin.query("UPDATE settings.schema_migrations SET checksum=$1 WHERE version=7", ["0".repeat(64)]);
+    try {
+        expect(await execute("data.health", "D4")).toMatchObject({ migrations: false, status: "unavailable" });
+        await expect(execute("data.record.read", "D3", conversation.id)).rejects.toThrow("STORAGE_SCHEMA_INCOMPATIBLE");
+    } finally { await sourceAdmin.query("UPDATE settings.schema_migrations SET checksum=$1 WHERE version=7", [prior]); }
+    await sourceAdmin.query("ALTER FUNCTION vector_dims(vector) RENAME TO vector_dims_failure_test");
+    try {
+        expect(await execute("data.health", "D4")).toMatchObject({ pgvector: false });
+        await expect(execute("data.record.read", "D3", conversation.id)).rejects.toThrow();
+    } finally { await sourceAdmin.query("ALTER FUNCTION vector_dims_failure_test(vector) RENAME TO vector_dims"); }
+    const lease = secretVault.lease;
+    secretVault.lease = async () => { throw new Error("synthetic unavailable vault"); };
+    try {
+        expect(await execute("data.health", "D4")).toMatchObject({ vault: false, status: "unavailable" });
+        await expect(execute("data.record.read", "D3", conversation.id)).rejects.toThrow();
+    } finally { secretVault.lease = lease; }
+    const id = randomUUID(), policy = dataPolicy(); policy.consent.keepAttachments = true;
+    await execute("data.object.put", "D2", id, { id, filename: "health.txt", mimeType: "text/plain", contentBase64: Buffer.from("health sentinel").toString("base64"), policy });
+    const list = liveObjects.list, get = liveObjects.get;
+    liveObjects.list = async () => { throw new Error("synthetic unavailable objects"); };
+    liveObjects.get = async () => { throw new Error("synthetic unavailable objects"); };
+    try {
+        expect(await execute("data.health", "D4")).toMatchObject({ objects: false });
+        await expect(execute("data.object.get", "D2", id)).rejects.toThrow();
+    } finally { liveObjects.list = list; liveObjects.get = get; }
+    expect(await execute("data.health", "D4")).toMatchObject({ postgres: true, migrations: true, pgvector: true, vault: true, keys: true, objects: true });
+    expect(await execute("data.object.get", "D2", id)).toMatchObject({ contentBase64: Buffer.from("health sentinel").toString("base64") });
+}, 30000);
+
+it("Q: authorized mixed-class retrieval minimizes before a synthetic provider and audits policy counts", async () => {
+    const specs = [["D1", "APPROVED_EXTERNAL_AI"], ["D2", "SPECIFIC_PROVIDER_ONLY"], ["D3", "NEVER_EXTERNAL"], ["D2", "LOCAL_ONLY"]] as const;
+    const rows = specs.map(([classification, mode], index) => {
+        const row = record("project", { name: "Unrelated private name", description: `Approved description ${index}` }, classification);
+        row.policy.privacy = "ai-allow"; row.policy.consent.externalAI = true;
+        row.external = { version: 1, mode, providers: ["synthetic"], regions: ["eu"], fields: ["description"], maximumCharacters: 100 };
+        return row;
+    });
+    for (const row of rows) await execute("data.record.put", row.policy.classification, row.id, row);
+    const issued = await authorize("data.context.prepare", "D3", null, { ids: rows.map(row => row.id), provider: "synthetic", region: "eu", limit: 100 });
+    const result = await subject("execute", issued) as { result: { value: { items: { id: string; fields: Record<string,string> }[]; excluded: string[] } } };
+    const syntheticProviderInput = result.result.value.items;
+    expect(syntheticProviderInput).toEqual(rows.slice(0,2).map(row => ({ id: row.id, fields: { description: row.payload.description } })));
+    expect(JSON.stringify(syntheticProviderInput)).not.toContain("Unrelated private name");
+    const policyEvidence = (await pool.query("SELECT record FROM security.data_access_events WHERE record->>'requestId'=$1", [issued.request.id])).rows;
+    expect(policyEvidence[0].record).toMatchObject({ classification: "D3", contextDecision: { included: 2, excluded: 2 } });
+    expect(JSON.stringify(policyEvidence)).not.toContain("Approved description");
+    expect(() => requireExternalContext([], "synthetic", "eu", [])).toThrow("EXTERNAL_CONTEXT_POLICY_UNSATISFIED");
+}, 30000);
+
+it("S: complete storage history includes safe recovery, secret, retention and context evidence", async () => {
+    const events = (await pool.query("SELECT record FROM security.data_access_events")).rows.map(row => row.record);
+    for (const operation of ["data.record.put", "data.record.read", "data.secret.use", "data.keys.rotate", "data.export", "data.record.forget", "data.backup.create", "data.backup.restore", "data.migration.verified", "data.context.prepare", "data.health", "data.deletion.purge", "data.retention.change", "data.retention.execute", "data.attachment.reconcile"])
+        expect(events.some(row => row.operation === operation)).toBe(true);
+    const lease = await secretVault.lease("development/tools/synthetic-credential", { version: 1, id: "jarvis-data-test", kind: "service", environment: "development" });
+    try { expect(JSON.stringify(events)).not.toContain(lease.value.toString()); }
+    finally { lease.destroy(); }
+    for (const sentinel of ["Sensitive synthetic title", "Synthetic confidential sentence", "NEVER_STORE_SYNTHETIC_SENTINEL", "Recovery deletion sentinel", "Generic migration sentinel"])
+        expect(JSON.stringify(events)).not.toContain(sentinel);
+    await expect(pool.query("UPDATE security.data_access_events SET record='{}'::jsonb")).rejects.toThrow();
+    await expect(pool.query("DELETE FROM security.data_access_events")).rejects.toThrow();
+    await expect(pool.query("TRUNCATE security.data_access_events")).rejects.toThrow();
+});
+
+it("E-K: encrypted objects keep canonical identity when the storage adapter destination changes", async () => {
+    const id = randomUUID(), policy = dataPolicy(); policy.consent.keepAttachments = true;
+    await execute("data.object.put", "D2", id, { id, filename: "portable-object.txt", mimeType: "text/plain", contentBase64: Buffer.from("Portable object sentinel").toString("base64"), policy });
+    const original = await execute("data.object.get", "D2", id);
+    const parent = record("message", { conversationId: conversation.id, authorId: subjectId, content: "Portable attachment parent", contentType: "text/plain", model: null }, "D3");
+    await execute("data.record.put", "D3", parent.id, parent);
+    const attachment = record("attachment", { messageId: parent.id, objectId: id }, "D3");
+    await execute("data.record.put", "D3", attachment.id, attachment);
+    const key = (await pool.query("SELECT object_key FROM storage.objects WHERE id=$1", [id])).rows[0].object_key;
+    const alternate = new LocalEncryptedObjects(join(dir, "alternate-provider"));
+    expect(await alternate.put(owner.session.ownerId, await liveObjects.get(owner.session.ownerId, key))).toBe(key);
+    const get = liveObjects.get;
+    liveObjects.get = (ownerId, objectKey) => alternate.get(ownerId, objectKey);
+    try { expect(await execute("data.object.get", "D2", id)).toEqual(original); }
+    finally { liveObjects.get = get; }
+    const reconstructed = reconstructPortableExport(await execute("data.export", "D4"));
+    expect(reconstructed.objects.get(id)).toEqual(original);
+    expect(reconstructed.objects.get(id)?.metadata.id).toBe(id);
+    expect(reconstructed.records.get(attachment.id)?.payload).toEqual({ messageId: parent.id, objectId: id });
+});
+
+it("P: a pending unapproved migration cannot obtain execution authorization", async () => {
+    const transient = { version: 1, migrationId: migrationDefinition.id, migrationHash: destructiveMigrationHash(migrationDefinition), backupId: randomUUID() };
+    const request = { version: 1, id: randomUUID(), toolId: "data.migration.execute", resource: "owner-data", environment: "development", input: { recordId: null, classification: "D4", payloadHash: digest(canonical(transient)) } };
+    const pending = await subject("request", request) as Pending;
+    expect(pending.approval.id).toBeTruthy();
+    expect(pending).not.toHaveProperty("authorization");
+    await expect(subject("execute", { request, authorization: { id: pending.approval.id }, transient })).rejects.toThrow();
+    expect((await pool.query("SELECT count(*)::int AS n FROM recovery.migration_probe")).rows[0].n).toBe(1);
+});

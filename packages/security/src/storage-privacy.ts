@@ -90,3 +90,12 @@ export function minimizeExternalContext(
     }
     return { version: 1 as const, provider, region, items: result, excluded };
 }
+
+/** Provider boundary guard after authorized retrieval. It grants no access and
+ * performs no model call. A caller cannot proceed with an unsatisfied context policy.
+ */
+export function requireExternalContext(raw: unknown, provider: string, region: string, selectedIds: readonly string[], limit = 16000) {
+    const result = minimizeExternalContext(raw, provider, region, selectedIds, limit);
+    if (result.items.length === 0) throw new BoundaryError("EXTERNAL_CONTEXT_POLICY_UNSATISFIED");
+    return result;
+}

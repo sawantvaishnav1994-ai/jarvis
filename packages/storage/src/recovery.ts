@@ -98,10 +98,10 @@ export class StorageRecovery {
         for (const table of recoveryTables) {
             const rows = (
                 await tx.query(
-                    `SELECT to_jsonb(t) AS row FROM ${table} t LIMIT 2001`,
+                    `SELECT to_jsonb(t) AS row FROM ${table} t LIMIT 10001`,
                 )
             ).rows;
-            if (rows.length > 2000) throw new BoundaryError("BACKUP_ROW_LIMIT");
+            if (rows.length > 10000) throw new BoundaryError("BACKUP_ROW_LIMIT");
             tables[table] = rows.map((r) => r.row);
         }
         const objects: Record<string, string> = {};

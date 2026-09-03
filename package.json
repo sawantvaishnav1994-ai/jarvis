@@ -28,6 +28,7 @@
         "lint": "eslint packages apps tests scripts --ignore-pattern '**/dist/**' --ignore-pattern '**/.next/**' && node scripts/check-boundaries.mjs",
         "test": "npm run build:packages && vitest run",
         "test:integration": "npm run build:packages && vitest run --config vitest.integration.config.ts",
+        "test:j04:go": "node scripts/j04-go.mjs",
         "test:e2e": "playwright test",
         "test:e2e:identity": "playwright test --config playwright.identity.config.ts",
         "smoke": "node scripts/smoke.mjs",

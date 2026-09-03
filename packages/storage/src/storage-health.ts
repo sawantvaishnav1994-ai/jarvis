@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { StorageHealthSchema } from "@jarvis/shared";
+import { StorageHealthSchema, BoundaryError } from "@jarvis/shared";
 import { DataKeys } from "./data-keys.js";
 import { PrivateObjects } from "./private-objects.js";
 import { StorageRecovery } from "./recovery.js";
@@ -14,6 +14,14 @@ export class StorageHealthService {
         private readonly recovery: StorageRecovery,
         private readonly migrationsDirectory: string,
     ) {}
+    async requireCompatibleSchema() {
+        const expected = await migrationFiles(this.migrationsDirectory);
+        const current = (await currentDataTransaction().query("SELECT version,checksum FROM settings.schema_migrations ORDER BY version")).rows;
+        if (current.length !== expected.length || current.some((row, i) => row.version !== expected[i]?.version || row.checksum !== expected[i]?.sha256))
+            throw new BoundaryError("STORAGE_SCHEMA_INCOMPATIBLE");
+        if ((await currentDataTransaction().query("SELECT vector_dims('[1,0,0]'::vector) AS dimensions")).rows[0]?.dimensions !== 3)
+            throw new BoundaryError("STORAGE_VECTOR_UNAVAILABLE");
+    }
     async inspect(ownerId: string) {
         const tx = currentDataTransaction();
         const probe = async (check: () => Promise<boolean>) => {

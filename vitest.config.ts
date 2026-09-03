@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
 export default defineConfig({
     test: {
+        reporters: ["default", "json"],
+        outputFile: ".jarvis/acceptance/unit.json",
         include: [
             "tests/unit/**/*.test.ts",
             "tests/contracts/**/*.test.ts",

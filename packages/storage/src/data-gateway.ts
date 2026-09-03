@@ -180,6 +180,10 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
         const tx = currentDataTransaction();
         await tx.query("SAVEPOINT private_data_operation");
         try {
+            if (request.toolId !== "data.health") {
+                if (!this.services?.health) throw new BoundaryError("STORAGE_HEALTH_UNAVAILABLE");
+                await this.services.health.requireCompatibleSchema();
+            }
             let value: unknown;
             if (
                 [
@@ -416,6 +420,13 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                         authorizationId: authorization.id,
                         policyVersions: authorization.policyVersions,
                         operation: request.toolId,
+                        classification: input.classification,
+                        ...(request.toolId === "data.context.prepare" ? {
+                            contextDecision: {
+                                included: (value as { items: unknown[] }).items.length,
+                                excluded: (value as { excluded: unknown[] }).excluded.length,
+                            },
+                        } : {}),
                         timestamp: Date.now(),
                         result: "success",
                     }),
