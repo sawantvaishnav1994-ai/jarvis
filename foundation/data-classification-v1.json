@@ -1,0 +1,24 @@
+{
+    "version": 1,
+    "classes": [
+        {"id":"D0","description":"public or intentionally non-sensitive data","externalModelEligibility":"policy-and-consent-controlled","durableStorage":"policy-controlled"},
+        {"id":"D1","description":"low-sensitivity private data","externalModelEligibility":"policy-and-consent-controlled","durableStorage":"policy-controlled"},
+        {"id":"D2","description":"private data eligible for approved external AI only with explicit policy and consent","externalModelEligibility":"approved-provider-and-region-only","durableStorage":"policy-controlled"},
+        {"id":"D3","description":"sensitive private data","externalModelEligibility":"not-eligible-under-Foundation-v1-external-disclosure-rule","durableStorage":"encrypted-and-policy-controlled"},
+        {"id":"D4","description":"highly sensitive private data","externalModelEligibility":"not-eligible-under-Foundation-v1-external-disclosure-rule","durableStorage":"encrypted-and-strictly-policy-controlled"},
+        {"id":"D5","description":"secret material","externalModelEligibility":"never","durableStorage":"never-through-general-durable-data-path","privacy":"local-only"}
+    ],
+    "privacyModes": ["local-only", "private-cloud", "ai-allow"],
+    "retentionModes": ["keep", "until", "session", "never-store"],
+    "neverStore": {
+        "semanticVersion": 1,
+        "rule": "Data marked never-store must not be written to prohibited durable stores, logs, audit payloads, event payloads, backup payloads or model-provider persistence paths."
+    },
+    "rules": [
+        "Classification is assigned by trusted policy/data handling logic and cannot be silently downgraded by model or tool input.",
+        "D5 is local-only and is never eligible for external model disclosure.",
+        "Foundation v1 external model disclosure permits only D0-D2 when privacy is ai-allow, externalAI consent is true, and provider plus region are approved.",
+        "Audit, logs and events carry protected metadata or redacted/encrypted representations rather than prohibited plaintext.",
+        "Retention, deletion and backup obligations follow the governing data policy and remain effective across recovery."
+    ]
+}
