@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { KnowledgeEvidenceEngine, type Entity, type KnowledgeRelationship, type RelationshipEvidence } from "@jarvis/knowledge";
 import type { DataPolicy } from "@jarvis/shared";
 const policy:DataPolicy={version:1,classification:"D2",privacy:"private-cloud",retention:{mode:"keep"},consent:{storeConversation:true,createMemory:true,projectKnowledge:true,keepAttachments:true,personalization:true,externalAI:false}};
-const prov={kind:"owner-input" as const,sourceId:"fixture",sourceVersion:1,actorId:"owner",capturedAt:Date.parse("2026-09-03T00:00:00.000Z"),confidence:1};
+const prov={kind:"owner-stated" as const,source:{kind:"person" as const,id:"owner",version:1},capturedAt:"2026-09-03T00:00:00.000Z",confidence:1,verifiedAt:"2026-09-03T00:00:00.000Z"};
 const entity=(name:string):Entity=>({version:1,id:randomUUID(),ownerId:"owner",projectId:"jarvis",type:"project",canonicalName:name,aliases:[],policy,lifecycle:"ACTIVE",provenance:[prov],recordVersion:1,createdAt:"2026-09-03T00:00:00.000Z",updatedAt:"2026-09-03T00:00:00.000Z"});
 function memoryStore(){const entities:Entity[]=[],relationships:KnowledgeRelationship[]=[],evidence:RelationshipEvidence[]=[];return {entities,relationships,evidence,store:{entities:async()=>entities,relationships:async()=>relationships,evidence:async()=>evidence,putEntity:async(e:Entity)=>{entities.push(e)},putRelationship:async(r:KnowledgeRelationship)=>{relationships.push(r)},putEvidence:async(e:RelationshipEvidence)=>{evidence.push(e)}}};}
 describe("J0.5 knowledge evidence engine",()=>{
