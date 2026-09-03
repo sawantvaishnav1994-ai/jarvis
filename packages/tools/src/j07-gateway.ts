@@ -1,167 +1,38 @@
 import { createHash, randomUUID } from "node:crypto";
 import { BoundaryError } from "@jarvis/shared";
-import {
-  AuthorizationDecisionSchema, ToolAuditEventSchema, ToolRequestSchema, ToolResultSchema,
-  type AuthorizationDecision, type CredentialBroker, type J07ToolDefinition, type ToolAdapterContext,
-  type ToolAuditEvent, type ToolAuditSink, type ToolOperation, type ToolRequest, type ToolResult,
-} from "./j07-contracts.js";
-import { UniversalToolRegistry } from "./j07-registry.js";
-import type { ToolAuthorizationPort } from "./j07-contracts.js";
-
-const stable = (value: unknown): string => {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
-  const object = value as Record<string, unknown>;
-  return `{${Object.keys(object).sort().map(k => `${JSON.stringify(k)}:${stable(object[k])}`).join(",")}}`;
-};
-const digest = (value: unknown) => createHash("sha256").update(stable(value)).digest("hex");
-const mutating = (op: ToolOperation) => op.sideEffectClass !== "READ_ONLY";
-
-export class ToolExecutionError extends Error {
-  constructor(public readonly code: string, public readonly outcomeMayHaveChanged = false) { super(code); }
+import { AuthorizationDecisionSchema, ToolAuditEventSchema, ToolRequestSchema, ToolResultSchema, type AuthorizationDecision, type CredentialBroker, type CredentialLease, type J07ToolDefinition, type ToolAdapterContext, type ToolAuditEvent, type ToolAuditSink, type ToolOperation, type ToolRequest, type ToolResult } from "./j07-contracts.js";
+import { UniversalToolRegistry } from "./j07-registry.js"; import { ToolLifecycle } from "./j07-lifecycle.js"; import type { ToolAuthorizationPort } from "./j07-contracts.js";
+const stable=(v:unknown):string=>{if(v===null||typeof v!=="object")return JSON.stringify(v);if(Array.isArray(v))return`[${v.map(stable).join(",")}]`;const o=v as Record<string,unknown>;return`{${Object.keys(o).sort().map(k=>`${JSON.stringify(k)}:${stable(o[k])}`).join(",")}}`;};
+const digest=(v:unknown)=>createHash("sha256").update(stable(v)).digest("hex"),mutating=(o:ToolOperation)=>o.sideEffectClass!=="READ_ONLY";
+export class ToolExecutionError extends Error{constructor(public readonly code:string,public readonly outcomeMayHaveChanged=false){super(code);}}
+export class MemoryToolExecutionStore{private readonly idem=new Map<string,{hash:string;result?:ToolResult}>(),executions=new Map<string,ToolResult>();get(k:string){return this.idem.get(k);}reserve(k:string,h:string){const e=this.idem.get(k);if(e&&e.hash!==h)throw new BoundaryError("IDEMPOTENCY_CONFLICT");if(!e)this.idem.set(k,{hash:h});}complete(k:string|undefined,h:string,r:ToolResult){if(k)this.idem.set(k,{hash:h,result:r});this.executions.set(r.executionId,r);}execution(id:string){return this.executions.get(id);}}
+export class ResourceLockManager{private readonly active=new Set<string>();acquire(key:string){if(this.active.has(key))throw new BoundaryError("CONCURRENCY_CONFLICT");this.active.add(key);return()=>this.active.delete(key);}}
+const sleep=async(ms:number,signal:AbortSignal)=>{if(ms<=0)return;await new Promise<void>((resolve,reject)=>{const t=setTimeout(resolve,ms);signal.addEventListener("abort",()=>{clearTimeout(t);reject(new ToolExecutionError("CANCELLED"));},{once:true});});};
+export class UniversalToolGateway{
+ constructor(private readonly registry:UniversalToolRegistry,private readonly authorization:ToolAuthorizationPort,private readonly credentials:CredentialBroker,private readonly audit:ToolAuditSink,private readonly store=new MemoryToolExecutionStore(),private readonly clock:()=>number=Date.now,private readonly locks=new ResourceLockManager()){}
+ private operation(d:J07ToolDefinition,r:ToolRequest){const o=d.metadata.operations.find(x=>x.operation===r.operation);if(!o)throw new BoundaryError("TOOL_NOT_FOUND");return o;}
+ private async emit(r:ToolRequest,h:string,state:ToolAuditEvent["state"],event:ToolAuditEvent["event"],reason:string,d?:AuthorizationDecision,id?:string){await this.audit.append(ToolAuditEventSchema.parse({event,requestId:r.requestId,executionId:id,actorId:r.actor.actorId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,resourceHash:digest(r.resource),inputHash:h,authorizationReference:d?.authorizationReference,approvalReference:d?.approvalReference,state,reason,timestamp:new Date(this.clock()).toISOString()}));}
+ private privacy(d:J07ToolDefinition,r:ToolRequest){if(!d.metadata.allowedClassifications.includes(r.privacyClass))throw new BoundaryError("PRIVACY_DENIED");if(d.metadata.boundary!=="LOCAL_ONLY"&&r.privacyClass==="D5")throw new BoundaryError("PRIVACY_DENIED");if(d.metadata.boundary==="EXTERNAL_SERVICE"&&r.metadata.externalAllowed!=="true")throw new BoundaryError("PRIVACY_DENIED");}
+ async invoke(raw:ToolRequest,outerSignal:AbortSignal=new AbortController().signal):Promise<ToolResult>{
+  const r=ToolRequestSchema.parse(raw),life=new ToolLifecycle(),d=this.registry.get(r.toolId,r.toolVersion),op=this.operation(d,r);let input:unknown;try{input=d.inputSchema.parse(r.input);}catch{throw new BoundaryError("INVALID_INPUT");}const encoded=stable(input);if(Buffer.byteLength(encoded)>100000)throw new BoundaryError("INVALID_INPUT");life.transition("VALIDATED");
+  const h=digest({toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,mode:r.requestedMode,resource:r.resource,executionReference:r.executionReference??null,input});if(r.inputHash&&r.inputHash!==h)throw new BoundaryError("AUTHORIZATION_INVALID");this.privacy(d,r);if(op.estimatedCostMinor>r.maxCostMinor)throw new BoundaryError("COST_BUDGET_EXCEEDED");await this.emit(r,h,"REQUESTED","TOOL_REQUESTED","validated-request");
+  if(r.requestedMode==="INSPECT"){const now=new Date(this.clock()).toISOString(),result=ToolResultSchema.parse({executionId:randomUUID(),requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:"VALIDATED",startedAt:now,finishedAt:now,output:{metadata:d.metadata},externalReferences:[],sideEffects:[],verified:false,attemptCount:0,costMinor:0,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:[]});this.store.complete(undefined,h,result);return result;}
+  let a:AuthorizationDecision;try{a=AuthorizationDecisionSchema.parse(await this.authorization.authorize(r,op,h,d.metadata));}catch{await this.emit(r,h,"FAILED","TOOL_AUTHORIZATION_DENIED","authorization-invalid");throw new BoundaryError("AUTHORIZATION_INVALID");}if(!a.allowed||a.bindingHash!==h||a.resource!==r.resource||a.capability!==op.capability||a.expiresAt<=this.clock()){await this.emit(r,h,"FAILED","TOOL_AUTHORIZATION_DENIED","authorization-denied",a);throw new BoundaryError("AUTHORIZATION_INVALID");}if(r.authorizationReference&&r.authorizationReference!==a.authorizationReference)throw new BoundaryError("AUTHORIZATION_INVALID");if(r.approvalReference&&a.approvalReference&&r.approvalReference!==a.approvalReference)throw new BoundaryError("APPROVAL_MISMATCH");life.transition("AUTHORIZED");
+  const id=randomUUID(),startedAt=new Date(this.clock()).toISOString(),controller=new AbortController(),abort=()=>controller.abort();outerSignal.addEventListener("abort",abort,{once:true});const remaining=Math.min(op.timeoutMs,r.deadlineEpochMs-this.clock());if(remaining<=0)throw new BoundaryError("TIMEOUT");const timer=setTimeout(()=>controller.abort(),remaining),base={request:r,signal:controller.signal};
+  try{
+   if(r.requestedMode==="SIMULATE"||r.requestedMode==="DRY_RUN"){const fn=r.requestedMode==="DRY_RUN"?d.adapter.dryRun:d.adapter.simulate;if(!fn)throw new BoundaryError("TOOL_UNAVAILABLE");const output=await fn.call(d.adapter,input,base);life.transition("SIMULATED");await this.emit(r,h,"SIMULATED","TOOL_SIMULATED",r.requestedMode.toLowerCase(),a,id);const result=ToolResultSchema.parse({executionId:id,requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:"SIMULATED",startedAt,finishedAt:new Date(this.clock()).toISOString(),output,externalReferences:[],sideEffects:[],verified:false,attemptCount:0,costMinor:0,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:["simulation-is-not-execution-authorization"]});this.store.complete(undefined,h,result);return result;}
+   if(!(await this.authorization.revalidate(r,a,h,op,d.metadata)))throw new BoundaryError("EMERGENCY_STOP");if(outerSignal.aborted)throw new BoundaryError("CANCELLED");
+   const prior=r.executionReference?this.store.execution(r.executionReference):undefined;
+   if(r.requestedMode==="VERIFY_ONLY"){if(!prior||!d.adapter.verify)throw new BoundaryError("VERIFICATION_FAILED");life.transition("VERIFYING");let parsed:unknown;try{parsed=d.outputSchema.parse(prior.output);}catch{throw new BoundaryError("INVALID_OUTPUT");}const ok=await d.adapter.verify(input,parsed,base);if(!ok)throw new BoundaryError("VERIFICATION_FAILED");life.transition("VERIFIED");await this.emit(r,h,"VERIFIED","TOOL_VERIFIED","verification-only",a,id);return ToolResultSchema.parse({...prior,executionId:id,requestId:r.requestId,status:"VERIFIED",startedAt,finishedAt:new Date(this.clock()).toISOString(),verified:true});}
+   if(r.requestedMode==="RECONCILE"){if(!d.adapter.reconcile)throw new BoundaryError("RECONCILIATION_FAILED");life.transition("RECONCILING");const x=await d.adapter.reconcile(input,base);life.transition("RECONCILED");await this.emit(r,h,"RECONCILED","TOOL_RECONCILED",x.occurred?"occurred":"not-observed",a,id);const result=ToolResultSchema.parse({executionId:id,requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:"RECONCILED",startedAt,finishedAt:new Date(this.clock()).toISOString(),output:x.output,externalReferences:[],sideEffects:x.occurred?["reconciled-effect"]:[],verified:x.occurred,attemptCount:0,costMinor:0,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:[]});this.store.complete(undefined,h,result);return result;}
+   if(r.requestedMode==="ROLLBACK"){if(!prior||!d.adapter.rollback||op.rollback==="NONE")throw new BoundaryError("ROLLBACK_FAILED");let parsed:unknown;try{parsed=d.outputSchema.parse(prior.output);}catch{throw new BoundaryError("INVALID_OUTPUT");}await this.emit(r,h,"AUTHORIZED","TOOL_ROLLBACK_REQUESTED","authorized-rollback",a,id);const out=await d.adapter.rollback(input,parsed,base);const clean=d.outputSchema.parse(out);await this.emit(r,h,"ROLLED_BACK","TOOL_ROLLED_BACK","rollback-complete",a,id);const result=ToolResultSchema.parse({executionId:id,requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:"ROLLED_BACK",startedAt,finishedAt:new Date(this.clock()).toISOString(),output:clean,externalReferences:[],sideEffects:["compensating-action"],verified:false,attemptCount:1,costMinor:0,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:[]});this.store.complete(undefined,h,result);return result;}
+   if(mutating(op)&&!r.idempotencyKey)throw new BoundaryError("IDEMPOTENCY_CONFLICT");if(r.idempotencyKey){const e=this.store.get(r.idempotencyKey);if(e&&e.hash!==h)throw new BoundaryError("IDEMPOTENCY_CONFLICT");if(e?.result)return e.result;this.store.reserve(r.idempotencyKey,h);}
+   const rawCredential=d.metadata.credentialRequirements.length?await this.credentials.lease(d.metadata.credentialRequirements,r):undefined;if(d.metadata.credentialRequirements.length&&!rawCredential)throw new BoundaryError("CREDENTIAL_UNAVAILABLE");const observedSecrets=new Set<string>();const credential:CredentialLease|undefined=rawCredential?{handle:rawCredential.handle,expiresAt:rawCredential.expiresAt,use:async<T>(consumer:(secret:string)=>Promise<T>)=>rawCredential.use(async secret=>{observedSecrets.add(secret);return consumer(secret);})}:undefined;
+   if(!(await this.authorization.revalidate(r,a,h,op,d.metadata)))throw new BoundaryError("EMERGENCY_STOP");await this.emit(r,h,"DISPATCHING","TOOL_DISPATCHED","pre-dispatch-authorized",a,id);life.transition("DISPATCHING");life.transition("RUNNING");const release=mutating(op)?this.locks.acquire(`${r.toolId}@${r.toolVersion}:${r.resource}`):()=>{};
+   let attempt=0,output:unknown,ambiguous=false;const retrySafe=op.sideEffectClass==="READ_ONLY"||op.supportsIdempotency;try{while(attempt<op.maxAttempts){attempt++;try{const ctx:ToolAdapterContext={request:r,signal:controller.signal,credential};output=await d.adapter.execute(input,ctx);break;}catch(error){const changed=error instanceof ToolExecutionError&&error.outcomeMayHaveChanged;ambiguous||=changed;if(controller.signal.aborted||changed||!retrySafe||attempt>=op.maxAttempts)break;const jitter=parseInt(h.slice((attempt-1)*2,(attempt-1)*2+2),16)%Math.max(1,op.retryBaseMs+1);await sleep(op.retryBaseMs*2**(attempt-1)+jitter,controller.signal);}}}finally{release();}
+   if(output===undefined){if(ambiguous&&mutating(op)){life.transition("UNKNOWN_OUTCOME");await this.emit(r,h,"UNKNOWN_OUTCOME","TOOL_UNKNOWN_OUTCOME","mutation-may-have-occurred",a,id);if(d.adapter.reconcile){life.transition("RECONCILING");const x=await d.adapter.reconcile(input,{request:r,signal:controller.signal,credential});life.transition("RECONCILED");await this.emit(r,h,"RECONCILED","TOOL_RECONCILED",x.occurred?"occurred":"not-observed",a,id);const result=ToolResultSchema.parse({executionId:id,requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:"RECONCILED",startedAt,finishedAt:new Date(this.clock()).toISOString(),output:x.output,externalReferences:[],sideEffects:x.occurred?["reconciled-effect"]:[],verified:x.occurred,attemptCount:attempt,costMinor:op.estimatedCostMinor,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:["unknown-outcome-reconciled"]});this.store.complete(r.idempotencyKey,h,result);return result;}throw new BoundaryError("UNKNOWN_OUTCOME");}if(controller.signal.aborted){life.transition(mutating(op)?"UNKNOWN_OUTCOME":"CANCEL_REQUESTED");if(!mutating(op))life.transition("CANCELLED");await this.emit(r,h,mutating(op)?"UNKNOWN_OUTCOME":"CANCELLED",mutating(op)?"TOOL_UNKNOWN_OUTCOME":"TOOL_CANCELLED","deadline-or-cancel",a,id);throw new BoundaryError(mutating(op)?"UNKNOWN_OUTCOME":"CANCELLED");}life.transition("FAILED");await this.emit(r,h,"FAILED","TOOL_FAILED","retry-exhausted",a,id);throw new BoundaryError("RETRY_EXHAUSTED");}
+   const serialized=stable(output);if([...observedSecrets].some(s=>s&&serialized.includes(s)))throw new BoundaryError("INVALID_OUTPUT");let parsed:unknown;try{parsed=d.outputSchema.parse(output);}catch{throw new BoundaryError("INVALID_OUTPUT");}const actual=d.adapter.actualCostMinor?.(input,parsed)??op.estimatedCostMinor;if(actual>r.maxCostMinor)throw new BoundaryError("COST_BUDGET_EXCEEDED");life.transition("SUCCEEDED");let verified=false;if(op.supportsVerification&&d.adapter.verify){life.transition("VERIFYING");verified=await d.adapter.verify(input,parsed,{request:r,signal:controller.signal,credential});if(!verified)throw new BoundaryError("VERIFICATION_FAILED");life.transition("VERIFIED");await this.emit(r,h,"VERIFIED","TOOL_VERIFIED","independently-verified",a,id);}const result=ToolResultSchema.parse({executionId:id,requestId:r.requestId,toolId:r.toolId,toolVersion:r.toolVersion,operation:r.operation,status:verified?"VERIFIED":"SUCCEEDED",startedAt,finishedAt:new Date(this.clock()).toISOString(),output:parsed,externalReferences:[],sideEffects:mutating(op)?["synthetic-effect"]:[],verified,attemptCount:attempt,costMinor:actual,provenance:"UNTRUSTED_EXTERNAL_DATA",warnings:[]});this.store.complete(r.idempotencyKey,h,result);await this.emit(r,h,result.status,"TOOL_SUCCEEDED",verified?"verified-success":"success",a,id);return result;
+  }catch(error){if(error instanceof BoundaryError)throw error;await this.emit(r,h,"FAILED","TOOL_FAILED","gateway-failure",a,id);throw new BoundaryError("INTERNAL_GATEWAY_ERROR");}finally{clearTimeout(timer);outerSignal.removeEventListener("abort",abort);}
+ }
 }
-
-export class MemoryToolExecutionStore {
-  private readonly byIdempotency = new Map<string, { hash: string; result?: ToolResult }>();
-  get(key: string) { return this.byIdempotency.get(key); }
-  reserve(key: string, hash: string): void {
-    const existing = this.byIdempotency.get(key);
-    if (existing && existing.hash !== hash) throw new BoundaryError("IDEMPOTENCY_CONFLICT");
-    if (!existing) this.byIdempotency.set(key, { hash });
-  }
-  complete(key: string, hash: string, result: ToolResult): void { this.byIdempotency.set(key, { hash, result }); }
-}
-
-export class UniversalToolGateway {
-  constructor(
-    private readonly registry: UniversalToolRegistry,
-    private readonly authorization: ToolAuthorizationPort,
-    private readonly credentials: CredentialBroker,
-    private readonly audit: ToolAuditSink,
-    private readonly store = new MemoryToolExecutionStore(),
-    private readonly clock: () => number = Date.now,
-  ) {}
-
-  private operation(definition: J07ToolDefinition, request: ToolRequest): ToolOperation {
-    const operation = definition.metadata.operations.find(o => o.operation === request.operation);
-    if (!operation) throw new BoundaryError("TOOL_NOT_FOUND");
-    return operation;
-  }
-  private async emit(request: ToolRequest, inputHash: string, state: ToolAuditEvent["state"], event: ToolAuditEvent["event"], reason: string, decision?: AuthorizationDecision, executionId?: string) {
-    await this.audit.append(ToolAuditEventSchema.parse({ event, requestId: request.requestId, executionId, actorId: request.actor.actorId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, resourceHash: digest(request.resource), inputHash, authorizationReference: decision?.authorizationReference, approvalReference: decision?.approvalReference, state, reason, timestamp: new Date(this.clock()).toISOString() }));
-  }
-  private privacy(definition: J07ToolDefinition, request: ToolRequest): void {
-    if (!definition.metadata.allowedClassifications.includes(request.privacyClass)) throw new BoundaryError("PRIVACY_DENIED");
-    if (definition.metadata.boundary !== "LOCAL_ONLY" && request.privacyClass === "D5") throw new BoundaryError("PRIVACY_DENIED");
-    if (definition.metadata.boundary === "EXTERNAL_SERVICE" && request.metadata.externalAllowed !== "true") throw new BoundaryError("PRIVACY_DENIED");
-  }
-
-  async invoke(raw: ToolRequest, outerSignal: AbortSignal = new AbortController().signal): Promise<ToolResult> {
-    const request = ToolRequestSchema.parse(raw);
-    const definition = this.registry.get(request.toolId, request.toolVersion);
-    const operation = this.operation(definition, request);
-    let input: unknown;
-    try { input = definition.inputSchema.parse(request.input); } catch { throw new BoundaryError("INVALID_INPUT"); }
-    const inputHash = digest({ toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, resource: request.resource, input });
-    if (request.inputHash && request.inputHash !== inputHash) throw new BoundaryError("AUTHORIZATION_INVALID");
-    this.privacy(definition, request);
-    await this.emit(request, inputHash, "REQUESTED", "TOOL_REQUESTED", "validated-request");
-
-    if (request.requestedMode === "INSPECT") return ToolResultSchema.parse({ executionId: randomUUID(), requestId: request.requestId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, status: "VALIDATED", startedAt: new Date(this.clock()).toISOString(), finishedAt: new Date(this.clock()).toISOString(), output: { metadata: definition.metadata }, externalReferences: [], sideEffects: [], verified: false, attemptCount: 0, costMinor: 0, provenance: "UNTRUSTED_EXTERNAL_DATA", warnings: [] });
-
-    let decision: AuthorizationDecision;
-    try { decision = AuthorizationDecisionSchema.parse(await this.authorization.authorize(request, operation, inputHash)); }
-    catch { await this.emit(request, inputHash, "FAILED", "TOOL_AUTHORIZATION_DENIED", "authorization-invalid"); throw new BoundaryError("AUTHORIZATION_INVALID"); }
-    if (!decision.allowed || decision.bindingHash !== inputHash || decision.resource !== request.resource || decision.capability !== operation.capability || decision.expiresAt <= this.clock()) {
-      await this.emit(request, inputHash, "FAILED", "TOOL_AUTHORIZATION_DENIED", "authorization-denied", decision); throw new BoundaryError("AUTHORIZATION_INVALID");
-    }
-    if (request.authorizationReference && request.authorizationReference !== decision.authorizationReference) throw new BoundaryError("AUTHORIZATION_INVALID");
-    if (request.approvalReference && request.approvalReference !== decision.approvalReference) throw new BoundaryError("APPROVAL_MISMATCH");
-
-    const executionId = randomUUID();
-    const startedAt = new Date(this.clock()).toISOString();
-    const controller = new AbortController();
-    const abort = () => controller.abort();
-    outerSignal.addEventListener("abort", abort, { once: true });
-    const remaining = Math.min(operation.timeoutMs, request.deadlineEpochMs - this.clock());
-    if (remaining <= 0) throw new BoundaryError("TIMEOUT");
-    const timer = setTimeout(() => controller.abort(), remaining);
-    const contextBase = { request, signal: controller.signal };
-    try {
-      if (request.requestedMode === "SIMULATE" || request.requestedMode === "DRY_RUN") {
-        const fn = request.requestedMode === "DRY_RUN" ? definition.adapter.dryRun : definition.adapter.simulate;
-        if (!fn) throw new BoundaryError("TOOL_UNAVAILABLE");
-        const output = await fn.call(definition.adapter, input, contextBase);
-        await this.emit(request, inputHash, "SIMULATED", "TOOL_SIMULATED", request.requestedMode.toLowerCase(), decision, executionId);
-        return ToolResultSchema.parse({ executionId, requestId: request.requestId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, status: "SIMULATED", startedAt, finishedAt: new Date(this.clock()).toISOString(), output, externalReferences: [], sideEffects: [], verified: false, attemptCount: 0, costMinor: 0, provenance: "UNTRUSTED_EXTERNAL_DATA", warnings: ["simulation-is-not-execution-authorization"] });
-      }
-      if (request.requestedMode === "VERIFY_ONLY") throw new BoundaryError("VERIFICATION_FAILED");
-      if (request.requestedMode === "RECONCILE") {
-        if (!definition.adapter.reconcile) throw new BoundaryError("RECONCILIATION_FAILED");
-        const reconciliation = await definition.adapter.reconcile(input, contextBase);
-        await this.emit(request, inputHash, "RECONCILED", "TOOL_RECONCILED", reconciliation.occurred ? "occurred" : "not-observed", decision, executionId);
-        return ToolResultSchema.parse({ executionId, requestId: request.requestId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, status: "RECONCILED", startedAt, finishedAt: new Date(this.clock()).toISOString(), output: reconciliation.output, externalReferences: [], sideEffects: reconciliation.occurred ? ["reconciled-effect"] : [], verified: reconciliation.occurred, attemptCount: 0, costMinor: 0, provenance: "UNTRUSTED_EXTERNAL_DATA", warnings: [] });
-      }
-
-      if (!(await this.authorization.revalidate(request, decision, inputHash))) throw new BoundaryError("EMERGENCY_STOP");
-      if (outerSignal.aborted) throw new BoundaryError("CANCELLED");
-      if (mutating(operation) && !request.idempotencyKey) throw new BoundaryError("IDEMPOTENCY_CONFLICT");
-      if (request.idempotencyKey) {
-        const existing = this.store.get(request.idempotencyKey);
-        if (existing && existing.hash !== inputHash) throw new BoundaryError("IDEMPOTENCY_CONFLICT");
-        if (existing?.result) return existing.result;
-        this.store.reserve(request.idempotencyKey, inputHash);
-      }
-      const credential = definition.metadata.credentialRequirements.length ? await this.credentials.lease(definition.metadata.credentialRequirements, request) : undefined;
-      if (definition.metadata.credentialRequirements.length && !credential) throw new BoundaryError("CREDENTIAL_UNAVAILABLE");
-      if (!(await this.authorization.revalidate(request, decision, inputHash))) throw new BoundaryError("EMERGENCY_STOP");
-      await this.emit(request, inputHash, "DISPATCHING", "TOOL_DISPATCHED", "pre-dispatch-authorized", decision, executionId);
-
-      let attempt = 0; let output: unknown; let ambiguous = false;
-      const retrySafe = operation.sideEffectClass === "READ_ONLY" || operation.supportsIdempotency;
-      while (attempt < operation.maxAttempts) {
-        attempt += 1;
-        try {
-          const context: ToolAdapterContext = { request, signal: controller.signal, credential };
-          output = await definition.adapter.execute(input, context);
-          break;
-        } catch (error) {
-          const changed = error instanceof ToolExecutionError && error.outcomeMayHaveChanged;
-          ambiguous ||= changed;
-          if (controller.signal.aborted || changed || !retrySafe || attempt >= operation.maxAttempts) break;
-        }
-      }
-      if (output === undefined) {
-        if (ambiguous && mutating(operation)) {
-          await this.emit(request, inputHash, "UNKNOWN_OUTCOME", "TOOL_UNKNOWN_OUTCOME", "mutation-may-have-occurred", decision, executionId);
-          if (definition.adapter.reconcile) {
-            const reconciliation = await definition.adapter.reconcile(input, { request, signal: controller.signal, credential });
-            await this.emit(request, inputHash, "RECONCILED", "TOOL_RECONCILED", reconciliation.occurred ? "occurred" : "not-observed", decision, executionId);
-            const result = ToolResultSchema.parse({ executionId, requestId: request.requestId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, status: "RECONCILED", startedAt, finishedAt: new Date(this.clock()).toISOString(), output: reconciliation.output, externalReferences: [], sideEffects: reconciliation.occurred ? ["reconciled-effect"] : [], verified: reconciliation.occurred, attemptCount: attempt, costMinor: 0, provenance: "UNTRUSTED_EXTERNAL_DATA", warnings: ["unknown-outcome-reconciled"] });
-            if (request.idempotencyKey) this.store.complete(request.idempotencyKey, inputHash, result);
-            return result;
-          }
-          throw new BoundaryError("UNKNOWN_OUTCOME");
-        }
-        if (controller.signal.aborted) { await this.emit(request, inputHash, mutating(operation) ? "UNKNOWN_OUTCOME" : "CANCELLED", mutating(operation) ? "TOOL_UNKNOWN_OUTCOME" : "TOOL_CANCELLED", "deadline-or-cancel", decision, executionId); throw new BoundaryError(mutating(operation) ? "UNKNOWN_OUTCOME" : "CANCELLED"); }
-        await this.emit(request, inputHash, "FAILED", "TOOL_FAILED", "retry-exhausted", decision, executionId); throw new BoundaryError("RETRY_EXHAUSTED");
-      }
-      let parsed: unknown;
-      try { parsed = definition.outputSchema.parse(output); } catch { throw new BoundaryError("INVALID_OUTPUT"); }
-      let verified = false;
-      if (operation.supportsVerification && definition.adapter.verify) verified = await definition.adapter.verify(input, parsed, { request, signal: controller.signal, credential });
-      if (operation.supportsVerification && !verified) throw new BoundaryError("VERIFICATION_FAILED");
-      if (verified) await this.emit(request, inputHash, "VERIFIED", "TOOL_VERIFIED", "independently-verified", decision, executionId);
-      const result = ToolResultSchema.parse({ executionId, requestId: request.requestId, toolId: request.toolId, toolVersion: request.toolVersion, operation: request.operation, status: verified ? "VERIFIED" : "SUCCEEDED", startedAt, finishedAt: new Date(this.clock()).toISOString(), output: parsed, externalReferences: [], sideEffects: mutating(operation) ? ["synthetic-effect"] : [], verified, attemptCount: attempt, costMinor: 0, provenance: "UNTRUSTED_EXTERNAL_DATA", warnings: [] });
-      if (request.idempotencyKey) this.store.complete(request.idempotencyKey, inputHash, result);
-      await this.emit(request, inputHash, result.status, "TOOL_SUCCEEDED", verified ? "verified-success" : "success", decision, executionId);
-      return result;
-    } catch (error) {
-      if (error instanceof BoundaryError) throw error;
-      await this.emit(request, inputHash, "FAILED", "TOOL_FAILED", "gateway-failure", decision, executionId);
-      throw new BoundaryError("INTERNAL_GATEWAY_ERROR");
-    } finally { clearTimeout(timer); outerSignal.removeEventListener("abort", abort); }
-  }
-}
-
-export { digest as toolInputDigest };
+export{digest as toolInputDigest};
