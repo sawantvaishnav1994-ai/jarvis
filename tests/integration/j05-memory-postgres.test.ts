@@ -1,32 +1,11 @@
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { createHash, randomUUID } from "node:crypto";
-import { homedir } from "node:os";
-import { resolve } from "node:path";
-import { loadConfig } from "@jarvis/config";
-import { FileSecretManager } from "@jarvis/security";
-import {
-    databasePool,
-    migrate,
-    PostgresMemoryLifecycleRepository,
-    type DatabasePool,
-} from "@jarvis/storage";
+import { PostgresMemoryLifecycleRepository, type DatabasePool } from "@jarvis/storage";
 import type { MemoryAdmissionDecision, MemoryConflict, MemoryRevision } from "@jarvis/memory";
-
-const config = await loadConfig("config/development.json");
-const actor = {
-    version: 1 as const,
-    id: "j05-memory-postgres",
-    kind: "service" as const,
-    environment: "development" as const,
-};
-let pool: DatabasePool;
-let admin: DatabasePool;
-let runtimePassword = "";
-let ownerId = "";
-const memoryA = randomUUID();
-const memoryB = randomUUID();
-const candidateId = randomUUID();
-const conflictId = randomUUID();
+import { isolatedMemoryDatabase } from "../fixtures/j05-database.js";
+let db: Awaited<ReturnType<typeof isolatedMemoryDatabase>>;
+let pool: DatabasePool, ownerId: string;
+const memoryA = randomUUID(), memoryB = randomUUID(), candidateId = randomUUID(), conflictId = randomUUID();
 
 async function ensureCatalog(memoryId: string): Promise<void> {
     await pool.query(
@@ -38,53 +17,12 @@ async function ensureCatalog(memoryId: string): Promise<void> {
 }
 
 beforeAll(async () => {
-    const manager = new FileSecretManager(
-        process.env.JARVIS_VAULT_FILE ?? ".jarvis/development/vault.json",
-        process.env.JARVIS_MASTER_KEY_FILE ??
-            resolve(homedir(), ".config/jarvis/typescript/development/master.key"),
-        "development",
-        actor.id,
-        new Set([
-            config.storage.postgres.passwordRef,
-            config.storage.postgres.migratorPasswordRef,
-        ]),
-    );
-    const runtimeLease = await manager.lease(config.storage.postgres.passwordRef, actor);
-    const adminLease = await manager.lease(config.storage.postgres.migratorPasswordRef, actor);
-    runtimePassword = runtimeLease.value.toString("utf8");
-    pool = databasePool(config.storage.postgres, runtimePassword);
-    admin = databasePool(config.storage.postgres, adminLease.value.toString("utf8"), true);
-    runtimeLease.destroy();
-    adminLease.destroy();
-
-    await migrate(
-        admin,
-        "infrastructure/migrations",
-        "development",
-        config.storage.postgres.runtimeUser,
-        runtimePassword,
-    );
-    await pool.query(
-        `INSERT INTO identity.root_owner(id,payload)
-         SELECT 'j05-test-owner','{}'
-         WHERE NOT EXISTS (SELECT 1 FROM identity.root_owner)`,
-    );
-    ownerId = (await pool.query<{ id: string }>("SELECT id FROM identity.root_owner WHERE singleton=true")).rows[0]!.id;
+    db = await isolatedMemoryDatabase();
+    ({ pool, ownerId } = db);
     await ensureCatalog(memoryA);
     await ensureCatalog(memoryB);
 });
-
-afterAll(async () => {
-    if (pool) {
-        await pool.query("DELETE FROM memory.conflicts WHERE id=$1", [conflictId]);
-        await pool.query("DELETE FROM memory.admission_decisions WHERE candidate_id=$1", [candidateId]);
-        await pool.query("DELETE FROM memory.revisions WHERE owner_id=$1 AND memory_id=ANY($2::uuid[])", [ownerId, [memoryA, memoryB]]);
-        await pool.query("DELETE FROM memory.lifecycle WHERE owner_id=$1 AND memory_id=ANY($2::uuid[])", [ownerId, [memoryA, memoryB]]);
-        await pool.query("DELETE FROM storage.record_catalog WHERE owner_id=$1 AND id=ANY($2::uuid[])", [ownerId, [memoryA, memoryB]]);
-        await pool.end();
-    }
-    if (admin) await admin.end();
-});
+afterAll(async () => { await db?.close(); });
 
 describe("J0.5 real PostgreSQL memory persistence", () => {
     it("round-trips lifecycle metadata through the runtime role", async () => {

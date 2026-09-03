@@ -46,12 +46,11 @@ async function stop(code = 0) {
     }
     process.exitCode = code;
 }
-function start(command, args, cwd = root, env = process.env) {
+function start(command, args, cwd = root) {
     const child = spawn(command, args, {
         cwd,
         stdio: "inherit",
         detached: true,
-        env,
     });
     children.push(child);
     child.once("error", () => {
@@ -83,7 +82,7 @@ async function waitReady(url) {
 try {
     if (process.platform === "win32")
         throw new Error("Use Linux, macOS, or WSL2");
-    const { config, vaultPath, keyPath } = await runtime("jarvis-supervisor", []);
+    const { config } = await runtime("jarvis-supervisor", []);
     await mkdir(directory, { recursive: true, mode: 0o700 });
     const info = await lstat(directory);
     if (
@@ -162,12 +161,6 @@ try {
     if (!stopping) {
         start(process.execPath, ["apps/api/dist/main.js"]);
         start(process.execPath, ["apps/worker/dist/main.js"]);
-        const webEnv = {
-            ...process.env,
-            JARVIS_CONFIG: process.env.JARVIS_CONFIG,
-            JARVIS_VAULT_FILE: vaultPath,
-            JARVIS_MASTER_KEY_FILE: keyPath,
-        };
         start(
             process.execPath,
             [
@@ -179,7 +172,6 @@ try {
                 String(config.web.port),
             ],
             resolve(root, "apps/web"),
-            webEnv,
         );
         await Promise.all([
             waitReady(
