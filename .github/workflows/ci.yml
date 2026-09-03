@@ -19,7 +19,7 @@ jobs:
       - run: PYTHONPATH=src python -m jarvis demo
   typescript-foundation:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     env: {NEXT_TELEMETRY_DISABLED: '1'}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -32,12 +32,16 @@ jobs:
         run: |
           npx prettier tests/acceptance/j11-gates.json > /tmp/j11-gates.formatted.json
           diff -u tests/acceptance/j11-gates.json /tmp/j11-gates.formatted.json
+      - name: J0.12 Foundation v1 freeze formatting
+        run: npx prettier --check foundation/*.json tests/acceptance/j12-gates.json tests/unit/j12-acceptance.test.ts scripts/j12-foundation-v1-go.mjs
+      - name: J0.12 Foundation v1 freeze integrity
+        run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: Static and contract checks
         run: npm run check
-      - name: J0.11 critical security repeatability
+      - name: J0.12 critical security repeatability
         run: |
           for i in 1 2 3; do
-            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/unit/j10-hardening.test.ts --reporter=default
+            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/identity.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j12-acceptance.test.ts --reporter=default
           done
       - name: Real PostgreSQL integration
         run: npm run test:integration
@@ -58,6 +62,12 @@ jobs:
         run: npm run test:e2e:identity
       - name: J0.10 backup and recovery disaster drills
         run: npm run test:j10:recovery-drill
+      - name: J0.12 Foundation v1 recovery and adversarial hardening
+        run: |
+          npm run test:j10:recovery-drill
+          npx vitest run tests/unit/j10-hardening.test.ts --reporter=default
+      - name: J0.12 replay concurrency and emergency regression
+        run: npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts --reporter=default
       - name: Dependency outage and recovery
         run: npm run test:failures
       - name: Stop and verify processes
@@ -116,6 +126,13 @@ jobs:
       - name: J0.11 evidence on failure
         if: failure()
         run: npm run test:j11:go
+      - name: Explicit J0.12 Foundation v1 A-T acceptance
+        if: success()
+        env: {J12_CI_SEQUENCE: 'complete'}
+        run: npm run test:j12:go
+      - name: J0.12 evidence on failure
+        if: failure()
+        run: npm run test:j12:go
       - name: Cleanup
         if: always()
         run: |
