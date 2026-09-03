@@ -1,0 +1,26 @@
+{
+  "milestone": "J0.8 Event System",
+  "baseline": "4c05f1d9522d4950e6f9b12a0087290ba74bd5fb",
+  "gates": [
+    "J0.8-A — Protected baseline",
+    "J0.8-B — Canonical event contracts",
+    "J0.8-C — Durable transactional outbox",
+    "J0.8-D — Durable inbox and deduplication",
+    "J0.8-E — Authenticated event ingress",
+    "J0.8-F — Owner/project isolation",
+    "J0.8-G — Privacy and classification",
+    "J0.8-H — Subscription authorization",
+    "J0.8-I — At-least-once safe delivery",
+    "J0.8-J — Ordering and stale-event handling",
+    "J0.8-K — Correlation, causation and loop protection",
+    "J0.8-L — Retry classification and bounds",
+    "J0.8-M — Durable dead-letter handling",
+    "J0.8-N — Controlled replay",
+    "J0.8-O — Durable scheduling",
+    "J0.8-P — J0.3 security preservation",
+    "J0.8-Q — J0.7 gateway enforcement",
+    "J0.8-R — Outage and crash recovery",
+    "J0.8-S — Safe evidence and owner control",
+    "J0.8-T — Full event-system integration"
+  ]
+}
