@@ -32,3 +32,4 @@ export * from "./memory-retrieval.js";
 export * from "./memory-controls.js";
 export * from "./event-store.js";
 export * from "./event-admin.js";
+export * from "./event-subscriptions.js";
