@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { DataClassSchema, type DataClass } from "@jarvis/shared";
+import { type DataClass } from "@jarvis/shared";
 import { EventScheduleSchema, EventSubscriptionSchema, EventSystemError, EventTypeDefinitionSchema, JarvisEventEnvelopeSchema, type EventEvidence, type EventSchedule, type EventSubscription, type EventTypeDefinition, type JarvisEventEnvelope } from "./j08-contracts.js";
 
 const rank:Record<DataClass,number>={D0:0,D1:1,D2:2,D3:3,D4:4,D5:5};
