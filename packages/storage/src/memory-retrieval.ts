@@ -37,13 +37,13 @@ export class PostgresMemoryVectorSearch {
                  ON c.owner_id=l.owner_id AND c.id=l.memory_id
               WHERE e.owner_id=$1
                 AND e.embedding IS NOT NULL
-                AND vector_dims(e.embedding)=array_length($2::real[],1)
+                AND vector_dims(e.embedding)=$5
                 AND l.lifecycle='ACTIVE'
                 AND c.deleted=false
                 AND ($4::text IS NULL OR e.provider=$4)
               ORDER BY e.memory_id, semantic_score DESC
               LIMIT $3`,
-            [ownerId, literal, boundedLimit, provider],
+            [ownerId, literal, boundedLimit, provider, vector.length],
         );
         return result.rows
             .map((row) => ({
