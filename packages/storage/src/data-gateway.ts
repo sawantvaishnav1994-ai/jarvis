@@ -35,6 +35,9 @@ const operations = {
     "data.record.put": { capability: "data.write", permission: "P3" },
     "data.record.read": { capability: "data.read", permission: "P0" },
     "data.record.forget": { capability: "data.delete", permission: "P4" },
+    "data.retention.change": { capability: "data.retention.modify", permission: "P4" },
+    "data.retention.plan": { capability: "data.read", permission: "P0" },
+    "data.retention.execute": { capability: "data.delete", permission: "P4" },
     "data.inventory": { capability: "data.inventory", permission: "P0" },
     "data.health": { capability: "storage.health.read", permission: "P0" },
     "data.lineage": { capability: "data.read", permission: "P0" },
@@ -95,6 +98,9 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                 "data.backup.restore",
                 "data.migration.probe",
                 "data.deletion.purge",
+                "data.retention.change",
+                "data.retention.plan",
+                "data.retention.execute",
             ].includes(request.toolId) &&
                 level !== 4) ||
             (request.toolId === "data.inventory" && level < 2) ||
@@ -107,6 +113,7 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                 "data.record.forget",
                 "data.object.forget",
                 "data.deletion.purge",
+                "data.retention.execute",
             ].includes(request.toolId)
                 ? "IRREVERSIBLE"
                 : "REVERSIBLE",
@@ -249,6 +256,17 @@ export class PrivateDataGateway implements ProtectedToolCatalog {
                                   );
                         break;
                 }
+            } else if (request.toolId.startsWith("data.retention.")) {
+                if (!input.recordId)
+                    throw new BoundaryError("DATA_RECORD_REQUIRED");
+                if (request.toolId === "data.retention.plan") {
+                    if (transient !== undefined)
+                        throw new BoundaryError("RETENTION_PLAN_INPUT_INVALID");
+                    value = await this.records.planRetention(authorization, input.recordId);
+                } else if (request.toolId === "data.retention.change")
+                    value = await this.records.changeRetention(authorization, input.recordId, transient);
+                else
+                    value = await this.records.executeRetention(authorization, input.recordId, transient);
             } else if (request.toolId === "data.health") {
                 if (!this.services?.health)
                     throw new BoundaryError("DATA_SERVICE_UNAVAILABLE");

@@ -148,6 +148,40 @@ export const StorageRecordSchema = z
 export type StorageRecord = z.infer<typeof StorageRecordSchema>;
 export type StorageDomain = z.infer<typeof StorageDomainSchema>;
 
+/** Payload-free exact deletion preview. Approval binds the entire plan, not just its root. */
+export const RetentionCleanupPlanSchema = z.strictObject({
+    version: z.literal(1),
+    ownerId: Id,
+    recordId: z.uuid(),
+    recordRevision: z.number().int().positive(),
+    retentionId: z.uuid(),
+    retentionRevision: z.number().int().positive(),
+    expiresAt: Nat,
+    plannedAt: Nat,
+    validUntil: Nat,
+    affected: z.array(z.strictObject({
+        id: z.uuid(),
+        domain: StorageDomainSchema,
+        revision: z.number().int().positive(),
+        classification: DataClassSchema,
+    })).min(1).max(100),
+    objectIds: z.array(z.uuid()).max(100),
+    backupExpiryRequired: z.literal(true),
+}).superRefine((p, c) => {
+    if (p.expiresAt > p.plannedAt || p.validUntil !== p.plannedAt + 300000 ||
+        new Set(p.affected.map(r => r.id)).size !== p.affected.length ||
+        new Set(p.objectIds).size !== p.objectIds.length ||
+        !p.affected.some(r => r.id === p.recordId && r.revision === p.recordRevision) ||
+        p.affected.some(r => r.classification === "D5"))
+        c.addIssue({ code: "custom", message: "Invalid retention cleanup plan" });
+});
+export type RetentionCleanupPlan = z.infer<typeof RetentionCleanupPlanSchema>;
+export const RetentionChangeSchema = z.strictObject({
+    version: z.literal(1),
+    expectedRevision: z.number().int().positive(),
+    retention: RetentionPolicySchema,
+});
+
 export const ObjectMetadataSchema = z.strictObject({
     version: z.literal(1),
     id: z.uuid(),

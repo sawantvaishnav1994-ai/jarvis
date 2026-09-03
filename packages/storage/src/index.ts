@@ -146,3 +146,4 @@ export * from "./private-objects.js";
 export * from "./exports.js";
 export * from "./recovery.js";
 export * from "./storage-health.js";
+export * from "./retention.js";

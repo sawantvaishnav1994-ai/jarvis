@@ -3,9 +3,12 @@ import { z } from "zod";
 import {
     BoundaryError,
     StorageRecordSchema,
+    RetentionChangeSchema,
+    RetentionCleanupPlanSchema,
     type StorageRecord,
     type StorageDomain,
 } from "@jarvis/shared";
+import { canonical } from "@jarvis/identity";
 import {
     EnvelopeCipher,
     EnvelopeBindingSchema,
@@ -15,6 +18,7 @@ import {
 } from "@jarvis/security";
 import { currentDataTransaction } from "./transaction.js";
 import { retireObjects } from "./object-deletion.js";
+import { validateRecordRetention, validateRetentionUpdate } from "./retention.js";
 
 const U = z.uuid(),
     T = z.string().max(16000),
@@ -149,6 +153,7 @@ export class PrivateRecords {
         Payloads[record.domain].parse(record.payload);
         // Metadata is also durable owner data, not a bypass for credentials.
         rejectGenericSecrets(record);
+        validateRecordRetention(record);
         const now = this.clock();
         if (record.createdAt > now || record.updatedAt > now)
             throw new BoundaryError("DATA_TIME_INVALID");
@@ -167,19 +172,6 @@ export class PrivateRecords {
             record.retention.expiresAt <= now
         )
             throw new BoundaryError("DATA_EXPIRED");
-        if (
-            record.retention.expiresAt !== null &&
-            (record.policy.retention.mode !== "until" ||
-                Date.parse(record.policy.retention.expiresAt) !==
-                    record.retention.expiresAt)
-        )
-            throw new BoundaryError("RETENTION_BOUNDARY_MISMATCH");
-        if (
-            record.retention.mode === "KEEP_FOR_DURATION" &&
-            record.retention.expiresAt !==
-                record.createdAt + record.retention.durationMs!
-        )
-            throw new BoundaryError("RETENTION_DURATION_MISMATCH");
         if (
             (["conversation", "message"].includes(record.domain) &&
                 !record.policy.consent.storeConversation) ||
@@ -217,6 +209,8 @@ export class PrivateRecords {
             throw new BoundaryError("DATA_VERSION_OR_OWNER_CONFLICT");
         if (!existing && record.revision !== 1)
             throw new BoundaryError("DATA_VERSION_CONFLICT");
+        if (existing)
+            validateRetentionUpdate(await this.read(auth.ownerId, record.id), record, auth, now);
         if (
             existing &&
             Number(record.policy.classification.slice(1)) <
@@ -372,7 +366,7 @@ export class PrivateRecords {
         }
         return { id: record.id, revision: record.revision, stored: true };
     }
-    async read(ownerId: string, id: string): Promise<StorageRecord> {
+    private async load(ownerId: string, id: string): Promise<StorageRecord> {
         const c = await this.catalog(ownerId, id),
             table = tables[c.domain],
             payloadColumn =
@@ -411,12 +405,82 @@ export class PrivateRecords {
             record.revision !== c.revision
         )
             throw new BoundaryError("DATA_BINDING_MISMATCH");
+        validateRecordRetention(record);
+        return record;
+    }
+    async read(ownerId: string, id: string): Promise<StorageRecord> {
+        const record = await this.load(ownerId, id);
         if (
             record.retention.expiresAt !== null &&
             record.retention.expiresAt <= this.clock()
         )
             throw new BoundaryError("DATA_EXPIRED");
         return record;
+    }
+    private retentionAuthority(auth: AuthorizationV3, capability: string) {
+        if (auth.capability !== capability || !auth.approvalId ||
+            auth.assurance !== "A3" || auth.zone !== "Z4" ||
+            auth.environment !== "development")
+            throw new BoundaryError("RETENTION_OWNER_APPROVAL_REQUIRED");
+    }
+    async changeRetention(auth: AuthorizationV3, id: string, input: unknown) {
+        this.retentionAuthority(auth, "data.retention.modify");
+        const change = RetentionChangeSchema.parse(input),
+            record = await this.read(auth.ownerId, id),
+            retention = change.retention;
+        if (record.revision !== change.expectedRevision ||
+            retention.id !== record.retention.id ||
+            retention.revision !== record.retention.revision + 1)
+            throw new BoundaryError("RETENTION_VERSION_CONFLICT");
+        // NEVER_STORE is a processing mode, not a way to leave old content behind.
+        if (retention.mode === "NEVER_STORE" || retention.mode === "DELETE_AFTER_SESSION")
+            throw new BoundaryError("RETENTION_CHANGE_REQUIRES_FORGET");
+        return this.put(auth, {
+            ...record,
+            actorId: auth.actorId,
+            revision: record.revision + 1,
+            previousRevision: record.revision,
+            updatedAt: this.clock(),
+            reason: "owner-authorized retention change",
+            retention,
+            policy: { ...record.policy, retention: retention.expiresAt === null
+                ? { mode: "keep" }
+                : { mode: "until", expiresAt: new Date(retention.expiresAt).toISOString() } },
+        });
+    }
+    private async cleanupPlan(auth: AuthorizationV3, id: string, plannedAt: number) {
+        const record = await this.load(auth.ownerId, id),
+            expiry = record.retention.expiresAt;
+        if (expiry === null || expiry > this.clock() ||
+            !["KEEP_UNTIL_DATE", "KEEP_FOR_DURATION"].includes(record.retention.mode))
+            throw new BoundaryError("RETENTION_NOT_DUE");
+        const { rows, objectIds } = await this.deletionScope(auth, id);
+        return RetentionCleanupPlanSchema.parse({
+            version: 1, ownerId: auth.ownerId, recordId: id,
+            recordRevision: record.revision, retentionId: record.retention.id,
+            retentionRevision: record.retention.revision, expiresAt: expiry,
+            plannedAt, validUntil: plannedAt + 300000,
+            affected: rows.map(r => ({ id: r.id, domain: r.domain,
+                revision: r.revision, classification: r.data_class }))
+                .sort((a,b) => a.id.localeCompare(b.id)),
+            objectIds: objectIds.sort(), backupExpiryRequired: true,
+        });
+    }
+    async planRetention(auth: AuthorizationV3, id: string) {
+        this.retentionAuthority(auth, "data.read");
+        return this.cleanupPlan(auth, id, this.clock());
+    }
+    async executeRetention(auth: AuthorizationV3, id: string, input: unknown) {
+        this.retentionAuthority(auth, "data.delete");
+        const plan = RetentionCleanupPlanSchema.parse(input);
+        if (plan.ownerId !== auth.ownerId || plan.recordId !== id ||
+            plan.plannedAt > this.clock() || this.clock() >= plan.validUntil)
+            throw new BoundaryError("RETENTION_PLAN_BINDING_OR_EXPIRY_INVALID");
+        const current = await this.cleanupPlan(auth, id, plan.plannedAt);
+        if (canonical(current) !== canonical(plan))
+            throw new BoundaryError("RETENTION_PLAN_STALE");
+        // Same identity transaction and storage savepoint as permit consumption/audit.
+        return this.forget(auth, id);
     }
     async lineage(ownerId: string, id: string) {
         await this.catalog(ownerId, id);
@@ -435,7 +499,7 @@ export class PrivateRecords {
             )
         ).rows;
     }
-    async forget(auth: AuthorizationV3, id: string) {
+    private async deletionScope(auth: AuthorizationV3, id: string) {
         const tx = currentDataTransaction();
         await this.catalog(auth.ownerId, id);
         const rows = (
@@ -454,8 +518,7 @@ export class PrivateRecords {
             )
         )
             throw new BoundaryError("DERIVED_DELETE_ZONE_UNDERSTATED");
-        const deletionId = randomUUID(),
-            ids = rows.map((r) => r.id);
+        const ids = rows.map((r) => r.id);
         const attachmentIds = rows
             .filter((r) => r.domain === "attachment")
             .map((r) => r.id);
@@ -479,6 +542,12 @@ export class PrivateRecords {
             throw new BoundaryError(
                 "SHARED_OBJECT_DELETE_REQUIRES_BROADER_SCOPE",
             );
+        return { rows, ids, attachmentIds, objectIds };
+    }
+    async forget(auth: AuthorizationV3, id: string) {
+        const tx = currentDataTransaction(),
+            { rows, ids, attachmentIds, objectIds } = await this.deletionScope(auth, id),
+            deletionId = randomUUID();
         await tx.query(
             "DELETE FROM storage.attachment_objects WHERE owner_id=$1 AND attachment_id=ANY($2::uuid[])",
             [auth.ownerId, attachmentIds],
