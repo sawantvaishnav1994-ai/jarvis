@@ -1,0 +1,82 @@
+name: J0.11 documentation closeout
+
+on:
+  push:
+    branches:
+      - validation/j0.11-full-foundation-integration-20260904
+    paths:
+      - .github/workflows/j0.11-doc-closeout.yml
+
+permissions:
+  contents: write
+
+jobs:
+  closeout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact validation branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: validation/j0.11-full-foundation-integration-20260904
+          fetch-depth: 0
+
+      - name: Patch STATUS and append cumulative work log safely
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+
+          status_path = Path('docs/STATUS.md')
+          log_path = Path('JARVIS_WORK_LOG.md')
+          addendum_path = Path('docs/roadmap/j0.11-work-log-addendum.md')
+
+          old_status = status_path.read_text(encoding='utf-8')
+          old_log = log_path.read_bytes()
+          addendum = addendum_path.read_bytes()
+
+          stale = '| J0.11 | Unit/contracts/security and real-stack acceptance suite | Complete authenticated full-J0 workflow and host/deployment tests |'
+          current = '| J0.11 | Full Foundation integration and adversarial qualification passed on exact-SHA cloud CI; J0.11 A–T PASS | Development qualification complete; production-only controls remain outside J0.11 |'
+
+          count = old_status.count(stale)
+          if count != 1:
+              raise SystemExit(f'Expected exactly one stale J0.11 STATUS row, found {count}')
+          new_status = old_status.replace(stale, current, 1)
+          status_path.write_text(new_status, encoding='utf-8')
+
+          marker = b'# JARVIS work-log addendum \xe2\x80\x94 J0.11'
+          if marker in old_log:
+              raise SystemExit('J0.11 addendum is already present in cumulative work log')
+
+          separator = b'' if old_log.endswith(b'\n\n') else (b'\n' if old_log.endswith(b'\n') else b'\n\n')
+          new_log = old_log + separator + addendum
+          log_path.write_bytes(new_log)
+
+          # Append-only invariant: every original byte must remain an exact prefix.
+          reread = log_path.read_bytes()
+          if not reread.startswith(old_log):
+              raise SystemExit('Append-only invariant failed: historical work log changed')
+          if hashlib.sha256(reread[:len(old_log)]).digest() != hashlib.sha256(old_log).digest():
+              raise SystemExit('Historical work-log prefix checksum changed')
+          if marker not in reread[len(old_log):]:
+              raise SystemExit('J0.11 addendum missing from appended region')
+
+          print('OLD_WORK_LOG_SHA256=' + hashlib.sha256(old_log).hexdigest())
+          print('NEW_WORK_LOG_SHA256=' + hashlib.sha256(reread).hexdigest())
+          print('APPEND_ONLY_PREFIX_VERIFIED=true')
+          PY
+
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' JARVIS_WORK_LOG.md docs/STATUS.md | sort)"
+          test "$changed" = "$expected"
+
+      - name: Commit only the two authorized documentation writes
+        shell: bash
+        run: |
+          git config user.name 'jarvis-validation-bot'
+          git config user.email 'jarvis-validation-bot@users.noreply.github.com'
+          git add JARVIS_WORK_LOG.md docs/STATUS.md
+          test "$(git diff --cached --name-only | sort)" = "$(printf '%s\n' JARVIS_WORK_LOG.md docs/STATUS.md | sort)"
+          git commit -m 'docs(j0.11): close status and append work log'
+          git push origin HEAD:validation/j0.11-full-foundation-integration-20260904
