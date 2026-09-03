@@ -6,8 +6,8 @@ import { it, expect } from "vitest";
 import { migrationFiles } from "@jarvis/storage";
 it("accepts reviewed append-only baseline SQL", async () => {
     const migrations = await migrationFiles("infrastructure/migrations");
-    expect(migrations).toHaveLength(10);
-    expect(migrations.at(-1)?.file).toBe("0010_memory_propagation.sql");
+    expect(migrations).toHaveLength(12);
+    expect(migrations.at(-1)?.file).toBe("0012_event_retention.sql");
 });
 it("refuses modified, unlisted and destructive migrations", async () => {
     const directory = await mkdtemp(join(tmpdir(), "jarvis-migration-"));
