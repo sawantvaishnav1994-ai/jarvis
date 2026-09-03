@@ -13,7 +13,12 @@ import {
 import type { MemoryAdmissionDecision, MemoryConflict, MemoryRevision } from "@jarvis/memory";
 
 const config = await loadConfig("config/development.json");
-const actor = { id: "j05-memory-postgres", kind: "service" as const, version: 1 as const };
+const actor = {
+    version: 1 as const,
+    id: "j05-memory-postgres",
+    kind: "service" as const,
+    environment: "development" as const,
+};
 let pool: DatabasePool;
 let admin: DatabasePool;
 let runtimePassword = "";
