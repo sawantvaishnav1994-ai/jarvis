@@ -1,56 +1,12 @@
 [
-    {
-        "version": 1,
-        "file": "0001_foundation.sql",
-        "sha256": "fe6d88f5caf0fcd2e201e8e2efc8c8d10d8f6acd3d18f8253dea1bae749824e3",
-        "destructive": false
-    },
-    {
-        "version": 2,
-        "file": "0002_identity.sql",
-        "sha256": "47bbf9d002302fc126bf874392607632a196f977d464964f383c0359377e459c",
-        "destructive": false
-    },
-    {
-        "version": 3,
-        "file": "0003_policy_audit.sql",
-        "sha256": "e94348f2c0be7416e7932dac9324a185e2fabc5e7d52d996fa5b157c897feda2",
-        "destructive": false
-    },
-    {
-        "version": 4,
-        "file": "0004_governance.sql",
-        "sha256": "dccf3d129b82405d49d3f113026f8157ef5e7c4a1ac07c7bd04e23bf102ea7ac",
-        "destructive": false
-    },
-    {
-        "version": 5,
-        "file": "0005_private_storage.sql",
-        "sha256": "b1ecb0a04d486f685e4547935e43c84aa1b72ac9447fa6d34b75070524b6e880",
-        "destructive": false
-    },
-    {
-        "version": 6,
-        "file": "0006_object_deletion.sql",
-        "sha256": "8eac0785d342f80ba92f6ae0706c70efabf7672357971bec8bd5b3a3c8ac81d1",
-        "destructive": false
-    },
-    {
-        "version": 7,
-        "file": "0007_backup_obligations.sql",
-        "sha256": "be64f2845be18cfd5ee03d60a7fd0d7c095dc3c37619511700a480a766e2a6af",
-        "destructive": false
-    },
-    {
-        "version": 8,
-        "file": "0008_memory_lifecycle.sql",
-        "sha256": "991073de26881fa031564f723c304b14dea1fb51533bc2ca4c99a780795da21c",
-        "destructive": false
-    },
-    {
-        "version": 9,
-        "file": "0009_memory_controls_audit.sql",
-        "sha256": "5fba8e2a06df0e4c68c10c2e882cfc4b6545e9ff4de26a02b4fd47a6a83e6245",
-        "destructive": false
-    }
+    {"version":1,"file":"0001_foundation.sql","sha256":"fe6d88f5caf0fcd2e201e8e2efc8c8d10d8f6acd3d18f8253dea1bae749824e3","destructive":false},
+    {"version":2,"file":"0002_identity.sql","sha256":"47bbf9d002302fc126bf874392607632a196f977d464964f383c0359377e459c","destructive":false},
+    {"version":3,"file":"0003_policy_audit.sql","sha256":"e94348f2c0be7416e7932dac9324a185e2fabc5e7d52d996fa5b157c897feda2","destructive":false},
+    {"version":4,"file":"0004_governance.sql","sha256":"dccf3d129b82405d49d3f113026f8157ef5e7c4a1ac07c7bd04e23bf102ea7ac","destructive":false},
+    {"version":5,"file":"0005_private_storage.sql","sha256":"b1ecb0a04d486f685e4547935e43c84aa1b72ac9447fa6d34b75070524b6e880","destructive":false},
+    {"version":6,"file":"0006_object_deletion.sql","sha256":"8eac0785d342f80ba92f6ae0706c70efabf7672357971bec8bd5b3a3c8ac81d1","destructive":false},
+    {"version":7,"file":"0007_backup_obligations.sql","sha256":"be64f2845be18cfd5ee03d60a7fd0d7c095dc3c37619511700a480a766e2a6af","destructive":false},
+    {"version":8,"file":"0008_memory_lifecycle.sql","sha256":"991073de26881fa031564f723c304b14dea1fb51533bc2ca4c99a780795da21c","destructive":false},
+    {"version":9,"file":"0009_memory_controls_audit.sql","sha256":"5fba8e2a06df0e4c68c10c2e882cfc4b6545e9ff4de26a02b4fd47a6a83e6245","destructive":false},
+    {"version":10,"file":"0010_memory_propagation.sql","sha256":"4d61c5556d6d13f16571c792826173cead8d12b7df49190b419000ff788450a0","destructive":false}
 ]
