@@ -16,11 +16,14 @@ const ownerMethods = new Set([
 ]);
 export async function POST(request: Request) {
     try {
-        const root = resolve(process.cwd(), "../..");
-        const config = await loadConfig(
-            process.env.JARVIS_CONFIG ??
-                resolve(root, "config/development.json"),
+        // The supervisor passes an absolute JARVIS_CONFIG path. Derive the repo
+        // root from it instead of Next's process.cwd(), which is not a stable
+        // contract for production/standalone server execution.
+        const configPath = resolve(
+            process.env.JARVIS_CONFIG ?? resolve(process.cwd(), "config/development.json"),
         );
+        const root = resolve(configPath, "../..");
+        const config = await loadConfig(configPath);
         requireDevelopment(config);
         if (
             request.headers.get("origin") !== config.identity.origin ||
