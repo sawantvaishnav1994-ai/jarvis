@@ -1,0 +1,27 @@
+{
+  "milestone": "J0.6",
+  "status": "implementation-in-progress",
+  "baseline": "16910231c5ff79bb0b34a15b86250f48575bedec",
+  "gates": {
+    "A": ["J0.6 A: protects exact J0.5 baseline and prior milestone regressions"],
+    "B": ["J0.6 B: preserves one provider-neutral request and result contract across adapters"],
+    "C": ["J0.6 C: validates and queries explicit provider and model capabilities"],
+    "D": ["J0.6 D: excludes providers incompatible with processing locality and privacy policy"],
+    "E": ["J0.6 E: rejects forbidden provider-boundary context before adapter invocation"],
+    "F": ["J0.6 F: keeps provider secrets out of model requests results and audit payloads"],
+    "G": ["J0.6 G: deterministic routing returns the same eligible provider and reasons"],
+    "H": ["J0.6 H: local-only restricted routing cannot select an external provider"],
+    "I": ["J0.6 I: approved external routing requires explicit external processing permission"],
+    "J": ["J0.6 J: fallback preserves privacy capability allowlist and remaining budget"],
+    "K": ["J0.6 K: retries are bounded and timeout or cancellation aborts execution"],
+    "L": ["J0.6 L: disabled and unavailable providers are excluded with explicit health evidence"],
+    "M": ["J0.6 M: token and monetary budgets constrain provider eligibility and result acceptance"],
+    "N": ["J0.6 N: invalid structured output is rejected as untrusted model data"],
+    "O": ["J0.6 O: normalized streaming preserves order and cannot complete after cancellation"],
+    "P": ["J0.6 P: provider substitution leaves permanent JARVIS-owned data contracts unchanged"],
+    "Q": ["J0.6 Q: independent verification uses a distinct eligible model without gaining authority"],
+    "R": ["J0.6 R: model audit records routing evidence without raw prompt or plaintext secret content"],
+    "S": ["J0.6 S: no eligible provider or provider failure produces explicit fail-safe degradation"],
+    "T": ["J0.6 T: owner inspection explains provider selection health privacy and budget without secrets"]
+  }
+}
