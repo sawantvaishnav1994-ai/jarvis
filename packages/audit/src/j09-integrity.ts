@@ -18,16 +18,18 @@ export function materializeAuditRecord(draft:AuditRecordDraft,sequence:number,re
     const recordHash=sha256(canonicalize(base)+(previousHash??"GENESIS"));
     return AuditRecordV3Schema.parse({...base,recordHash});
 }
-export type IntegrityResult={ok:boolean;checked:number;headHash:string|null;reason?:string};
-export function verifyAuditChain(input:AuditRecordV3[]):IntegrityResult{
-    let previous:string|null=null; let expectedSequence=input[0]?.sequence??1;
+export type IntegrityAnchor={previousHash:string|null;previousSequence:number};
+export type IntegrityResult={ok:boolean;checked:number;headHash:string|null;lastSequence:number;reason?:string};
+export function verifyAuditChain(input:AuditRecordV3[],anchor:IntegrityAnchor={previousHash:null,previousSequence:0}):IntegrityResult{
+    let previous=anchor.previousHash; let expectedSequence=anchor.previousSequence+1;
     for(const raw of input){
         const r=AuditRecordV3Schema.parse(raw);
-        if(r.sequence!==expectedSequence)return{ok:false,checked:expectedSequence-(input[0]?.sequence??1),headHash:previous,reason:"SEQUENCE_GAP"};
-        if(r.previousHash!==previous)return{ok:false,checked:r.sequence-(input[0]?.sequence??r.sequence),headHash:previous,reason:"PREVIOUS_HASH_MISMATCH"};
+        if(r.sequence!==expectedSequence)return{ok:false,checked:expectedSequence-(anchor.previousSequence+1),headHash:previous,lastSequence:expectedSequence-1,reason:"SEQUENCE_GAP"};
+        if(r.previousHash!==previous)return{ok:false,checked:r.sequence-(anchor.previousSequence+1),headHash:previous,lastSequence:r.sequence-1,reason:"PREVIOUS_HASH_MISMATCH"};
         const {recordHash,...base}=r; const expected=sha256(canonicalize(base)+(r.previousHash??"GENESIS"));
-        if(recordHash!==expected)return{ok:false,checked:r.sequence-(input[0]?.sequence??r.sequence),headHash:previous,reason:"RECORD_HASH_MISMATCH"};
+        if(recordHash!==expected)return{ok:false,checked:r.sequence-(anchor.previousSequence+1),headHash:previous,lastSequence:r.sequence-1,reason:"RECORD_HASH_MISMATCH"};
         previous=recordHash; expectedSequence++;
     }
-    return{ok:true,checked:input.length,headHash:previous};
+    return{ok:true,checked:input.length,headHash:previous,lastSequence:expectedSequence-1};
 }
+export function stackFingerprint(error:unknown){if(!(error instanceof Error)||!error.stack)return null;return sha256(error.stack.replace(/:\d+:\d+/g,":#:##"));}
