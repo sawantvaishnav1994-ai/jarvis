@@ -136,7 +136,7 @@ describe("J0.6 A-T acceptance", () => {
         expect(() => J06ModelRequestSchema.parse({ ...req(), credentialRef: "plaintext-secret" })).toThrow();
         const records: ModelAuditRecord[] = [];
         const registry = registryWith(new SyntheticModelAdapter(desc()));
-        await new ModelRouter(registry, { append: (record) => records.push(ModelAuditRecordSchema.parse(record)) }).execute(req(), route(), new AbortController().signal);
+        await new ModelRouter(registry, { append: (record) => { records.push(ModelAuditRecordSchema.parse(record)); } }).execute(req(), route(), new AbortController().signal);
         expect(JSON.stringify(records)).not.toContain("vault://model/provider-a");
         expect(JSON.stringify(records)).not.toContain("model abstraction acceptance");
     });
@@ -213,7 +213,7 @@ describe("J0.6 A-T acceptance", () => {
         const registry = registryWith(adapter);
         const router = new ModelRouter(registry);
         const controller = new AbortController();
-        const chunks = [];
+        const chunks: number[] = [];
         await expect((async () => {
             for await (const chunk of streamModel(registry, router, req({ requiredCapabilities: ["streaming"] }), route(), controller.signal)) {
                 chunks.push(chunk.sequence);
@@ -256,7 +256,7 @@ describe("J0.6 A-T acceptance", () => {
     it("J0.6 R: model audit records routing evidence without raw prompt or plaintext secret content", async () => {
         const records: ModelAuditRecord[] = [];
         const registry = registryWith(new SyntheticModelAdapter(desc()));
-        await new ModelRouter(registry, { append: (record) => records.push(record) }).execute(req(), route(), new AbortController().signal);
+        await new ModelRouter(registry, { append: (record) => { records.push(record); } }).execute(req(), route(), new AbortController().signal);
         const serialized = JSON.stringify(records);
         expect(serialized).not.toContain("model abstraction acceptance");
         expect(serialized).not.toContain("vault://");
