@@ -184,6 +184,8 @@ describe("J0.11 full-foundation acceptance", () => {
             expect(existsSync(`tests/acceptance/${milestone}-gates.json`)).toBe(true);
             expect(workflow).toContain(`npm run test:${milestone}:go`);
         }
-        expect(workflow).not.toMatch(/J0\.12|J1 —|J1 /);
+        expect(workflow).toContain("Explicit J0.11 A-T acceptance");
+        expect(workflow).toContain("npm run test:j11:go");
+        expect(workflow).not.toMatch(/J1 —|J1 /);
     });
 });
