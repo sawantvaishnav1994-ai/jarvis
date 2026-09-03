@@ -1,7 +1,7 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { describe,expect,it,vi } from "vitest";
 import { J03EventConsumerAuthorization } from "@jarvis/core";
-import { EventAdmissionLimiter,EventControlPlane,EventRouter,EventSystem,EventSystemError,EventTypeRegistry,ExternalEventIngress,GracefulEventWorkerGate,HmacIngressAuthenticator,MemoryEventStore,MemoryIngressReceipts,jsonPayload,type EventAdminStorePort,type EventEvidence,type EventSubscription,type JarvisEventEnvelope } from "@jarvis/events";
+import { EventAdmissionLimiter,EventControlPlane,EventRouter,EventSystem,EventTypeRegistry,ExternalEventIngress,GracefulEventWorkerGate,HmacIngressAuthenticator,MemoryEventStore,MemoryIngressReceipts,jsonPayload,type EventAdminStorePort,type EventEvidence,type EventSubscription,type JarvisEventEnvelope } from "@jarvis/events";
 
 const now="2026-09-03T15:00:00.000Z",owner="owner-hardening";
 const event=(over:Partial<JarvisEventEnvelope>={}):JarvisEventEnvelope=>({eventId:randomUUID(),eventType:"system.hardening",schemaVersion:1,occurredAt:now,receivedAt:now,ownerId:owner,projectId:"jarvis",correlationId:"hardening",producerId:"jarvis.system",producerType:"SYSTEM",subject:"hardening",payload:{reference:"safe"},payloadClassification:"D1",privacy:"private-cloud",chainDepth:0,...over});
