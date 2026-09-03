@@ -76,6 +76,8 @@ export async function migrate(pool: pg.Pool,directory: string,environment: strin
         await client.query("GRANT SELECT,INSERT ON audit.memory_events TO jarvis_development_runtime");
         await client.query("REVOKE UPDATE,DELETE ON audit.memory_events FROM jarvis_development_runtime");
         await client.query("GRANT SELECT,INSERT ON events.envelopes,audit.entries,audit.policy_entries TO jarvis_development_runtime");
+        await client.query("GRANT SELECT,INSERT,UPDATE,DELETE ON events.event_log,events.outbox,events.inbox,events.subscriptions,events.delivery_attempts,events.dead_letters,events.schedules,events.ingress_receipts,events.sequence_checkpoints TO jarvis_development_runtime");
+        await client.query("GRANT USAGE,SELECT ON SEQUENCE events.delivery_attempts_attempt_id_seq,events.dead_letters_dead_letter_id_seq TO jarvis_development_runtime");
         await client.query("GRANT USAGE ON SCHEMA identity TO jarvis_development_runtime");
         await client.query("GRANT USAGE ON SCHEMA security TO jarvis_development_runtime");
         await client.query("GRANT SELECT,INSERT,UPDATE ON security.governance_state TO jarvis_development_runtime");
