@@ -31,3 +31,4 @@ export * from "./memory-lifecycle.js";
 export * from "./memory-retrieval.js";
 export * from "./memory-controls.js";
 export * from "./event-store.js";
+export * from "./event-admin.js";
