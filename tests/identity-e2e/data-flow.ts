@@ -97,7 +97,7 @@ export async function browserDataFlow(page: Page, ownerId: string) {
         spentMinor: 0,
         maximumToolCalls: 10,
         toolCalls: 0,
-        maximumRisk: "R2",
+        maximumRisk: "R4",
         resources: ["owner-data"],
         environments: ["development"],
         startedAt: Date.now(),
@@ -223,13 +223,6 @@ export async function browserDataFlow(page: Page, ownerId: string) {
         await authorized("data.record.read", transient.id),
         "TOOL_FAILED",
     );
-    await command("owner", "budget.set", {
-        version: 1, actorId, maximumRuntimeMs: 180000,
-        maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 3, toolCalls: 0,
-        maximumRisk: "R4", resources: ["owner-data"], environments: ["development"],
-        startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 180000,
-        networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3",
-    });
     const secretInput = { version: 1, handle: "secret://synthetic/credential-check", tool: "synthetic.credential-check" };
     const secretUse = await authorized("data.secret.use", null, secretInput, "D4");
     expect((await command("agent", "execute", secretUse)).result.value).toEqual({

@@ -1136,13 +1136,6 @@ it("retention: exact expired cleanup purges derived vectors, rejects altered pla
 }, 30000);
 
 it("H: exact owner-approved tool consumes a vault handle without returning or auditing plaintext", async () => {
-    await ownerCommand("budget.set", {
-        version: 1, actorId: subjectId, maximumRuntimeMs: 900000,
-        maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 20, toolCalls: 0,
-        maximumRisk: "R4", resources: ["owner-data"], environments: ["development"],
-        startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 900000,
-        networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3",
-    });
     const input = { version: 1, handle: "secret://synthetic/credential-check", tool: "synthetic.credential-check" };
     const lease = await secretVault.lease("development/tools/synthetic-credential", {
         version: 1, id: "jarvis-data-test", kind: "service", environment: "development",
