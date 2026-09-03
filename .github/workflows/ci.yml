@@ -19,7 +19,7 @@ jobs:
       - run: PYTHONPATH=src python -m jarvis demo
   typescript-foundation:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env: {NEXT_TELEMETRY_DISABLED: '1'}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -27,8 +27,15 @@ jobs:
         with: {node-version-file: .nvmrc, cache: npm}
       - name: Fresh checkout setup
         run: npm run setup
+      - name: J0.11 acceptance formatting
+        run: npx prettier --check tests/acceptance/j11-gates.json
       - name: Static and contract checks
         run: npm run check
+      - name: J0.11 critical security repeatability
+        run: |
+          for i in 1 2 3; do
+            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/unit/j10-hardening.test.ts --reporter=default
+          done
       - name: Real PostgreSQL integration
         run: npm run test:integration
       - name: Start API, worker and web
@@ -99,6 +106,13 @@ jobs:
       - name: J0.10 evidence on failure
         if: failure()
         run: npm run test:j10:go
+      - name: Explicit J0.11 A-T acceptance
+        if: success()
+        env: {J11_CI_SEQUENCE: 'complete'}
+        run: npm run test:j11:go
+      - name: J0.11 evidence on failure
+        if: failure()
+        run: npm run test:j11:go
       - name: Cleanup
         if: always()
         run: |
