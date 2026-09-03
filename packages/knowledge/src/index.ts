@@ -1,4 +1,5 @@
 export * from "./j05-contracts.js";
+export * from "./evidence-engine.js";
 import type { Actor } from "@jarvis/identity";
 export interface KnowledgeEdge {
     version: 1;
