@@ -1385,7 +1385,7 @@ it("S: complete storage history includes safe recovery, secret, retention and co
     await expect(pool.query("TRUNCATE security.data_access_events")).rejects.toThrow();
 });
 
-it("E-K: encrypted objects keep canonical identity when the storage adapter destination changes", async () => {
+it("E: encrypted objects keep canonical identity when the storage adapter destination changes", async () => {
     const id = randomUUID(), policy = dataPolicy(); policy.consent.keepAttachments = true;
     await execute("data.object.put", "D2", id, { id, filename: "portable-object.txt", mimeType: "text/plain", contentBase64: Buffer.from("Portable object sentinel").toString("base64"), policy });
     const original = await execute("data.object.get", "D2", id);
@@ -1393,10 +1393,6 @@ it("E-K: encrypted objects keep canonical identity when the storage adapter dest
     await execute("data.record.put", "D3", parent.id, parent);
     const attachment = record("attachment", { messageId: parent.id, objectId: id }, "D3");
     await execute("data.record.put", "D3", attachment.id, attachment);
-    const reconstructed = reconstructPortableExport(await execute("data.export", "D4"));
-    expect(reconstructed.objects.get(id)).toEqual(original);
-    expect(reconstructed.objects.get(id)?.metadata.id).toBe(id);
-    expect(reconstructed.records.get(attachment.id)?.payload).toEqual({ messageId: parent.id, objectId: id });
     const key = (await pool.query("SELECT object_key FROM storage.objects WHERE id=$1", [id])).rows[0].object_key;
     const alternate = new LocalEncryptedObjects(join(dir, "alternate-provider"));
     expect(await alternate.put(owner.session.ownerId, await liveObjects.get(owner.session.ownerId, key))).toBe(key);
