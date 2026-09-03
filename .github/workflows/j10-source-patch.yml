@@ -1,0 +1,26 @@
+name: J0.10 one-shot source patch
+on:
+  push:
+    branches: [validation/j0.10-recovery-data-sovereignty-20260903]
+    paths:
+      - '.github/workflows/j10-source-patch.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: validation/j0.10-recovery-data-sovereignty-20260903
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+      - run: node scripts/j10-patch-migration-baseline.mjs
+      - run: |
+          git config user.name 'sawantvaishnav1994-ai'
+          git config user.email 'sawantvaishnav1994@gmail.com'
+          git add tests/integration/private-data-postgres.test.ts
+          git diff --cached --exit-code && exit 1 || true
+          git commit -m 'test(j0.10): advance protected PostgreSQL migration baseline'
+          git push origin HEAD:validation/j0.10-recovery-data-sovereignty-20260903
