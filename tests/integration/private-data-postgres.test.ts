@@ -1255,7 +1255,7 @@ it("A: creates a separately bounded extended-acceptance actor without resetting 
     await ownerCommand("policy.activate", { id: "owner.storage-extended", revision: 1 });
     await ownerCommand("delegation.grant", { version: 1, actorId: subjectId, capability: "data.inventory", resource: "owner-data", environment: "development", ttlSeconds: 900, maximumUses: 100, maximumRisk: "R2", toolId: null });
     await ownerCommand("budget.set", { version: 1, actorId: subjectId, maximumRuntimeMs: 900000, maximumSpendMinor: 0, spentMinor: 0, maximumToolCalls: 100, toolCalls: 0, maximumRisk: "R4", resources: ["owner-data"], environments: ["development"], startedAt: Date.now(), notBefore: 0, expiresAt: Date.now() + 900000, networkAllowed: false, maximumConcurrent: 1, approvalThreshold: "R3" });
-    expect((await pool.query("SELECT version FROM settings.schema_migrations ORDER BY version")).rows.map(row => row.version)).toEqual([1,2,3,4,5,6,7,8,9,10]);
+    expect((await pool.query("SELECT version FROM settings.schema_migrations ORDER BY version")).rows.map(row => row.version)).toEqual([1,2,3,4,5,6,7,8,9,10,11,12]);
 });
 
 it("B-G-K: reconstructs provider-independent conversation, graph, settings and safe definitions with deletion metadata", async () => {
