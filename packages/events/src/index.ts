@@ -15,5 +15,6 @@ export * from "./j08-contracts.js";
 export * from "./j08-runtime.js";
 export * from "./j08-ingress.js";
 export * from "./j08-transport.js";
+export * from "./j08-control.js";
 export { Queue,Worker,QueueEvents } from "bullmq";
 export { Redis } from "ioredis";
