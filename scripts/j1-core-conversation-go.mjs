@@ -76,7 +76,8 @@ try {
     const foundationContract = (name) =>
         Number.isInteger(foundation.contracts?.[name]) &&
         foundation.contracts[name] > 0;
-    const hasAll = (text, values) => values.every((value) => text.includes(value));
+    const hasAll = (text, values) =>
+        values.every((value) => text.includes(value));
 
     const j1SpecTest = unit.testResults
         .flatMap((suite) => suite.assertionResults)
@@ -134,13 +135,14 @@ try {
                 "provenance",
                 "classification ceiling",
                 "freshness",
-            ]) &&
-            security.includes("Context sources carry provenance"),
+            ]) && security.includes("Context sources carry provenance"),
         H:
             foundationContract("memory") &&
             foundationContract("neverStore") &&
             hasAll(contracts, ["Memory Request", "NEVER_STORE"]) &&
-            security.includes("Memory write candidates are not silently promoted"),
+            security.includes(
+                "Memory write candidates are not silently promoted",
+            ),
         I:
             foundationContract("modelProviderPort") &&
             hasAll(architecture, [
@@ -171,7 +173,9 @@ try {
         ]),
         N:
             hasAll(contracts, ["Stream Event", "Cancellation", "idempotent"]) &&
-            security.includes("Retry/idempotency prevents duplicate governed execution"),
+            security.includes(
+                "Retry/idempotency prevents duplicate governed execution",
+            ),
         O:
             foundationContract("audit") &&
             foundationContract("event") &&
@@ -192,10 +196,10 @@ try {
             manifest.milestones[0].includes("J1.0") &&
             manifest.milestones.at(-1).includes("J1.12"),
         S:
-            manifest.releaseMetadataDebt?.statusDocumentStillContainsPreGoText ===
-                true &&
-            manifest.releaseMetadataDebt?.foundationManifestStillCarriesRcLabel ===
-                true &&
+            manifest.releaseMetadataDebt
+                ?.statusDocumentStillContainsPreGoText === true &&
+            manifest.releaseMetadataDebt
+                ?.foundationManifestStillCarriesRcLabel === true &&
             manifest.releaseMetadataDebt?.rule?.includes(
                 "signed Foundation v1 release SHA",
             ),
@@ -214,7 +218,8 @@ try {
             letter,
             {
                 result: checks[letter] ? "PASS" : "FAIL",
-                evidence: catalog.gates.find(({ id }) => id === letter)?.name ?? null,
+                evidence:
+                    catalog.gates.find(({ id }) => id === letter)?.name ?? null,
             },
         ]),
     );
