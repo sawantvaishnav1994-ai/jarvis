@@ -109,7 +109,7 @@ export interface J13AuditSink {
 export class J13ModelRuntimeError extends Error {
     constructor(
         readonly code: J13FailureCode,
-        message = code,
+        message: string = code,
         readonly decision?: ModelRouteDecision,
     ) {
         super(message);
