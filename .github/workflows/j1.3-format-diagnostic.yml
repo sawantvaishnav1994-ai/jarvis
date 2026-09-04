@@ -4,17 +4,18 @@ on:
     branches:
       - validation/j1.3-model-orchestration-runtime-20260904
 permissions:
-  contents: read
+  contents: write
 jobs:
-  format-diagnostic:
+  format-and-clean:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 1}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: {node-version-file: .nvmrc, cache: npm}
       - run: npm ci --ignore-scripts
-      - name: Emit exact Prettier output
+      - name: Apply exact formatter and self-clean
         shell: bash
         run: |
           set -euo pipefail
@@ -26,10 +27,10 @@ jobs:
             packages/models/src/router.ts
           )
           npx prettier --write "${files[@]}"
-          for f in "${files[@]}"; do
-            echo "J13_FORMAT_BEGIN:${f}"
-            base64 -w0 "$f"
-            echo
-            echo "J13_FORMAT_END:${f}"
-          done
-          exit 1
+          git rm .github/workflows/j1.3-format-diagnostic.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${files[@]}"
+          git diff --cached --check
+          git commit -m "style(j1.3): apply locked Prettier formatting"
+          git push origin HEAD:validation/j1.3-model-orchestration-runtime-20260904
