@@ -128,11 +128,8 @@ const RETENTION_MODES: readonly ContextRetentionMode[] = [
     "never-store",
 ];
 const TRUST_LEVELS: readonly ContextTrust[] = ["trusted", "untrusted"];
-const DISCLOSURE_TARGETS: readonly ContextAssemblyPolicy["disclosureTarget"][] = [
-    "local",
-    "private",
-    "external-ai",
-];
+const DISCLOSURE_TARGETS: readonly ContextAssemblyPolicy["disclosureTarget"][] =
+    ["local", "private", "external-ai"];
 
 function validAuthority(authority: ContextAssemblyAuthority): boolean {
     return (
@@ -174,7 +171,8 @@ function validCandidate(source: ContextCandidateSource): boolean {
         source.ownerId.length > 0 &&
         (source.projectId === undefined ||
             source.projectId === null ||
-            (typeof source.projectId === "string" && source.projectId.length > 0)) &&
+            (typeof source.projectId === "string" &&
+                source.projectId.length > 0)) &&
         typeof source.provenance === "string" &&
         source.classification in CLASS_RANK &&
         Number.isSafeInteger(source.freshness) &&
@@ -246,7 +244,9 @@ export class ContextAssembler {
             if (!validCandidate(source)) {
                 excluded.push({
                     sourceId:
-                        typeof source.sourceId === "string" ? source.sourceId : "",
+                        typeof source.sourceId === "string"
+                            ? source.sourceId
+                            : "",
                     reason: "MALFORMED_SOURCE_DENIED",
                 });
                 continue;
