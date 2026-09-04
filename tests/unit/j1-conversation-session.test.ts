@@ -69,12 +69,14 @@ const authority = {
     securityEpoch: 7,
     operatingMode: "assistant" as const,
 };
+const newId = () => crypto.randomUUID();
 describe("J1.1 conversation session engine", () => {
     it("binds turns to current owner/device/session/epoch authority", async () => {
         const repo = new Repo();
         const engine = new ConversationSessionEngine(
             repo,
             async (a) => a.securityEpoch === 7,
+            newId,
         );
         const session = await engine.openSession(authority);
         const turn = await engine.acceptTurn({
@@ -95,7 +97,7 @@ describe("J1.1 conversation session engine", () => {
     });
     it("enforces lifecycle and monotonic cancellation", async () => {
         const repo = new Repo();
-        const engine = new ConversationSessionEngine(repo, async () => true);
+        const engine = new ConversationSessionEngine(repo, async () => true, newId);
         const session = await engine.openSession(authority);
         let turn = await engine.acceptTurn({
             authority,
@@ -118,7 +120,7 @@ describe("J1.1 conversation session engine", () => {
     });
     it("rejects invalid authority before creating a session", async () => {
         const repo = new Repo();
-        const engine = new ConversationSessionEngine(repo, async () => false);
+        const engine = new ConversationSessionEngine(repo, async () => false, newId);
         await expect(engine.openSession(authority)).rejects.toThrow();
         expect(repo.sessions.size).toBe(0);
     });
