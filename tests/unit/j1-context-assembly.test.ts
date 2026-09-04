@@ -100,6 +100,24 @@ describe("J1.2 context assembly", () => {
         ]);
     });
 
+    it("rejects malformed sources before sorting or budgeting", async () => {
+        const assembler = new ContextAssembler({ verify: () => true });
+        const envelope = await assembler.assemble(
+            authority,
+            [
+                source({ sourceId: "negative-size", size: -1 }),
+                source({ sourceId: "valid", size: 10 }),
+            ],
+            policy,
+        );
+        expect(envelope.sources.map((item) => item.sourceId)).toEqual(["valid"]);
+        expect(envelope.excluded).toContainEqual({
+            sourceId: "negative-size",
+            reason: "MALFORMED_SOURCE_DENIED",
+        });
+        expect(envelope.usedSize).toBe(10);
+    });
+
     it("rejects stale authority before assembling", async () => {
         const assembler = new ContextAssembler({ verify: () => false });
         await expect(
