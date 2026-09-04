@@ -43,15 +43,7 @@ jobs:
       - name: J1.3 model orchestration formatting
         run: npx prettier --check tests/acceptance/j1.3-gates.json tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/security/j1-model-orchestration-security.test.ts packages/core/src/model-orchestration.ts packages/models/src/j06-contracts.ts packages/models/src/router.ts packages/models/src/reference-adapter.ts scripts/j1-model-orchestration-go.mjs
       - name: J1.4 turn pipeline formatting
-        shell: bash
-        run: |
-          failed=0
-          for file in tests/acceptance/j1.4-gates.json tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/integration/j1-turn-pipeline-postgres.test.ts tests/security/j1-turn-pipeline-security.test.ts packages/core/src/turn-pipeline.ts scripts/j1-turn-pipeline-go.mjs; do
-            formatted="/tmp/$(basename "$file").formatted"
-            npx prettier "$file" > "$formatted"
-            if ! diff -u "$file" "$formatted"; then failed=1; fi
-          done
-          exit "$failed"
+        run: npx prettier --check tests/acceptance/j1.4-gates.json tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/integration/j1-turn-pipeline-postgres.test.ts tests/security/j1-turn-pipeline-security.test.ts packages/core/src/turn-pipeline.ts scripts/j1-turn-pipeline-go.mjs
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: J1.0 specification integrity
