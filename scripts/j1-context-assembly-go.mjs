@@ -22,21 +22,44 @@ try {
             j1Migrations.length === 1 &&
             j1Migrations[0]?.version === 15 &&
             roadmap.includes("introduces no database migration"),
-        C: ["ownerId", "conversationId", "sessionId", "turnId", "securityEpoch", "operatingMode"].every((item) => runtime.includes(item)),
-        D: runtime.includes("OWNER_SCOPE_DENIED") && runtime.includes("PROJECT_SCOPE_DENIED"),
+        C: [
+            "ownerId",
+            "conversationId",
+            "sessionId",
+            "turnId",
+            "securityEpoch",
+            "operatingMode",
+        ].every((item) => runtime.includes(item)),
+        D:
+            runtime.includes("OWNER_SCOPE_DENIED") &&
+            runtime.includes("PROJECT_SCOPE_DENIED"),
         E: runtime.includes("stableOrder") && runtime.includes("localeCompare"),
         F: runtime.includes("CLASSIFICATION_CEILING_DENIED"),
         G: runtime.includes("D5_GENERIC_CONTEXT_DENIED"),
         H: runtime.includes("DISCLOSURE_DENIED"),
-        I: runtime.includes("STALE_SOURCE_DENIED") && runtime.includes("DELETED_OR_REVOKED"),
-        J: runtime.includes("RETENTION_EXPIRED") && runtime.includes("SESSION_BOUNDARY_DENIED"),
-        K: roadmap.includes("NEVER_STORE") && roadmap.includes("must not become durable context cache"),
+        I:
+            runtime.includes("STALE_SOURCE_DENIED") &&
+            runtime.includes("DELETED_OR_REVOKED"),
+        J:
+            runtime.includes("RETENTION_EXPIRED") &&
+            runtime.includes("SESSION_BOUNDARY_DENIED"),
+        K:
+            roadmap.includes("NEVER_STORE") &&
+            roadmap.includes("must not become durable context cache"),
         L: runtime.includes("PROVENANCE_REQUIRED"),
-        M: runtime.includes("UNTRUSTED_SOURCE_DENIED") && roadmap.includes("untrusted data"),
-        N: runtime.includes("BUDGET_EXCEEDED") && runtime.includes("maximumSize"),
+        M:
+            runtime.includes("UNTRUSTED_SOURCE_DENIED") &&
+            roadmap.includes("untrusted data"),
+        N:
+            runtime.includes("BUDGET_EXCEEDED") &&
+            runtime.includes("maximumSize"),
         O: runtime.includes("CONTEXT_AUTHORITY_INVALID"),
-        P: roadmap.includes("provider-neutral") && roadmap.includes("client-neutral"),
-        Q: roadmap.includes("trusted phone") && roadmap.includes("trusted web client"),
+        P:
+            roadmap.includes("provider-neutral") &&
+            roadmap.includes("client-neutral"),
+        Q:
+            roadmap.includes("trusted phone") &&
+            roadmap.includes("trusted web client"),
         R: process.env.J1_2_CI_SEQUENCE === "complete",
         S: runtime.length > 3000,
         T: roadmap.includes("J1.3 production model orchestration"),
