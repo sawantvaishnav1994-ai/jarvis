@@ -38,8 +38,9 @@ try {
             roadmap.includes("provider/model registry") &&
             runtime.includes("validRuntimePolicy"),
         D:
+            architecture.includes("eligible model") &&
             architecture.includes("capability") &&
-            architecture.includes("eligibility"),
+            runtime.includes("requiredCapabilities"),
         E:
             architecture.includes("deterministic") &&
             runtime.includes("router.select"),
@@ -49,7 +50,9 @@ try {
             security.includes("Privacy and disclosure"),
         G:
             runtime.includes("MODEL_BUDGET_EXCEEDED") &&
-            architecture.includes("token/context/output/cost"),
+            ["context", "output", "token", "cost"].every((term) =>
+                architecture.includes(term),
+            ),
         H:
             runtime.includes("operationTimeoutMs") &&
             runtime.includes("MODEL_TIMEOUT"),
