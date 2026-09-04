@@ -96,9 +96,13 @@ describe("J1.0 Core + Conversation specification acceptance", () => {
             expect(await exists(path)).toBe(true);
 
         const roadmap = await readText("docs/roadmap/j1.0.md");
-        expect(roadmap).toContain("J1 runtime implementation: NOT STARTED BY J1.0");
+        expect(roadmap).toContain(
+            "J1 runtime implementation: NOT STARTED BY J1.0",
+        );
         expect(roadmap).toContain("J1.1 Conversation/session engine");
-        expect(roadmap).toContain("J1.12 Full integration/adversarial validation");
+        expect(roadmap).toContain(
+            "J1.12 Full integration/adversarial validation",
+        );
         expect(roadmap).toContain("Conversation never creates authority");
 
         const architecture = await readText(
@@ -110,7 +114,9 @@ describe("J1.0 Core + Conversation specification acceptance", () => {
         const contracts = await readText(
             "docs/contracts/j1-core-conversation-contracts.md",
         );
-        expect(contracts).toContain("Stream events cannot authorize side effects");
+        expect(contracts).toContain(
+            "Stream events cannot authorize side effects",
+        );
         expect(contracts).toContain("NEVER_STORE");
 
         const security = await readText(
@@ -123,7 +129,9 @@ describe("J1.0 Core + Conversation specification acceptance", () => {
             "runtime implementation beyond J1.0 specification and freeze artifacts",
         );
         expect(await exists("infrastructure/migrations/0015.sql")).toBe(false);
-        expect(await exists("infrastructure/migrations/0015_j1.sql")).toBe(false);
+        expect(await exists("infrastructure/migrations/0015_j1.sql")).toBe(
+            false,
+        );
 
         expect(
             manifest.releaseMetadataDebt.statusDocumentStillContainsPreGoText,
