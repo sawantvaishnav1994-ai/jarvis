@@ -1,0 +1,48 @@
+name: J1.3 provider health fix
+on:
+  push:
+    branches:
+      - validation/j1.3-model-orchestration-runtime-20260904
+permissions:
+  contents: write
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 1}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: {node-version-file: .nvmrc, cache: npm}
+      - run: npm ci --ignore-scripts
+      - name: Apply narrow provider-attempt normalization fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('packages/core/src/model-orchestration.ts')
+          s = p.read_text()
+          old = '''                const code = normalizeFailure(
+                    new ModelRoutingError(
+                        attempt.code ?? "MODEL_PROVIDER_ERROR",
+                        attempt.code ?? "MODEL_PROVIDER_ERROR",
+                    ),
+                );'''
+          new = '''                const code = normalizeFailure(
+                    new Error(attempt.code ?? "MODEL_PROVIDER_ERROR"),
+                );'''
+          if s.count(old) != 1:
+              raise SystemExit('expected provider-attempt normalization block not found exactly once')
+          p.write_text(s.replace(old, new))
+          PY
+          npx prettier --write packages/core/src/model-orchestration.ts
+          npx prettier --check packages/core/src/model-orchestration.ts
+          npx vitest run tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/security/j1-model-orchestration-security.test.ts --reporter=default
+          git rm .github/workflows/j1.3-health-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/core/src/model-orchestration.ts
+          git diff --cached --check
+          git commit -m "fix(j1.3): attribute provider attempt failures to health"
+          git push origin HEAD:validation/j1.3-model-orchestration-runtime-20260904
