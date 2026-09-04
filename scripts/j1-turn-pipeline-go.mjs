@@ -100,8 +100,9 @@ try {
             roadmap.includes("J1.6 memory-aware conversation") &&
             runtime.includes("memoryWriteCommitted: false"),
         R:
-            workflow.includes("Explicit J1.3 Model Orchestration A-T acceptance") &&
-            workflow.includes("J1.4 turn pipeline integrity"),
+            workflow.includes(
+                "Explicit J1.3 Model Orchestration A-T acceptance",
+            ) && workflow.includes("J1.4 turn pipeline integrity"),
         S:
             process.env.J1_4_CI_SEQUENCE === "complete" &&
             workflow.includes("Real PostgreSQL integration") &&
