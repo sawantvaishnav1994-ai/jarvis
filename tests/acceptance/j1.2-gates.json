@@ -3,23 +3,44 @@
     "gates": [
         { "id": "A", "name": "Exact accepted J1.1 baseline" },
         { "id": "B", "name": "No new migration or duplicate context store" },
-        { "id": "C", "name": "Owner conversation session turn epoch and mode binding" },
+        {
+            "id": "C",
+            "name": "Owner conversation session turn epoch and mode binding"
+        },
         { "id": "D", "name": "Owner and project source isolation" },
-        { "id": "E", "name": "Deterministic source ordering and stable tie breaking" },
+        {
+            "id": "E",
+            "name": "Deterministic source ordering and stable tie breaking"
+        },
         { "id": "F", "name": "Classification ceiling enforcement" },
         { "id": "G", "name": "D5 generic context prohibition" },
         { "id": "H", "name": "Disclosure eligibility enforcement" },
         { "id": "I", "name": "Freshness deleted and revoked source exclusion" },
-        { "id": "J", "name": "Retention expiry and session boundary enforcement" },
+        {
+            "id": "J",
+            "name": "Retention expiry and session boundary enforcement"
+        },
         { "id": "K", "name": "NEVER_STORE remains transient and non-durable" },
         { "id": "L", "name": "Provenance and digest required" },
         { "id": "M", "name": "Untrusted source prompt-injection boundary" },
         { "id": "N", "name": "Hard context size budget" },
         { "id": "O", "name": "Fail closed on invalid authority" },
-        { "id": "P", "name": "Provider-neutral and client-neutral context engine" },
-        { "id": "Q", "name": "Trusted phone and web clients share authority boundary" },
-        { "id": "R", "name": "Foundation J1.0 and J1.1 regression remain green" },
-        { "id": "S", "name": "J1.2 unit security and integration qualification pass" },
+        {
+            "id": "P",
+            "name": "Provider-neutral and client-neutral context engine"
+        },
+        {
+            "id": "Q",
+            "name": "Trusted phone and web clients share authority boundary"
+        },
+        {
+            "id": "R",
+            "name": "Foundation J1.0 and J1.1 regression remain green"
+        },
+        {
+            "id": "S",
+            "name": "J1.2 unit security and integration qualification pass"
+        },
         { "id": "T", "name": "J1.3 model orchestration not started" }
     ]
 }
