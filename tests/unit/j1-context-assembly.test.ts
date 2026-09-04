@@ -94,9 +94,9 @@ describe("J1.2 context assembly", () => {
         ]);
         expect(envelope.excluded.map((item) => item.reason)).toEqual([
             "OWNER_SCOPE_DENIED",
+            "SESSION_BOUNDARY_DENIED",
             "D5_GENERIC_CONTEXT_DENIED",
             "UNTRUSTED_SOURCE_DENIED",
-            "SESSION_BOUNDARY_DENIED",
         ]);
     });
 
