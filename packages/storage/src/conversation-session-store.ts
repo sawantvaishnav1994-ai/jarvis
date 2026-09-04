@@ -1,6 +1,8 @@
 import type pg from "pg";
 import { BoundaryError } from "@jarvis/shared";
 
+type SessionState = "ACTIVE" | "REVOKED" | "CLOSED" | "CANCELLED";
+
 type Session = {
     id: string;
     ownerId: string;
@@ -9,9 +11,22 @@ type Session = {
     identitySessionId: string;
     securityEpoch: number;
     operatingMode: string;
-    state: "ACTIVE" | "REVOKED" | "CLOSED" | "CANCELLED";
+    state: SessionState;
     version: number;
 };
+
+type SessionRow = {
+    id: string;
+    owner_id: string;
+    actor_id: string;
+    device_id: string;
+    identity_session_id: string;
+    security_epoch: number | string;
+    operating_mode: string;
+    state: SessionState;
+    version: number;
+};
+
 type Turn = {
     id: string;
     ownerId: string;
@@ -24,100 +39,134 @@ type Turn = {
     reasonCode: string | null;
     version: number;
 };
-const sessionFrom = (r: any): Session => ({
-    id: r.id,
-    ownerId: r.owner_id,
-    actorId: r.actor_id,
-    deviceId: r.device_id,
-    identitySessionId: r.identity_session_id,
-    securityEpoch: Number(r.security_epoch),
-    operatingMode: r.operating_mode,
-    state: r.state,
-    version: r.version,
+
+type TurnRow = {
+    id: string;
+    owner_id: string;
+    conversation_id: string;
+    session_id: string;
+    input_message_id: string | null;
+    state: string;
+    idempotency_key: string;
+    correlation_id: string;
+    reason_code: string | null;
+    version: number;
+};
+
+const sessionFrom = (row: SessionRow): Session => ({
+    id: row.id,
+    ownerId: row.owner_id,
+    actorId: row.actor_id,
+    deviceId: row.device_id,
+    identitySessionId: row.identity_session_id,
+    securityEpoch: Number(row.security_epoch),
+    operatingMode: row.operating_mode,
+    state: row.state,
+    version: row.version,
 });
-const turnFrom = (r: any): Turn => ({
-    id: r.id,
-    ownerId: r.owner_id,
-    conversationId: r.conversation_id,
-    sessionId: r.session_id,
-    inputMessageId: r.input_message_id,
-    state: r.state,
-    idempotencyKey: r.idempotency_key,
-    correlationId: r.correlation_id,
-    reasonCode: r.reason_code,
-    version: r.version,
+
+const turnFrom = (row: TurnRow): Turn => ({
+    id: row.id,
+    ownerId: row.owner_id,
+    conversationId: row.conversation_id,
+    sessionId: row.session_id,
+    inputMessageId: row.input_message_id,
+    state: row.state,
+    idempotencyKey: row.idempotency_key,
+    correlationId: row.correlation_id,
+    reasonCode: row.reason_code,
+    version: row.version,
 });
+
+function postgresErrorCode(error: unknown): string | null {
+    if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof error.code === "string"
+    ) {
+        return error.code;
+    }
+    return null;
+}
+
 export class PostgresConversationSessionRepository {
     constructor(private readonly pool: pg.Pool) {}
-    async createSession(s: Session): Promise<Session> {
-        const q = await this.pool.query(
+
+    async createSession(session: Session): Promise<Session> {
+        const result = await this.pool.query<SessionRow>(
             "INSERT INTO conversations.sessions(id,owner_id,actor_id,device_id,identity_session_id,security_epoch,operating_mode,state,version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
             [
-                s.id,
-                s.ownerId,
-                s.actorId,
-                s.deviceId,
-                s.identitySessionId,
-                s.securityEpoch,
-                s.operatingMode,
-                s.state,
-                s.version,
+                session.id,
+                session.ownerId,
+                session.actorId,
+                session.deviceId,
+                session.identitySessionId,
+                session.securityEpoch,
+                session.operatingMode,
+                session.state,
+                session.version,
             ],
         );
-        return sessionFrom(q.rows[0]);
+        return sessionFrom(result.rows[0]!);
     }
+
     async getSession(ownerId: string, id: string): Promise<Session | null> {
-        const q = await this.pool.query(
+        const result = await this.pool.query<SessionRow>(
             "SELECT * FROM conversations.sessions WHERE owner_id=$1 AND id=$2",
             [ownerId, id],
         );
-        return q.rows[0] ? sessionFrom(q.rows[0]) : null;
+        return result.rows[0] ? sessionFrom(result.rows[0]) : null;
     }
+
     async updateSessionState(
         ownerId: string,
         id: string,
         expectedVersion: number,
         state: Session["state"],
     ): Promise<Session> {
-        const q = await this.pool.query(
+        const result = await this.pool.query<SessionRow>(
             "UPDATE conversations.sessions SET state=$4,version=version+1,last_seen_at=now(),revoked_at=CASE WHEN $4='REVOKED' THEN now() ELSE revoked_at END,cancelled_at=CASE WHEN $4='CANCELLED' THEN now() ELSE cancelled_at END WHERE owner_id=$1 AND id=$2 AND version=$3 RETURNING *",
             [ownerId, id, expectedVersion, state],
         );
-        if (q.rowCount !== 1)
+        if (result.rowCount !== 1)
             throw new BoundaryError("CONVERSATION_SESSION_CONFLICT");
-        return sessionFrom(q.rows[0]);
+        return sessionFrom(result.rows[0]!);
     }
-    async createTurn(t: Turn): Promise<Turn> {
+
+    async createTurn(turn: Turn): Promise<Turn> {
         try {
-            const q = await this.pool.query(
+            const result = await this.pool.query<TurnRow>(
                 "INSERT INTO conversations.turns(id,owner_id,conversation_id,session_id,input_message_id,state,idempotency_key,correlation_id,reason_code,version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *",
                 [
-                    t.id,
-                    t.ownerId,
-                    t.conversationId,
-                    t.sessionId,
-                    t.inputMessageId,
-                    t.state,
-                    t.idempotencyKey,
-                    t.correlationId,
-                    t.reasonCode,
-                    t.version,
+                    turn.id,
+                    turn.ownerId,
+                    turn.conversationId,
+                    turn.sessionId,
+                    turn.inputMessageId,
+                    turn.state,
+                    turn.idempotencyKey,
+                    turn.correlationId,
+                    turn.reasonCode,
+                    turn.version,
                 ],
             );
-            return turnFrom(q.rows[0]);
-        } catch (e: any) {
-            if (e?.code === "23505")
+            return turnFrom(result.rows[0]!);
+        } catch (error: unknown) {
+            if (postgresErrorCode(error) === "23505")
                 throw new BoundaryError("CONVERSATION_IDEMPOTENCY_CONFLICT");
-            throw e;
+            throw error;
         }
     }
+
     async getTurn(ownerId: string, id: string): Promise<Turn | null> {
-        const q = await this.pool.query(
+        const result = await this.pool.query<TurnRow>(
             "SELECT * FROM conversations.turns WHERE owner_id=$1 AND id=$2",
             [ownerId, id],
         );
-        return q.rows[0] ? turnFrom(q.rows[0]) : null;
+        return result.rows[0] ? turnFrom(result.rows[0]) : null;
     }
+
     async transitionTurn(
         ownerId: string,
         id: string,
@@ -126,12 +175,12 @@ export class PostgresConversationSessionRepository {
         reasonCode: string | null,
     ): Promise<Turn> {
         const terminal = ["completed", "failed", "cancelled"].includes(state);
-        const q = await this.pool.query(
+        const result = await this.pool.query<TurnRow>(
             "UPDATE conversations.turns SET state=$4,reason_code=$5,version=version+1,completed_at=CASE WHEN $6 THEN now() ELSE completed_at END WHERE owner_id=$1 AND id=$2 AND version=$3 RETURNING *",
             [ownerId, id, expectedVersion, state, reasonCode, terminal],
         );
-        if (q.rowCount !== 1)
+        if (result.rowCount !== 1)
             throw new BoundaryError("CONVERSATION_TURN_CONFLICT");
-        return turnFrom(q.rows[0]);
+        return turnFrom(result.rows[0]!);
     }
 }
