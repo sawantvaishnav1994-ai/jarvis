@@ -1,0 +1,25 @@
+{
+    "milestone": "J1.1",
+    "gates": [
+        { "id": "A", "name": "Exact accepted J1.0 baseline" },
+        { "id": "B", "name": "Additive schema 0015 and immutable 0001-0014" },
+        { "id": "C", "name": "Conversation session owner actor device identity-session and epoch binding" },
+        { "id": "D", "name": "Conversation ownership and locator-not-authority semantics" },
+        { "id": "E", "name": "Turn lifecycle state machine" },
+        { "id": "F", "name": "Atomic optimistic concurrency" },
+        { "id": "G", "name": "Idempotency and replay protection" },
+        { "id": "H", "name": "Cancellation monotonicity" },
+        { "id": "I", "name": "Revocation and stale security epoch fail closed" },
+        { "id": "J", "name": "NEVER_STORE and session-only content remain transient" },
+        { "id": "K", "name": "D0-D5 and D5 vault boundary preserved" },
+        { "id": "L", "name": "No model context memory or tool execution scope creep" },
+        { "id": "M", "name": "PostgreSQL persistence and database-enforced invariants" },
+        { "id": "N", "name": "Restart recovery and durable nonterminal coordination" },
+        { "id": "O", "name": "Correlation-safe turn identity" },
+        { "id": "P", "name": "Dependency outage failure remains closed" },
+        { "id": "Q", "name": "Trusted mobile and web clients use the same authority boundary" },
+        { "id": "R", "name": "Foundation regression pipeline remains green" },
+        { "id": "S", "name": "J1.1 runtime tests and migration upgrade path pass" },
+        { "id": "T", "name": "J1.2 not started and main remains untouched during qualification" }
+    ]
+}
