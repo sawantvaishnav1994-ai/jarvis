@@ -612,10 +612,7 @@ export class J13ModelOrchestrator {
                 }
                 if (attempt.event !== "failure") return;
                 const code = normalizeFailure(
-                    new ModelRoutingError(
-                        attempt.code ?? "MODEL_PROVIDER_ERROR",
-                        attempt.code ?? "MODEL_PROVIDER_ERROR",
-                    ),
+                    new Error(attempt.code ?? "MODEL_PROVIDER_ERROR"),
                 );
                 if (!affectsProviderHealth(code)) return;
                 const snapshot = this.health.recordFailure(
