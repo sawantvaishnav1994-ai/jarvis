@@ -37,10 +37,7 @@ jobs:
       - name: J1.0 specification formatting
         run: npx prettier --check tests/acceptance/j1.0-gates.json tests/unit/j1-core-acceptance.test.ts scripts/j1-core-conversation-go.mjs
       - name: J1.1 runtime formatting
-        shell: bash
-        run: |
-          npx prettier --write tests/acceptance/j1.1-gates.json tests/unit/j1-conversation-session.test.ts tests/integration/j1-conversation-session-postgres.test.ts packages/core/src/conversation-session.ts packages/storage/src/conversation-session-store.ts scripts/j1-conversation-session-go.mjs
-          git diff --exit-code -- tests/acceptance/j1.1-gates.json tests/unit/j1-conversation-session.test.ts tests/integration/j1-conversation-session-postgres.test.ts packages/core/src/conversation-session.ts packages/storage/src/conversation-session-store.ts scripts/j1-conversation-session-go.mjs
+        run: npx prettier --check tests/acceptance/j1.1-gates.json tests/unit/j1-conversation-session.test.ts tests/integration/j1-conversation-session-postgres.test.ts packages/core/src/conversation-session.ts packages/storage/src/conversation-session-store.ts scripts/j1-conversation-session-go.mjs
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: J1.0 specification integrity
