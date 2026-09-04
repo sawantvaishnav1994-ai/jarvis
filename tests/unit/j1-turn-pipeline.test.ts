@@ -125,7 +125,12 @@ function result(text = "response"): J13ExecutionResult {
             modelId: "reasoner",
             text,
             structured: null,
-            usage: { inputTokens: 10, outputTokens: 2, totalTokens: 12, cost: 0.01 },
+            usage: {
+                inputTokens: 10,
+                outputTokens: 2,
+                totalTokens: 12,
+                cost: 0.01,
+            },
             finishReason: "stop",
             verified: true,
         },
@@ -207,14 +212,21 @@ function harness(reason: J14AuthorityReason = "OK") {
 describe("J1.4 governed response turn pipeline", () => {
     it("executes the explicit success state machine and keeps model output content-only", async () => {
         const { pipeline } = harness();
-        const response = await pipeline.execute(input, new AbortController().signal);
+        const response = await pipeline.execute(
+            input,
+            new AbortController().signal,
+        );
         expect(response.state).toBe("COMPLETED");
         expect(response.response).toBe("response");
         expect(response.acceptedAsContentOnly).toBe(true);
         expect(response.toolExecutionCommitted).toBe(false);
         expect(response.approvalCommitted).toBe(false);
         expect(response.memoryWriteCommitted).toBe(false);
-        expect(response.events.filter((event) => event.kind === "state").map((event) => event.state)).toEqual([
+        expect(
+            response.events
+                .filter((event) => event.kind === "state")
+                .map((event) => event.state),
+        ).toEqual([
             "AUTHORITY_VALIDATING",
             "CONTEXT_ASSEMBLING",
             "MODEL_PENDING",
