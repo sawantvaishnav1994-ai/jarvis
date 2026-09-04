@@ -210,24 +210,30 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
             { create: () => `model-operation-${++operation}` },
             { now: () => 100 },
         );
+        const runtimePolicy = {
+            route: {
+                allowedProviderIds: [],
+                deniedProviderIds: [],
+                preferredProviderIds: ["synthetic"],
+                allowDegraded: false,
+                maxAttempts: 1,
+            },
+            operationTimeoutMs: 2_000,
+            operationAttemptLimit: 2,
+            operationMaxTokens: 200,
+            operationMaxCost: 1,
+            operationAllowUnknownCost: false,
+            circuitFailureThreshold: 2,
+            circuitResetMs: 1_000,
+        };
         const result = await orchestrator.execute(
             {
                 operationKey: `${turn.id}:model`,
+                operationDigest: "c".repeat(64),
                 authority: contextAuthority,
                 context: envelope,
                 request: modelRequest,
-                policy: {
-                    route: {
-                        allowedProviderIds: [],
-                        deniedProviderIds: [],
-                        preferredProviderIds: ["synthetic"],
-                        allowDegraded: false,
-                        maxAttempts: 1,
-                    },
-                    operationTimeoutMs: 2_000,
-                    circuitFailureThreshold: 2,
-                    circuitResetMs: 1_000,
-                },
+                policy: runtimePolicy,
             },
             new AbortController().signal,
         );
@@ -239,6 +245,87 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
             orchestrator.execute(
                 {
                     operationKey: `${turn.id}:model-after-revoke`,
+                    operationDigest: "d".repeat(64),
+                    authority: contextAuthority,
+                    context: envelope,
+                    request: modelRequest,
+                    policy: runtimePolicy,
+                },
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_AUTHORITY_INVALID" });
+    });
+
+    it("rechecks authority between provider attempts and prevents fallback after revocation", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(
+            new SyntheticModelAdapter(
+                { ...modelDescriptor, providerId: "primary" },
+                { failuresBeforeSuccess: 10, retryableFailure: true },
+            ),
+        );
+        registry.register(
+            new SyntheticModelAdapter({
+                ...modelDescriptor,
+                providerId: "fallback",
+            }),
+        );
+        let checks = 0;
+        const orchestrator = new J13ModelOrchestrator(
+            new ModelRouter(registry),
+            {
+                verify: () => {
+                    checks += 1;
+                    return checks < 3;
+                },
+            },
+            { create: () => "operation-authority-recheck" },
+            { now: () => 100 },
+        );
+        const contextAuthority = {
+            ownerId: "owner",
+            conversationId: uuids[2]!,
+            sessionId: uuids[0]!,
+            turnId: uuids[1]!,
+            securityEpoch: 3,
+            operatingMode: "assistant" as const,
+            projectId: "jarvis",
+        };
+        const envelope = await new ContextAssembler({ verify: () => true }).assemble(
+            contextAuthority,
+            [
+                {
+                    sourceType: "conversation",
+                    sourceId: "turn-input",
+                    ownerId: "owner",
+                    projectId: "jarvis",
+                    provenance: "J1.1:turn-input",
+                    classification: "D2",
+                    freshness: 10,
+                    retention: "session",
+                    retentionBoundary: uuids[0]!,
+                    disclosureEligibility: true,
+                    digest: "e".repeat(64),
+                    trust: "trusted",
+                    priority: 100,
+                    size: 10,
+                    payload: "authorized turn context",
+                },
+            ],
+            {
+                disclosureTarget: "external-ai",
+                classificationCeiling: "D2",
+                maximumSize: 100,
+                minimumFreshness: 0,
+                allowUntrusted: false,
+                now: 20,
+            },
+        );
+        await expect(
+            orchestrator.execute(
+                {
+                    operationKey: "authority-recheck",
+                    operationDigest: "f".repeat(64),
                     authority: contextAuthority,
                     context: envelope,
                     request: modelRequest,
@@ -246,11 +333,15 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
                         route: {
                             allowedProviderIds: [],
                             deniedProviderIds: [],
-                            preferredProviderIds: [],
+                            preferredProviderIds: ["primary", "fallback"],
                             allowDegraded: false,
-                            maxAttempts: 1,
+                            maxAttempts: 2,
                         },
                         operationTimeoutMs: 2_000,
+                        operationAttemptLimit: 4,
+                        operationMaxTokens: 200,
+                        operationMaxCost: 1,
+                        operationAllowUnknownCost: false,
                         circuitFailureThreshold: 2,
                         circuitResetMs: 1_000,
                     },

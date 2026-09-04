@@ -5,6 +5,7 @@ export const ModelCapabilitySchema = z.enum([
     "text",
     "reasoning",
     "vision",
+    "audio",
     "structured-output",
     "streaming",
     "tool-planning",
@@ -30,12 +31,19 @@ export const ModelDescriptorSchema = z.strictObject({
     version: z.literal(1),
     providerId: z.string().min(1).max(100),
     modelId: z.string().min(1).max(200),
+    modelFamily: z.string().min(1).max(200).optional(),
+    revision: z.string().min(1).max(200).nullable().optional(),
     locality: ProcessingTargetSchema,
-    capabilities: z.array(ModelCapabilitySchema).min(1).max(6),
+    capabilities: z.array(ModelCapabilitySchema).min(1).max(7),
     contextWindowTokens: z.number().int().positive().max(10_000_000),
     maxOutputTokens: z.number().int().positive().max(1_000_000),
+    pricingKnown: z.boolean().optional(),
     inputCostPerMillion: z.number().finite().nonnegative().max(100_000),
     outputCostPerMillion: z.number().finite().nonnegative().max(100_000),
+    latencyClass: z.enum(["low", "standard", "high"]).optional(),
+    qualityTier: z.number().int().min(0).max(100).optional(),
+    reliabilityTier: z.number().int().min(0).max(100).optional(),
+    region: z.string().min(1).max(100).nullable().optional(),
     health: ProviderHealthSchema,
     credentialRef: z.string().min(1).max(300).nullable(),
 });
@@ -62,7 +70,7 @@ export const J06ModelRequestSchema = z.strictObject({
     ownerId: z.string().min(1).max(200),
     projectId: z.string().min(1).max(200).nullable(),
     messages: z.array(J06ModelMessageSchema).min(1).max(128),
-    requiredCapabilities: z.array(ModelCapabilitySchema).max(6),
+    requiredCapabilities: z.array(ModelCapabilitySchema).max(7),
     processingTarget: ProcessingTargetSchema,
     dataPolicy: DataPolicySchema,
     context: ModelContextBoundarySchema,
@@ -80,7 +88,7 @@ export const NormalizedUsageSchema = z.strictObject({
     inputTokens: z.number().int().nonnegative(),
     outputTokens: z.number().int().nonnegative(),
     totalTokens: z.number().int().nonnegative(),
-    cost: z.number().finite().nonnegative(),
+    cost: z.number().finite().nonnegative().nullable(),
 });
 export type NormalizedUsage = z.infer<typeof NormalizedUsageSchema>;
 
@@ -100,6 +108,7 @@ export type J06ModelResult = z.infer<typeof J06ModelResultSchema>;
 export const RouteRejectionCodeSchema = z.enum([
     "PROVIDER_NOT_ALLOWED",
     "PROVIDER_DENIED",
+    "PINNED_MODEL_MISMATCH",
     "LOCALITY_MISMATCH",
     "PRIVACY_MISMATCH",
     "CAPABILITY_MISMATCH",
@@ -109,14 +118,30 @@ export const RouteRejectionCodeSchema = z.enum([
     "OUTPUT_LIMIT",
     "TOKEN_BUDGET",
     "COST_BUDGET",
+    "COST_UNKNOWN",
 ]);
 export type RouteRejectionCode = z.infer<typeof RouteRejectionCodeSchema>;
+
+export const ModelRoutingStrategySchema = z.enum([
+    "balanced",
+    "cheapest-eligible",
+    "fastest-eligible",
+    "highest-quality-eligible",
+    "local-private-preferred",
+    "pinned",
+    "fallback-chain",
+]);
+export type ModelRoutingStrategy = z.infer<typeof ModelRoutingStrategySchema>;
 
 export const ModelRoutePolicySchema = z.strictObject({
     allowedProviderIds: z.array(z.string().min(1).max(100)).max(100),
     deniedProviderIds: z.array(z.string().min(1).max(100)).max(100),
     preferredProviderIds: z.array(z.string().min(1).max(100)).max(100),
     allowDegraded: z.boolean(),
+    allowUnknownCost: z.boolean().optional(),
+    strategy: ModelRoutingStrategySchema.optional(),
+    pinnedProviderId: z.string().min(1).max(100).nullable().optional(),
+    pinnedModelId: z.string().min(1).max(200).nullable().optional(),
     maxAttempts: z.number().int().min(1).max(5),
 });
 export type ModelRoutePolicy = z.infer<typeof ModelRoutePolicySchema>;
@@ -125,7 +150,7 @@ export const RouteCandidateSchema = z.strictObject({
     providerId: z.string().min(1).max(100),
     modelId: z.string().min(1).max(200),
     eligible: z.boolean(),
-    estimatedCost: z.number().finite().nonnegative(),
+    estimatedCost: z.number().finite().nonnegative().nullable(),
     rejectionCodes: z.array(RouteRejectionCodeSchema),
 });
 export type RouteCandidate = z.infer<typeof RouteCandidateSchema>;
@@ -157,7 +182,7 @@ export const ModelAuditRecordSchema = z.strictObject({
     ]),
     processingTarget: ProcessingTargetSchema,
     classification: z.enum(["D0", "D1", "D2", "D3", "D4", "D5"]),
-    capabilities: z.array(ModelCapabilitySchema).max(6),
+    capabilities: z.array(ModelCapabilitySchema).max(7),
     inputTokens: z.number().int().nonnegative().nullable(),
     outputTokens: z.number().int().nonnegative().nullable(),
     cost: z.number().finite().nonnegative().nullable(),

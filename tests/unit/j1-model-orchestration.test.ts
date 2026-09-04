@@ -6,6 +6,7 @@ import {
     J13ProviderHealth,
     type ContextAssemblyAuthority,
     type ContextCandidateSource,
+    type J13AuditRecord,
 } from "@jarvis/core";
 import {
     J06ModelRequestSchema,
@@ -28,6 +29,8 @@ const authority: ContextAssemblyAuthority = {
     operatingMode: "assistant",
     projectId: "jarvis",
 };
+
+const operationDigest = "d".repeat(64);
 
 const contextSource = (
     over: Partial<ContextCandidateSource> = {},
@@ -139,40 +142,59 @@ async function envelope(over: Partial<ContextCandidateSource>[] = []) {
 function runtime(
     registry: ModelProviderRegistry,
     authorityValid: () => boolean = () => true,
+    health = new J13ProviderHealth(),
+    audit?: { append(record: J13AuditRecord): void },
+    router = new ModelRouter(registry),
 ) {
     let id = 0;
     return new J13ModelOrchestrator(
-        new ModelRouter(registry),
+        router,
         { verify: authorityValid },
         { create: () => `operation-${++id}` },
         { now: () => 1_000 },
+        health,
+        audit,
     );
 }
 
 const policy = {
     route: route(),
     operationTimeoutMs: 2_000,
+    operationAttemptLimit: 10,
+    operationMaxTokens: 5_000,
+    operationMaxCost: 10,
+    operationAllowUnknownCost: false,
     circuitFailureThreshold: 2,
     circuitResetMs: 5_000,
 };
+
+const input = async (
+    operationKey: string,
+    over: Record<string, unknown> = {},
+) => ({
+    operationKey,
+    operationDigest,
+    authority,
+    context: await envelope(),
+    request: request(),
+    policy,
+    ...over,
+});
 
 describe("J1.3 model orchestration runtime", () => {
     it("executes an authorized J1.2 envelope and treats output as content only", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
         const result = await runtime(registry).execute(
-            {
-                operationKey: "turn-1:model",
-                authority,
-                context: await envelope(),
-                request: request(),
-                policy,
-            },
+            await input("turn-1:model"),
             new AbortController().signal,
         );
         expect(result.result.providerId).toBe("provider-a");
         expect(result.acceptedAsContentOnly).toBe(true);
         expect(result.turnId).toBe("turn-1");
+        expect(result.costStatus).toBe("actual");
+        expect(result.actualCost).toBe(0);
+        expect(result.selectedEstimatedMaximumCost).toBeGreaterThan(0);
     });
 
     it("fails closed when current authority is stale or revoked", async () => {
@@ -180,13 +202,7 @@ describe("J1.3 model orchestration runtime", () => {
         registry.register(new SyntheticModelAdapter(descriptor()));
         await expect(
             runtime(registry, () => false).execute(
-                {
-                    operationKey: "revoked",
-                    authority,
-                    context: await envelope(),
-                    request: request(),
-                    policy,
-                },
+                await input("revoked"),
                 new AbortController().signal,
             ),
         ).rejects.toMatchObject({ code: "MODEL_AUTHORITY_INVALID" });
@@ -198,22 +214,15 @@ describe("J1.3 model orchestration runtime", () => {
         const model = runtime(registry);
         await expect(
             model.execute(
-                {
-                    operationKey: "wrong-owner",
-                    authority,
-                    context: await envelope(),
+                await input("wrong-owner", {
                     request: request({ ownerId: "other-owner" }),
-                    policy,
-                },
+                }),
                 new AbortController().signal,
             ),
         ).rejects.toBeInstanceOf(J13ModelRuntimeError);
         await expect(
             model.execute(
-                {
-                    operationKey: "d5",
-                    authority,
-                    context: await envelope(),
+                await input("d5", {
                     request: request({
                         processingTarget: "LOCAL",
                         dataPolicy: {
@@ -234,14 +243,29 @@ describe("J1.3 model orchestration runtime", () => {
                             containsSecretMaterial: true,
                         },
                     }),
-                    policy,
-                },
+                }),
                 new AbortController().signal,
             ),
         ).rejects.toMatchObject({ code: "MODEL_POLICY_DENIED" });
     });
 
-    it("preserves external disclosure boundary from J1.2", async () => {
+    it("enforces the J1.2 classification ceiling at model dispatch", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(new SyntheticModelAdapter(descriptor()));
+        const lowEnvelope = await new ContextAssembler({ verify: () => true }).assemble(
+            authority,
+            [contextSource()],
+            { ...contextPolicy, classificationCeiling: "D1" },
+        );
+        await expect(
+            runtime(registry).execute(
+                await input("ceiling", { context: lowEnvelope }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_POLICY_DENIED" });
+    });
+
+    it("preserves local/private/external disclosure boundaries", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
         const privateEnvelope = await new ContextAssembler({
@@ -252,19 +276,13 @@ describe("J1.3 model orchestration runtime", () => {
         });
         await expect(
             runtime(registry).execute(
-                {
-                    operationKey: "private-context",
-                    authority,
-                    context: privateEnvelope,
-                    request: request(),
-                    policy,
-                },
+                await input("private-context", { context: privateEnvelope }),
                 new AbortController().signal,
             ),
         ).rejects.toMatchObject({ code: "MODEL_POLICY_DENIED" });
     });
 
-    it("keeps deterministic routing and policy allow/deny/capability/budget checks", async () => {
+    it("keeps deterministic routing and policy allow/deny/capability/budget checks", () => {
         const registry = new ModelProviderRegistry();
         registry.register(
             new SyntheticModelAdapter(
@@ -304,6 +322,109 @@ describe("J1.3 model orchestration runtime", () => {
         ).toBeNull();
     });
 
+    it("supports cheapest, fastest, quality, local-private, pinned and fallback-chain routing modes", () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({
+                    providerId: "cheap",
+                    modelId: "m",
+                    inputCostPerMillion: 1,
+                    outputCostPerMillion: 1,
+                    latencyClass: "standard",
+                    qualityTier: 40,
+                }),
+            ),
+        );
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({
+                    providerId: "fast",
+                    modelId: "m",
+                    inputCostPerMillion: 10,
+                    outputCostPerMillion: 10,
+                    latencyClass: "low",
+                    qualityTier: 50,
+                }),
+            ),
+        );
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({
+                    providerId: "quality",
+                    modelId: "q",
+                    inputCostPerMillion: 20,
+                    outputCostPerMillion: 20,
+                    latencyClass: "high",
+                    qualityTier: 100,
+                    reliabilityTier: 100,
+                }),
+            ),
+        );
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({
+                    providerId: "local",
+                    modelId: "m",
+                    locality: "LOCAL",
+                    inputCostPerMillion: 5,
+                    outputCostPerMillion: 5,
+                }),
+            ),
+        );
+        const router = new ModelRouter(registry);
+        expect(
+            router.select(request(), route({ strategy: "cheapest-eligible" }))
+                .selectedProviderId,
+        ).toBe("cheap");
+        expect(
+            router.select(request(), route({ strategy: "fastest-eligible" }))
+                .selectedProviderId,
+        ).toBe("fast");
+        expect(
+            router.select(
+                request(),
+                route({ strategy: "highest-quality-eligible" }),
+            ).selectedProviderId,
+        ).toBe("quality");
+        expect(
+            router.select(
+                request(),
+                route({ strategy: "local-private-preferred" }),
+            ).selectedProviderId,
+        ).toBe("local");
+        expect(
+            router.select(
+                request(),
+                route({
+                    strategy: "pinned",
+                    pinnedProviderId: "quality",
+                    pinnedModelId: "q",
+                }),
+            ).selectedProviderId,
+        ).toBe("quality");
+        expect(
+            router.select(
+                request(),
+                route({
+                    strategy: "fallback-chain",
+                    preferredProviderIds: ["fast", "cheap"],
+                }),
+            ).selectedProviderId,
+        ).toBe("fast");
+        expect(
+            router.select(
+                request(),
+                route({
+                    strategy: "pinned",
+                    pinnedProviderId: "quality",
+                    pinnedModelId: "q",
+                    deniedProviderIds: ["quality"],
+                }),
+            ).selectedProviderId,
+        ).toBeNull();
+    });
+
     it("bounds retries and performs only policy-eligible fallback", async () => {
         const registry = new ModelProviderRegistry();
         const primary = new SyntheticModelAdapter(
@@ -316,28 +437,145 @@ describe("J1.3 model orchestration runtime", () => {
         registry.register(primary);
         registry.register(fallback);
         const result = await runtime(registry).execute(
-            {
-                operationKey: "fallback",
-                authority,
-                context: await envelope(),
-                request: request(),
+            await input("fallback", {
                 policy: {
                     ...policy,
                     route: route({
+                        strategy: "fallback-chain",
                         preferredProviderIds: ["primary", "fallback"],
                         maxAttempts: 2,
                     }),
                 },
-            },
+            }),
             new AbortController().signal,
         );
         expect(primary.callCount()).toBe(2);
         expect(fallback.callCount()).toBe(1);
         expect(result.result.providerId).toBe("fallback");
         expect(result.fallbackPossible).toBe(true);
+        expect(result.attemptsBound).toBe(4);
     });
 
-    it("propagates cancellation and discards late work", async () => {
+    it("opens a failed primary circuit even when fallback succeeds", async () => {
+        const registry = new ModelProviderRegistry();
+        const primary = new SyntheticModelAdapter(
+            descriptor({ providerId: "primary", modelId: "m" }),
+            { failuresBeforeSuccess: 10, retryableFailure: true },
+        );
+        registry.register(primary);
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({ providerId: "fallback", modelId: "m" }),
+            ),
+        );
+        const health = new J13ProviderHealth();
+        const orchestrator = runtime(registry, () => true, health);
+        await orchestrator.execute(
+            await input("health-fallback", {
+                policy: {
+                    ...policy,
+                    route: route({
+                        strategy: "fallback-chain",
+                        preferredProviderIds: ["primary", "fallback"],
+                        maxAttempts: 2,
+                    }),
+                },
+            }),
+            new AbortController().signal,
+        );
+        expect(health.snapshot("primary", 1_000).state).toBe("circuit-open");
+        expect(health.snapshot("fallback", 1_000).state).toBe("healthy");
+    });
+
+    it("rejects retry/fallback plans that exceed total logical operation budgets", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({ providerId: "a", modelId: "m" }),
+            ),
+        );
+        registry.register(
+            new SyntheticModelAdapter(
+                descriptor({ providerId: "b", modelId: "m" }),
+            ),
+        );
+        await expect(
+            runtime(registry).execute(
+                await input("attempt-limit", {
+                    policy: { ...policy, operationAttemptLimit: 3 },
+                }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_POLICY_DENIED" });
+        await expect(
+            runtime(registry).execute(
+                await input("token-limit", {
+                    policy: { ...policy, operationMaxTokens: 700 },
+                }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_BUDGET_EXCEEDED" });
+        await expect(
+            runtime(registry).execute(
+                await input("cost-limit", {
+                    policy: { ...policy, operationMaxCost: 0.001 },
+                }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_BUDGET_EXCEEDED" });
+    });
+
+    it("represents unknown estimated and actual provider cost explicitly", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(
+            new ReferenceModelAdapter(
+                descriptor({
+                    providerId: "unknown-cost",
+                    modelId: "m",
+                    pricingKnown: false,
+                }),
+                {
+                    invoke: async (model, modelInput) => ({
+                        version: 1,
+                        requestId: modelInput.requestId,
+                        providerId: model.providerId,
+                        modelId: model.modelId,
+                        text: "unknown-cost-result",
+                        structured: null,
+                        usage: {
+                            inputTokens: modelInput.inputTokenEstimate,
+                            outputTokens: 1,
+                            totalTokens: modelInput.inputTokenEstimate + 1,
+                            cost: null,
+                        },
+                        finishReason: "stop",
+                        verified: false,
+                    }),
+                },
+            ),
+        );
+        const router = new ModelRouter(registry);
+        expect(router.select(request(), route()).selectedProviderId).toBeNull();
+        expect(
+            router.select(request(), route({ allowUnknownCost: true }))
+                .selectedProviderId,
+        ).toBe("unknown-cost");
+        const result = await runtime(registry, () => true, new J13ProviderHealth(), undefined, router).execute(
+            await input("unknown-cost", {
+                policy: {
+                    ...policy,
+                    route: route({ allowUnknownCost: true }),
+                    operationAllowUnknownCost: true,
+                },
+            }),
+            new AbortController().signal,
+        );
+        expect(result.selectedEstimatedMaximumCost).toBeNull();
+        expect(result.actualCost).toBeNull();
+        expect(result.costStatus).toBe("unknown");
+    });
+
+    it("propagates owner cancellation and reports discarded late work honestly", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(
             new SyntheticModelAdapter(descriptor(), {
@@ -347,39 +585,49 @@ describe("J1.3 model orchestration runtime", () => {
         );
         const controller = new AbortController();
         const pending = runtime(registry).execute(
-            {
-                operationKey: "cancel",
-                authority,
-                context: await envelope(),
-                request: request(),
-                policy,
-            },
+            await input("cancel"),
             controller.signal,
         );
         controller.abort();
         await expect(pending).rejects.toMatchObject({
             code: "MODEL_CANCELLED",
+            cancellationState: "requested-result-discarded",
         });
     });
 
-    it("deduplicates the same logical operation key", async () => {
+    it("distinguishes the orchestration timeout from owner cancellation", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(
+            new SyntheticModelAdapter(descriptor(), { delayMs: 100 }),
+        );
+        await expect(
+            runtime(registry).execute(
+                await input("timeout", {
+                    policy: { ...policy, operationTimeoutMs: 5 },
+                }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_TIMEOUT" });
+    });
+
+    it("deduplicates an exact logical operation and rejects a changed digest", async () => {
         const registry = new ModelProviderRegistry();
         const adapter = new SyntheticModelAdapter(descriptor());
         registry.register(adapter);
         const orchestrator = runtime(registry);
-        const input = {
-            operationKey: "same-operation",
-            authority,
-            context: await envelope(),
-            request: request(),
-            policy,
-        };
+        const sameInput = await input("same-operation");
         const [a, b] = await Promise.all([
-            orchestrator.execute(input, new AbortController().signal),
-            orchestrator.execute(input, new AbortController().signal),
+            orchestrator.execute(sameInput, new AbortController().signal),
+            orchestrator.execute(sameInput, new AbortController().signal),
         ]);
         expect(a.operationId).toBe(b.operationId);
         expect(adapter.callCount()).toBe(1);
+        await expect(
+            orchestrator.execute(
+                { ...sameInput, operationDigest: "e".repeat(64) },
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_OPERATION_CONFLICT" });
     });
 
     it("opens and recovers provider circuit deterministically", () => {
@@ -402,7 +650,7 @@ describe("J1.3 model orchestration runtime", () => {
             new ReferenceModelAdapter(
                 descriptor({ providerId: "reference", modelId: "ref" }),
                 {
-                    invoke: async (model, input, signal) => {
+                    invoke: async (model, modelInput, signal) => {
                         if (signal.aborted)
                             throw new ModelProviderFailure(
                                 "MODEL_CANCELLED",
@@ -410,15 +658,15 @@ describe("J1.3 model orchestration runtime", () => {
                             );
                         return {
                             version: 1,
-                            requestId: input.requestId,
+                            requestId: modelInput.requestId,
                             providerId: model.providerId,
                             modelId: model.modelId,
                             text: "reference result",
                             structured: null,
                             usage: {
-                                inputTokens: input.inputTokenEstimate,
+                                inputTokens: modelInput.inputTokenEstimate,
                                 outputTokens: 2,
-                                totalTokens: input.inputTokenEstimate + 2,
+                                totalTokens: modelInput.inputTokenEstimate + 2,
                                 cost: 0,
                             },
                             finishReason: "stop",
@@ -429,32 +677,46 @@ describe("J1.3 model orchestration runtime", () => {
             ),
         );
         const result = await runtime(registry).execute(
-            {
-                operationKey: "reference-adapter",
-                authority,
-                context: await envelope(),
-                request: request(),
-                policy,
-            },
+            await input("reference-adapter"),
             new AbortController().signal,
         );
         expect(result.result.providerId).toBe("reference");
     });
 
-    it("fails closed for malformed runtime policy", async () => {
+    it("fails closed for malformed runtime policy and malformed operation digest", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
         await expect(
             runtime(registry).execute(
-                {
-                    operationKey: "bad-policy",
-                    authority,
-                    context: await envelope(),
-                    request: request(),
+                await input("bad-policy", {
                     policy: { ...policy, operationTimeoutMs: -1 },
-                },
+                }),
                 new AbortController().signal,
             ),
         ).rejects.toMatchObject({ code: "MODEL_POLICY_DENIED" });
+        await expect(
+            runtime(registry).execute(
+                await input("bad-digest", { operationDigest: "plaintext" }),
+                new AbortController().signal,
+            ),
+        ).rejects.toMatchObject({ code: "MODEL_OPERATION_CONFLICT" });
+    });
+
+    it("keeps audit metadata free of prompt, context payload and credential references", async () => {
+        const registry = new ModelProviderRegistry();
+        registry.register(new SyntheticModelAdapter(descriptor()));
+        const records: J13AuditRecord[] = [];
+        const orchestrator = runtime(registry, () => true, new J13ProviderHealth(), {
+            append: (record) => records.push(record),
+        });
+        await orchestrator.execute(
+            await input("audit-safe"),
+            new AbortController().signal,
+        );
+        const serialized = JSON.stringify(records);
+        expect(serialized).not.toContain("answer using authorized context");
+        expect(serialized).not.toContain("context content");
+        expect(serialized).not.toContain("vault://models/provider-a");
+        expect(records.length).toBeGreaterThan(1);
     });
 });

@@ -14,6 +14,7 @@ try {
         contracts,
         security,
         modelsIndex,
+        modelContracts,
     ] = await Promise.all([
         json("tests/acceptance/j1.3-gates.json"),
         read("packages/core/src/model-orchestration.ts"),
@@ -22,6 +23,7 @@ try {
         read("docs/contracts/j1-model-orchestration-contracts.md"),
         read("docs/security/j1-model-orchestration-security.md"),
         read("packages/models/src/index.ts"),
+        read("packages/models/src/j06-contracts.ts"),
     ]);
     const checks = {
         A:
@@ -36,40 +38,51 @@ try {
             runtime.includes("ModelRouter"),
         C:
             roadmap.includes("provider/model registry") &&
-            runtime.includes("validRuntimePolicy"),
+            runtime.includes("validRuntimePolicy") &&
+            modelContracts.includes("ModelRoutingStrategySchema"),
         D:
             architecture.includes("eligible model") &&
             architecture.includes("capability") &&
             runtime.includes("requiredCapabilities"),
         E:
             architecture.includes("deterministic") &&
-            runtime.includes("router.select"),
+            runtime.includes("router.select") &&
+            modelContracts.includes("cheapest-eligible") &&
+            modelContracts.includes("pinned"),
         F:
+            runtime.includes("CLASS_RANK") &&
             runtime.includes("D5") &&
             runtime.includes("external-ai") &&
             security.includes("Privacy and disclosure"),
         G:
             runtime.includes("MODEL_BUDGET_EXCEEDED") &&
-            ["context", "output", "token", "cost"].every((term) =>
-                architecture.includes(term),
-            ),
+            runtime.includes("operationAttemptLimit") &&
+            runtime.includes("operationMaxTokens") &&
+            runtime.includes("operationMaxCost") &&
+            contracts.includes("unknown"),
         H:
             runtime.includes("operationTimeoutMs") &&
-            runtime.includes("MODEL_TIMEOUT"),
+            runtime.includes("MODEL_TIMEOUT") &&
+            security.includes("Operation deadline"),
         I:
             contracts.includes("attemptsBound") &&
+            runtime.includes("operationAttemptLimit") &&
             architecture.includes("Retry count is bounded"),
         J:
             architecture.includes("fallback") &&
             security.includes(
                 "Provider locality cannot be broadened by fallback",
-            ),
+            ) &&
+            security.includes("Before each new attempt"),
         K:
             runtime.includes("circuit-open") &&
-            runtime.includes("J13ProviderHealth"),
+            runtime.includes("J13ProviderHealth") &&
+            runtime.includes("afterAttempt"),
         L:
             runtime.includes("MODEL_CANCELLED") &&
-            runtime.includes("authorityVerifier.verify"),
+            runtime.includes("authorityVerifier.verify") &&
+            runtime.includes("beforeAttempt") &&
+            security.includes("FREEZE/SHUTDOWN"),
         M:
             runtime.includes("normalizeFailure") &&
             runtime.includes("MODEL_PROVIDER_INVALID_RESPONSE"),
@@ -78,12 +91,14 @@ try {
             architecture.includes("ReferenceModelAdapter"),
         O:
             runtime.includes("operationKey") &&
+            runtime.includes("operationDigest") &&
             runtime.includes("correlationId") &&
             runtime.includes("operations"),
         P:
             runtime.includes("J13AuditRecord") &&
             security.includes("prompt bodies") &&
-            security.includes("credentials"),
+            security.includes("credentials") &&
+            security.includes("NEVER_STORE"),
         Q:
             roadmap.includes("J1.1") &&
             roadmap.includes("J1.2") &&
@@ -92,7 +107,7 @@ try {
         R: process.env.J1_3_CI_SEQUENCE === "complete",
         S:
             process.env.J1_3_CI_SEQUENCE === "complete" &&
-            runtime.length > 10_000,
+            runtime.length > 15_000,
         T:
             roadmap.includes("J1.4 response generation") &&
             roadmap.includes("not part of J1.3"),
