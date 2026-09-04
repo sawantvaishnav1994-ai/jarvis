@@ -39,11 +39,7 @@ jobs:
       - name: J1.1 runtime formatting
         run: npx prettier --check tests/acceptance/j1.1-gates.json tests/unit/j1-conversation-session.test.ts tests/integration/j1-conversation-session-postgres.test.ts packages/core/src/conversation-session.ts packages/storage/src/conversation-session-store.ts scripts/j1-conversation-session-go.mjs
       - name: J1.2 context formatting
-        shell: bash
-        run: |
-          npx prettier --write tests/unit/j1-context-assembly.test.ts packages/core/src/context-assembly.ts
-          git diff -- tests/unit/j1-context-assembly.test.ts packages/core/src/context-assembly.ts
-          test -z "$(git status --short -- tests/unit/j1-context-assembly.test.ts packages/core/src/context-assembly.ts)"
+        run: npx prettier --check tests/acceptance/j1.2-gates.json tests/unit/j1-context-assembly.test.ts packages/core/src/context-assembly.ts scripts/j1-context-assembly-go.mjs
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: J1.0 specification integrity
