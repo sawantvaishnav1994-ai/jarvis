@@ -68,7 +68,13 @@ const transitions: Record<TurnState, readonly TurnState[]> = {
     streaming: ["completed", "awaiting_approval", "failed", "cancelled"],
     awaiting_approval: ["executing_tool", "resuming", "failed", "cancelled"],
     executing_tool: ["resuming", "failed", "cancelled"],
-    resuming: ["awaiting_model", "streaming", "completed", "failed", "cancelled"],
+    resuming: [
+        "awaiting_model",
+        "streaming",
+        "completed",
+        "failed",
+        "cancelled",
+    ],
     completed: [],
     failed: [],
     cancelled: [],
@@ -81,11 +87,25 @@ export function assertTurnTransition(from: TurnState, to: TurnState) {
 
 export interface ConversationSessionRepository {
     createSession(session: ConversationSession): Promise<ConversationSession>;
-    getSession(ownerId: string, sessionId: string): Promise<ConversationSession | null>;
-    updateSessionState(ownerId: string, sessionId: string, expectedVersion: number, state: z.infer<typeof ConversationSessionStateSchema>): Promise<ConversationSession>;
+    getSession(
+        ownerId: string,
+        sessionId: string,
+    ): Promise<ConversationSession | null>;
+    updateSessionState(
+        ownerId: string,
+        sessionId: string,
+        expectedVersion: number,
+        state: z.infer<typeof ConversationSessionStateSchema>,
+    ): Promise<ConversationSession>;
     createTurn(turn: ConversationTurn): Promise<ConversationTurn>;
     getTurn(ownerId: string, turnId: string): Promise<ConversationTurn | null>;
-    transitionTurn(ownerId: string, turnId: string, expectedVersion: number, state: TurnState, reasonCode: string | null): Promise<ConversationTurn>;
+    transitionTurn(
+        ownerId: string,
+        turnId: string,
+        expectedVersion: number,
+        state: TurnState,
+        reasonCode: string | null,
+    ): Promise<ConversationTurn>;
 }
 
 export type ConversationAuthorityVerifier = (
@@ -126,7 +146,10 @@ export class ConversationSessionEngine {
         correlationId: string;
     }) {
         const authority = await this.requireAuthority(input.authority);
-        const session = await this.repository.getSession(authority.ownerId, input.sessionId);
+        const session = await this.repository.getSession(
+            authority.ownerId,
+            input.sessionId,
+        );
         if (
             !session ||
             session.state !== "ACTIVE" ||
@@ -152,22 +175,50 @@ export class ConversationSessionEngine {
         );
     }
 
-    async transition(authority: ConversationAuthority, turnId: string, to: TurnState) {
+    async transition(
+        authority: ConversationAuthority,
+        turnId: string,
+        to: TurnState,
+    ) {
         const a = await this.requireAuthority(authority);
         const turn = await this.repository.getTurn(a.ownerId, turnId);
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
-        const session = await this.repository.getSession(a.ownerId, turn.sessionId);
-        if (!session || session.state !== "ACTIVE" || session.securityEpoch !== a.securityEpoch)
+        const session = await this.repository.getSession(
+            a.ownerId,
+            turn.sessionId,
+        );
+        if (
+            !session ||
+            session.state !== "ACTIVE" ||
+            session.securityEpoch !== a.securityEpoch
+        )
             throw new BoundaryError("CONVERSATION_SESSION_STALE");
         assertTurnTransition(turn.state, to);
-        return this.repository.transitionTurn(a.ownerId, turn.id, turn.version, to, null);
+        return this.repository.transitionTurn(
+            a.ownerId,
+            turn.id,
+            turn.version,
+            to,
+            null,
+        );
     }
 
-    async cancel(authority: ConversationAuthority, turnId: string, reasonCode = "OWNER_CANCELLED") {
+    async cancel(
+        authority: ConversationAuthority,
+        turnId: string,
+        reasonCode = "OWNER_CANCELLED",
+    ) {
         const a = await this.requireAuthority(authority);
         const turn = await this.repository.getTurn(a.ownerId, turnId);
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
-        if (["completed", "failed", "cancelled"].includes(turn.state)) return turn;
-        return this.repository.transitionTurn(a.ownerId, turn.id, turn.version, "cancelled", reasonCode);
+        if (["completed", "failed", "cancelled"].includes(turn.state))
+            return turn;
+        return this.repository.transitionTurn(
+            a.ownerId,
+            turn.id,
+            turn.version,
+            "cancelled",
+            reasonCode,
+        );
     }
 }
