@@ -58,7 +58,10 @@ describe("J1.2 context assembly", () => {
             ],
             policy,
         );
-        expect(envelope.sources.map((item) => item.sourceId)).toEqual(["a", "b"]);
+        expect(envelope.sources.map((item) => item.sourceId)).toEqual([
+            "a",
+            "b",
+        ]);
         expect(envelope.excluded).toContainEqual({
             sourceId: "c",
             reason: "BUDGET_EXCEEDED",
@@ -99,7 +102,9 @@ describe("J1.2 context assembly", () => {
 
     it("rejects stale authority before assembling", async () => {
         const assembler = new ContextAssembler({ verify: () => false });
-        await expect(assembler.assemble(authority, [source()], policy)).rejects.toEqual(
+        await expect(
+            assembler.assemble(authority, [source()], policy),
+        ).rejects.toEqual(
             new ContextAssemblyError("CONTEXT_AUTHORITY_INVALID"),
         );
     });
