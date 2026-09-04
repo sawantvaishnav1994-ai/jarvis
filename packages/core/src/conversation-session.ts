@@ -14,7 +14,8 @@ export const conversationOperatingModes = [
     "safe",
     "emergency",
 ] as const;
-export type ConversationOperatingMode = (typeof conversationOperatingModes)[number];
+export type ConversationOperatingMode =
+    (typeof conversationOperatingModes)[number];
 
 export const conversationSessionStates = [
     "ACTIVE",
@@ -22,7 +23,8 @@ export const conversationSessionStates = [
     "CLOSED",
     "CANCELLED",
 ] as const;
-export type ConversationSessionState = (typeof conversationSessionStates)[number];
+export type ConversationSessionState =
+    (typeof conversationSessionStates)[number];
 
 export const turnStates = [
     "accepted",
@@ -111,7 +113,10 @@ export function parseConversationAuthority(value: unknown): ConversationAuthorit
         deviceId: requireId(input.deviceId),
         identitySessionId: requireId(input.identitySessionId),
         securityEpoch: requireNonnegativeInteger(input.securityEpoch),
-        operatingMode: requireMember(conversationOperatingModes, input.operatingMode),
+        operatingMode: requireMember(
+            conversationOperatingModes,
+            input.operatingMode,
+        ),
     };
 }
 export function parseConversationSession(value: unknown): ConversationSession {
@@ -235,7 +240,10 @@ export class ConversationSessionEngine {
         const inputMessageId = requireNullableUuid(input.inputMessageId ?? null);
         const idempotencyKey = requireId(input.idempotencyKey);
         const correlationId = requireId(input.correlationId);
-        const session = await this.repository.getSession(authority.ownerId, sessionId);
+        const session = await this.repository.getSession(
+            authority.ownerId,
+            sessionId,
+        );
         if (
             !session ||
             session.state !== "ACTIVE" ||
@@ -269,7 +277,10 @@ export class ConversationSessionEngine {
         const validated = await this.requireAuthority(authority);
         const validatedTurnId = requireUuid(turnId);
         const validatedState = requireMember(turnStates, to);
-        const turn = await this.repository.getTurn(validated.ownerId, validatedTurnId);
+        const turn = await this.repository.getTurn(
+            validated.ownerId,
+            validatedTurnId,
+        );
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
         const session = await this.repository.getSession(
             validated.ownerId,
@@ -299,9 +310,13 @@ export class ConversationSessionEngine {
         const validated = await this.requireAuthority(authority);
         const validatedTurnId = requireUuid(turnId);
         const validatedReason = requireId(reasonCode);
-        const turn = await this.repository.getTurn(validated.ownerId, validatedTurnId);
+        const turn = await this.repository.getTurn(
+            validated.ownerId,
+            validatedTurnId,
+        );
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
-        if (["completed", "failed", "cancelled"].includes(turn.state)) return turn;
+        if (["completed", "failed", "cancelled"].includes(turn.state))
+            return turn;
         return this.repository.transitionTurn(
             validated.ownerId,
             turn.id,
