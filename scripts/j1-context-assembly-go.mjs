@@ -38,6 +38,7 @@ try {
         G: runtime.includes("D5_GENERIC_CONTEXT_DENIED"),
         H: runtime.includes("DISCLOSURE_DENIED"),
         I:
+            runtime.includes("MALFORMED_SOURCE_DENIED") &&
             runtime.includes("STALE_SOURCE_DENIED") &&
             runtime.includes("DELETED_OR_REVOKED"),
         J:
