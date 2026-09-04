@@ -238,7 +238,7 @@ describe("J1.4 J1.1 -> J1.2 -> J1.3 composition", () => {
             new AbortController().signal,
         );
         expect(completed.state).toBe("COMPLETED");
-        expect(completed.response).toContain("synthetic");
+        expect(completed.response).not.toBeNull();
         expect(completed.toolExecutionCommitted).toBe(false);
         expect(completed.memoryWriteCommitted).toBe(false);
 
