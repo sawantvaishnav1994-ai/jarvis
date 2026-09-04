@@ -1,9 +1,10 @@
-import { randomUUID } from "node:crypto";
-import { z } from "zod";
 import { BoundaryError } from "@jarvis/shared";
 
-const Id = z.string().min(1).max(128);
-export const ConversationOperatingModeSchema = z.enum([
+const idPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export const conversationOperatingModes = [
     "assistant",
     "copilot",
     "autonomous",
@@ -12,14 +13,18 @@ export const ConversationOperatingModeSchema = z.enum([
     "guest",
     "safe",
     "emergency",
-]);
-export const ConversationSessionStateSchema = z.enum([
+] as const;
+export type ConversationOperatingMode = (typeof conversationOperatingModes)[number];
+
+export const conversationSessionStates = [
     "ACTIVE",
     "REVOKED",
     "CLOSED",
     "CANCELLED",
-]);
-export const TurnStateSchema = z.enum([
+] as const;
+export type ConversationSessionState = (typeof conversationSessionStates)[number];
+
+export const turnStates = [
     "accepted",
     "assembling_context",
     "awaiting_model",
@@ -30,36 +35,109 @@ export const TurnStateSchema = z.enum([
     "completed",
     "failed",
     "cancelled",
-]);
-export type TurnState = z.infer<typeof TurnStateSchema>;
-export const ConversationAuthoritySchema = z.strictObject({
-    ownerId: Id,
-    actorId: Id,
-    deviceId: Id,
-    identitySessionId: Id,
-    securityEpoch: z.number().int().nonnegative(),
-    operatingMode: ConversationOperatingModeSchema,
-});
-export type ConversationAuthority = z.infer<typeof ConversationAuthoritySchema>;
-export const ConversationSessionSchema = ConversationAuthoritySchema.extend({
-    id: z.uuid(),
-    state: ConversationSessionStateSchema,
-    version: z.number().int().positive(),
-});
-export type ConversationSession = z.infer<typeof ConversationSessionSchema>;
-export const ConversationTurnSchema = z.strictObject({
-    id: z.uuid(),
-    ownerId: Id,
-    conversationId: z.uuid(),
-    sessionId: z.uuid(),
-    inputMessageId: z.uuid().nullable(),
-    state: TurnStateSchema,
-    idempotencyKey: Id,
-    correlationId: Id,
-    reasonCode: Id.nullable(),
-    version: z.number().int().positive(),
-});
-export type ConversationTurn = z.infer<typeof ConversationTurnSchema>;
+] as const;
+export type TurnState = (typeof turnStates)[number];
+
+export type ConversationAuthority = {
+    ownerId: string;
+    actorId: string;
+    deviceId: string;
+    identitySessionId: string;
+    securityEpoch: number;
+    operatingMode: ConversationOperatingMode;
+};
+export type ConversationSession = ConversationAuthority & {
+    id: string;
+    state: ConversationSessionState;
+    version: number;
+};
+export type ConversationTurn = {
+    id: string;
+    ownerId: string;
+    conversationId: string;
+    sessionId: string;
+    inputMessageId: string | null;
+    state: TurnState;
+    idempotencyKey: string;
+    correlationId: string;
+    reasonCode: string | null;
+    version: number;
+};
+
+function failInput(): never {
+    throw new BoundaryError("CONVERSATION_INPUT_INVALID");
+}
+function requireId(value: unknown): string {
+    if (typeof value !== "string" || !idPattern.test(value)) failInput();
+    return value;
+}
+function requireUuid(value: unknown): string {
+    if (typeof value !== "string" || !uuidPattern.test(value)) failInput();
+    return value;
+}
+function requirePositiveInteger(value: unknown): number {
+    if (typeof value !== "number" || !Number.isInteger(value) || value <= 0)
+        failInput();
+    return value;
+}
+function requireNonnegativeInteger(value: unknown): number {
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 0)
+        failInput();
+    return value;
+}
+function requireMember<const T extends readonly string[]>(
+    values: T,
+    value: unknown,
+): T[number] {
+    if (typeof value !== "string" || !values.includes(value)) failInput();
+    return value as T[number];
+}
+function requireNullableId(value: unknown): string | null {
+    return value === null ? null : requireId(value);
+}
+function requireNullableUuid(value: unknown): string | null {
+    return value === null ? null : requireUuid(value);
+}
+function requireObject(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) failInput();
+    return value as Record<string, unknown>;
+}
+
+export function parseConversationAuthority(value: unknown): ConversationAuthority {
+    const input = requireObject(value);
+    return {
+        ownerId: requireId(input.ownerId),
+        actorId: requireId(input.actorId),
+        deviceId: requireId(input.deviceId),
+        identitySessionId: requireId(input.identitySessionId),
+        securityEpoch: requireNonnegativeInteger(input.securityEpoch),
+        operatingMode: requireMember(conversationOperatingModes, input.operatingMode),
+    };
+}
+export function parseConversationSession(value: unknown): ConversationSession {
+    const input = requireObject(value);
+    return {
+        ...parseConversationAuthority(input),
+        id: requireUuid(input.id),
+        state: requireMember(conversationSessionStates, input.state),
+        version: requirePositiveInteger(input.version),
+    };
+}
+export function parseConversationTurn(value: unknown): ConversationTurn {
+    const input = requireObject(value);
+    return {
+        id: requireUuid(input.id),
+        ownerId: requireId(input.ownerId),
+        conversationId: requireUuid(input.conversationId),
+        sessionId: requireUuid(input.sessionId),
+        inputMessageId: requireNullableUuid(input.inputMessageId),
+        state: requireMember(turnStates, input.state),
+        idempotencyKey: requireId(input.idempotencyKey),
+        correlationId: requireId(input.correlationId),
+        reasonCode: requireNullableId(input.reasonCode),
+        version: requirePositiveInteger(input.version),
+    };
+}
 
 const transitions: Record<TurnState, readonly TurnState[]> = {
     accepted: ["assembling_context", "failed", "cancelled"],
@@ -95,7 +173,7 @@ export interface ConversationSessionRepository {
         ownerId: string,
         sessionId: string,
         expectedVersion: number,
-        state: z.infer<typeof ConversationSessionStateSchema>,
+        state: ConversationSessionState,
     ): Promise<ConversationSession>;
     createTurn(turn: ConversationTurn): Promise<ConversationTurn>;
     getTurn(ownerId: string, turnId: string): Promise<ConversationTurn | null>;
@@ -111,26 +189,32 @@ export interface ConversationSessionRepository {
 export type ConversationAuthorityVerifier = (
     authority: ConversationAuthority,
 ) => Promise<boolean>;
+export type ConversationIdFactory = () => string;
 
 export class ConversationSessionEngine {
     constructor(
         private readonly repository: ConversationSessionRepository,
         private readonly authorityValid: ConversationAuthorityVerifier,
+        private readonly createId: ConversationIdFactory,
     ) {}
 
     private async requireAuthority(authority: ConversationAuthority) {
-        const a = ConversationAuthoritySchema.parse(authority);
-        if (!(await this.authorityValid(a)))
+        const validated = parseConversationAuthority(authority);
+        if (!(await this.authorityValid(validated)))
             throw new BoundaryError("CONVERSATION_AUTHORITY_INVALID");
-        return a;
+        return validated;
+    }
+
+    private nextId() {
+        return requireUuid(this.createId());
     }
 
     async openSession(authority: ConversationAuthority) {
-        const a = await this.requireAuthority(authority);
+        const validated = await this.requireAuthority(authority);
         return this.repository.createSession(
-            ConversationSessionSchema.parse({
-                ...a,
-                id: randomUUID(),
+            parseConversationSession({
+                ...validated,
+                id: this.nextId(),
                 state: "ACTIVE",
                 version: 1,
             }),
@@ -146,10 +230,12 @@ export class ConversationSessionEngine {
         correlationId: string;
     }) {
         const authority = await this.requireAuthority(input.authority);
-        const session = await this.repository.getSession(
-            authority.ownerId,
-            input.sessionId,
-        );
+        const sessionId = requireUuid(input.sessionId);
+        const conversationId = requireUuid(input.conversationId);
+        const inputMessageId = requireNullableUuid(input.inputMessageId ?? null);
+        const idempotencyKey = requireId(input.idempotencyKey);
+        const correlationId = requireId(input.correlationId);
+        const session = await this.repository.getSession(authority.ownerId, sessionId);
         if (
             !session ||
             session.state !== "ACTIVE" ||
@@ -160,15 +246,15 @@ export class ConversationSessionEngine {
         )
             throw new BoundaryError("CONVERSATION_SESSION_BINDING_INVALID");
         return this.repository.createTurn(
-            ConversationTurnSchema.parse({
-                id: randomUUID(),
+            parseConversationTurn({
+                id: this.nextId(),
                 ownerId: authority.ownerId,
-                conversationId: input.conversationId,
-                sessionId: input.sessionId,
-                inputMessageId: input.inputMessageId ?? null,
+                conversationId,
+                sessionId,
+                inputMessageId,
                 state: "accepted",
-                idempotencyKey: input.idempotencyKey,
-                correlationId: input.correlationId,
+                idempotencyKey,
+                correlationId,
                 reasonCode: null,
                 version: 1,
             }),
@@ -180,25 +266,27 @@ export class ConversationSessionEngine {
         turnId: string,
         to: TurnState,
     ) {
-        const a = await this.requireAuthority(authority);
-        const turn = await this.repository.getTurn(a.ownerId, turnId);
+        const validated = await this.requireAuthority(authority);
+        const validatedTurnId = requireUuid(turnId);
+        const validatedState = requireMember(turnStates, to);
+        const turn = await this.repository.getTurn(validated.ownerId, validatedTurnId);
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
         const session = await this.repository.getSession(
-            a.ownerId,
+            validated.ownerId,
             turn.sessionId,
         );
         if (
             !session ||
             session.state !== "ACTIVE" ||
-            session.securityEpoch !== a.securityEpoch
+            session.securityEpoch !== validated.securityEpoch
         )
             throw new BoundaryError("CONVERSATION_SESSION_STALE");
-        assertTurnTransition(turn.state, to);
+        assertTurnTransition(turn.state, validatedState);
         return this.repository.transitionTurn(
-            a.ownerId,
+            validated.ownerId,
             turn.id,
             turn.version,
-            to,
+            validatedState,
             null,
         );
     }
@@ -208,17 +296,18 @@ export class ConversationSessionEngine {
         turnId: string,
         reasonCode = "OWNER_CANCELLED",
     ) {
-        const a = await this.requireAuthority(authority);
-        const turn = await this.repository.getTurn(a.ownerId, turnId);
+        const validated = await this.requireAuthority(authority);
+        const validatedTurnId = requireUuid(turnId);
+        const validatedReason = requireId(reasonCode);
+        const turn = await this.repository.getTurn(validated.ownerId, validatedTurnId);
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
-        if (["completed", "failed", "cancelled"].includes(turn.state))
-            return turn;
+        if (["completed", "failed", "cancelled"].includes(turn.state)) return turn;
         return this.repository.transitionTurn(
-            a.ownerId,
+            validated.ownerId,
             turn.id,
             turn.version,
             "cancelled",
-            reasonCode,
+            validatedReason,
         );
     }
 }
