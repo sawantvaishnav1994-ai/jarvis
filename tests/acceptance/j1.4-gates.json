@@ -6,15 +6,33 @@
         { "id": "A", "name": "Exact frozen J1.3 baseline" },
         { "id": "B", "name": "Explicit machine-testable turn state machine" },
         { "id": "C", "name": "J1.1 conversation session binding preserved" },
-        { "id": "D", "name": "Current authority rechecked before protected continuations" },
+        {
+            "id": "D",
+            "name": "Current authority rechecked before protected continuations"
+        },
         { "id": "E", "name": "J1.2 ContextEnvelope consumed without bypass" },
-        { "id": "F", "name": "J1.3 model orchestration used as sole model port" },
+        {
+            "id": "F",
+            "name": "J1.3 model orchestration used as sole model port"
+        },
         { "id": "G", "name": "Model output remains content only" },
-        { "id": "H", "name": "Failure cancellation timeout and revocation terminal safety" },
+        {
+            "id": "H",
+            "name": "Failure cancellation timeout and revocation terminal safety"
+        },
         { "id": "I", "name": "FREEZE SAFE MODE and SHUTDOWN fail closed" },
-        { "id": "J", "name": "Exact owner project conversation session turn binding" },
-        { "id": "K", "name": "Digest-bound idempotency and replay conflict handling" },
-        { "id": "L", "name": "Partial response contract cannot commit protected actions" },
+        {
+            "id": "J",
+            "name": "Exact owner project conversation session turn binding"
+        },
+        {
+            "id": "K",
+            "name": "Digest-bound idempotency and replay conflict handling"
+        },
+        {
+            "id": "L",
+            "name": "Partial response contract cannot commit protected actions"
+        },
         { "id": "M", "name": "J1.5 persistence boundary and no migration" },
         { "id": "N", "name": "Privacy-safe audit and event correlation" },
         { "id": "O", "name": "Dedicated unit integration and security tests" },
@@ -22,6 +40,9 @@
         { "id": "Q", "name": "No memory promotion or J1.6 behavior" },
         { "id": "R", "name": "Foundation and J1.0-J1.3 regression preserved" },
         { "id": "S", "name": "Full real-stack cloud qualification" },
-        { "id": "T", "name": "J1.5-J1.12 not started and no production credentials" }
+        {
+            "id": "T",
+            "name": "J1.5-J1.12 not started and no production credentials"
+        }
     ]
 }
