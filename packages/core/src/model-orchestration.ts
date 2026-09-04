@@ -34,14 +34,10 @@ export type J13FailureCode =
     | "MODEL_OPERATION_CONFLICT";
 
 export type ModelHealthState =
-    | "healthy"
-    | "degraded"
-    | "unavailable"
-    | "circuit-open";
+    "healthy" | "degraded" | "unavailable" | "circuit-open";
 
 export type J13CancellationState =
-    | "not-requested"
-    | "requested-result-discarded";
+    "not-requested" | "requested-result-discarded";
 
 export interface J13AuthorityVerifier {
     verify(authority: ContextAssemblyAuthority): boolean | Promise<boolean>;
@@ -254,10 +250,7 @@ function noEligibleFailure(decision: ModelRouteDecision): J13FailureCode {
         return "MODEL_BUDGET_EXCEEDED";
     if (reasons.has("CAPABILITY_MISMATCH"))
         return "MODEL_CAPABILITY_UNAVAILABLE";
-    if (
-        reasons.has("UNAVAILABLE") ||
-        reasons.has("DEGRADED_NOT_ALLOWED")
-    )
+    if (reasons.has("UNAVAILABLE") || reasons.has("DEGRADED_NOT_ALLOWED"))
         return "MODEL_PROVIDER_UNAVAILABLE";
     return "MODEL_NO_ELIGIBLE_PROVIDER";
 }
@@ -417,7 +410,10 @@ export class J13ModelOrchestrator {
         input: J13ExecutionInput,
         signal: AbortSignal,
     ): Promise<J13ExecutionResult> {
-        if (!input.operationKey || !OPERATION_DIGEST.test(input.operationDigest))
+        if (
+            !input.operationKey ||
+            !OPERATION_DIGEST.test(input.operationDigest)
+        )
             return Promise.reject(
                 new J13ModelRuntimeError("MODEL_OPERATION_CONFLICT"),
             );
@@ -513,8 +509,7 @@ export class J13ModelOrchestrator {
         const reservedCostBudget = hasUnknownCost
             ? null
             : eligible.reduce(
-                  (total, candidate) =>
-                      total + (candidate.estimatedCost ?? 0),
+                  (total, candidate) => total + (candidate.estimatedCost ?? 0),
                   0,
               ) * route.maxAttempts;
         if (attemptsBound > input.policy.operationAttemptLimit)

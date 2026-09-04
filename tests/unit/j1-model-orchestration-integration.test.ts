@@ -291,7 +291,9 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
             operatingMode: "assistant" as const,
             projectId: "jarvis",
         };
-        const envelope = await new ContextAssembler({ verify: () => true }).assemble(
+        const envelope = await new ContextAssembler({
+            verify: () => true,
+        }).assemble(
             contextAuthority,
             [
                 {

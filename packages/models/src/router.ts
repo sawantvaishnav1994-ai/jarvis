@@ -99,8 +99,7 @@ function localityAllowed(
     provider: ProcessingTarget,
 ): boolean {
     if (requested === "LOCAL") return provider === "LOCAL";
-    if (requested === "PRIVATE_REMOTE")
-        return provider !== "APPROVED_EXTERNAL";
+    if (requested === "PRIVATE_REMOTE") return provider !== "APPROVED_EXTERNAL";
     return true;
 }
 
@@ -167,9 +166,7 @@ export class ModelProviderRegistry {
 
     list(): ModelDescriptor[] {
         return [...this.adapters.values()]
-            .map((adapter) =>
-                ModelDescriptorSchema.parse(adapter.descriptor()),
-            )
+            .map((adapter) => ModelDescriptorSchema.parse(adapter.descriptor()))
             .sort(
                 (a, b) =>
                     a.providerId.localeCompare(b.providerId) ||
@@ -246,10 +243,7 @@ export class ModelRouter {
                 if (!privacyAllowed(request, descriptor))
                     rejectionCodes.push("PRIVACY_MISMATCH");
                 if (
-                    !hasCapabilities(
-                        descriptor,
-                        request.requiredCapabilities,
-                    )
+                    !hasCapabilities(descriptor, request.requiredCapabilities)
                 ) {
                     rejectionCodes.push("CAPABILITY_MISMATCH");
                 }
@@ -259,10 +253,7 @@ export class ModelRouter {
                 ) {
                     rejectionCodes.push("UNAVAILABLE");
                 }
-                if (
-                    descriptor.health === "DEGRADED" &&
-                    !policy.allowDegraded
-                ) {
+                if (descriptor.health === "DEGRADED" && !policy.allowDegraded) {
                     rejectionCodes.push("DEGRADED_NOT_ALLOWED");
                 }
                 if (
@@ -280,10 +271,7 @@ export class ModelRouter {
                 ) {
                     rejectionCodes.push("TOKEN_BUDGET");
                 }
-                const estimatedCost = estimateMaximumCost(
-                    request,
-                    descriptor,
-                );
+                const estimatedCost = estimateMaximumCost(request, descriptor);
                 if (estimatedCost === null) {
                     if (!(policy.allowUnknownCost ?? false))
                         rejectionCodes.push("COST_UNKNOWN");
@@ -300,7 +288,9 @@ export class ModelRouter {
             });
 
         const descriptorFor = (candidate: RouteCandidate) =>
-            this.registry.get(candidate.providerId, candidate.modelId)!.descriptor();
+            this.registry
+                .get(candidate.providerId, candidate.modelId)!
+                .descriptor();
         const costOf = (candidate: RouteCandidate) =>
             candidate.estimatedCost ?? Number.POSITIVE_INFINITY;
         const preferredRank = (candidate: RouteCandidate) =>
@@ -425,11 +415,7 @@ export class ModelRouter {
                 candidate.providerId,
                 candidate.modelId,
             )!;
-            for (
-                let attempt = 1;
-                attempt <= policy.maxAttempts;
-                attempt += 1
-            ) {
+            for (let attempt = 1; attempt <= policy.maxAttempts; attempt += 1) {
                 const attemptInfo: ModelAttemptInfo = {
                     providerId: candidate.providerId,
                     modelId: candidate.modelId,
@@ -636,10 +622,7 @@ export class ModelRouter {
             result.providerId !== candidate.providerId ||
             result.modelId !== candidate.modelId
         ) {
-            throw new ModelProviderFailure(
-                "RESULT_IDENTITY_MISMATCH",
-                false,
-            );
+            throw new ModelProviderFailure("RESULT_IDENTITY_MISMATCH", false);
         }
         if (
             result.usage.totalTokens !==
@@ -652,19 +635,13 @@ export class ModelRouter {
                 false,
             );
         }
-        if (
-            result.usage.cost === null &&
-            candidate.estimatedCost !== null
-        ) {
+        if (result.usage.cost === null && candidate.estimatedCost !== null) {
             throw new ModelProviderFailure(
                 "MODEL_PROVIDER_INVALID_RESPONSE",
                 false,
             );
         }
-        if (
-            result.usage.cost !== null &&
-            result.usage.cost > request.maxCost
-        ) {
+        if (result.usage.cost !== null && result.usage.cost > request.maxCost) {
             throw new ModelProviderFailure(
                 "RESULT_COST_BUDGET_EXCEEDED",
                 false,

@@ -183,7 +183,10 @@ describe("J1.3 direct model-orchestration security", () => {
                             ...dataPolicy,
                             classification: "D5",
                             privacy: "local-only",
-                            consent: { ...dataPolicy.consent, externalAI: false },
+                            consent: {
+                                ...dataPolicy.consent,
+                                externalAI: false,
+                            },
                         },
                         context: {
                             packageId: "d5-context",
@@ -253,9 +256,7 @@ describe("J1.3 direct model-orchestration security", () => {
 
         const contextRegistry = new ModelProviderRegistry();
         contextRegistry.register(
-            new SyntheticModelAdapter(
-                descriptor({ contextWindowTokens: 30 }),
-            ),
+            new SyntheticModelAdapter(descriptor({ contextWindowTokens: 30 })),
         );
         await expect(
             orchestrator(contextRegistry).execute(
@@ -282,9 +283,7 @@ describe("J1.3 direct model-orchestration security", () => {
 
         const outageRegistry = new ModelProviderRegistry();
         outageRegistry.register(
-            new SyntheticModelAdapter(
-                descriptor({ health: "UNAVAILABLE" }),
-            ),
+            new SyntheticModelAdapter(descriptor({ health: "UNAVAILABLE" })),
         );
         await expect(
             orchestrator(outageRegistry).execute(
@@ -389,8 +388,8 @@ describe("J1.3 direct model-orchestration security", () => {
             verify: (_contractId, value) =>
                 Boolean(
                     value &&
-                        typeof value === "object" &&
-                        (value as { allowed?: boolean }).allowed === true,
+                    typeof value === "object" &&
+                    (value as { allowed?: boolean }).allowed === true,
                 ),
         });
         await expect(

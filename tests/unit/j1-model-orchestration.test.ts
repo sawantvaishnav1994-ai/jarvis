@@ -252,11 +252,12 @@ describe("J1.3 model orchestration runtime", () => {
     it("enforces the J1.2 classification ceiling at model dispatch", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
-        const lowEnvelope = await new ContextAssembler({ verify: () => true }).assemble(
-            authority,
-            [contextSource()],
-            { ...contextPolicy, classificationCeiling: "D1" },
-        );
+        const lowEnvelope = await new ContextAssembler({
+            verify: () => true,
+        }).assemble(authority, [contextSource()], {
+            ...contextPolicy,
+            classificationCeiling: "D1",
+        });
         await expect(
             runtime(registry).execute(
                 await input("ceiling", { context: lowEnvelope }),
@@ -560,7 +561,13 @@ describe("J1.3 model orchestration runtime", () => {
             router.select(request(), route({ allowUnknownCost: true }))
                 .selectedProviderId,
         ).toBe("unknown-cost");
-        const result = await runtime(registry, () => true, new J13ProviderHealth(), undefined, router).execute(
+        const result = await runtime(
+            registry,
+            () => true,
+            new J13ProviderHealth(),
+            undefined,
+            router,
+        ).execute(
             await input("unknown-cost", {
                 policy: {
                     ...policy,
@@ -706,9 +713,14 @@ describe("J1.3 model orchestration runtime", () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
         const records: J13AuditRecord[] = [];
-        const orchestrator = runtime(registry, () => true, new J13ProviderHealth(), {
-            append: (record) => records.push(record),
-        });
+        const orchestrator = runtime(
+            registry,
+            () => true,
+            new J13ProviderHealth(),
+            {
+                append: (record) => records.push(record),
+            },
+        );
         await orchestrator.execute(
             await input("audit-safe"),
             new AbortController().signal,
