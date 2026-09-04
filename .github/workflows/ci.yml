@@ -41,7 +41,11 @@ jobs:
       - name: J1.2 context formatting
         run: npx prettier --check tests/acceptance/j1.2-gates.json tests/unit/j1-context-assembly.test.ts packages/core/src/context-assembly.ts scripts/j1-context-assembly-go.mjs
       - name: J1.3 model orchestration formatting
-        run: npx prettier --check tests/acceptance/j1.3-gates.json tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts packages/core/src/model-orchestration.ts packages/models/src/reference-adapter.ts scripts/j1-model-orchestration-go.mjs
+        shell: bash
+        run: |
+          npx prettier --write tests/acceptance/j1.3-gates.json tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts packages/core/src/model-orchestration.ts packages/models/src/reference-adapter.ts scripts/j1-model-orchestration-go.mjs
+          git diff -- tests/acceptance/j1.3-gates.json tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts packages/core/src/model-orchestration.ts packages/models/src/reference-adapter.ts scripts/j1-model-orchestration-go.mjs
+          test -z "$(git status --short -- tests/acceptance/j1.3-gates.json tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts packages/core/src/model-orchestration.ts packages/models/src/reference-adapter.ts scripts/j1-model-orchestration-go.mjs)"
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: J1.0 specification integrity
