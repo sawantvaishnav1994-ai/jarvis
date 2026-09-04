@@ -51,9 +51,9 @@ export interface J14AuthorityCheck {
     reason: J14AuthorityReason;
 }
 export interface J14AuthorityVerifier {
-    verify(authority: ContextAssemblyAuthority):
-        | J14AuthorityCheck
-        | Promise<J14AuthorityCheck>;
+    verify(
+        authority: ContextAssemblyAuthority,
+    ): J14AuthorityCheck | Promise<J14AuthorityCheck>;
 }
 export interface J14ContextPort {
     assemble(
@@ -350,12 +350,7 @@ export class J14TurnPipeline {
             error: J14TurnPipelineError,
         ): Promise<J14TurnPipelineResult> => {
             if (transitions[state].includes(error.terminalState)) {
-                await emit(
-                    error.terminalState,
-                    "terminal",
-                    null,
-                    error.code,
-                );
+                await emit(error.terminalState, "terminal", null, error.code);
             } else if (!terminalStates.includes(state as J14TerminalState)) {
                 await emit("FAILED", "terminal", null, error.code);
             }
