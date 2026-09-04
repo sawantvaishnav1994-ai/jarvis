@@ -150,7 +150,11 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
             idempotencyKey: "integration-key",
             correlationId: "integration-correlation",
         });
-        await sessions.transition(conversationAuthority, turn.id, "assembling_context");
+        await sessions.transition(
+            conversationAuthority,
+            turn.id,
+            "assembling_context",
+        );
         const contextAuthority = {
             ownerId: "owner",
             conversationId: uuids[2]!,
@@ -160,7 +164,9 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
             operatingMode: "assistant" as const,
             projectId: "jarvis",
         };
-        const envelope = await new ContextAssembler({ verify: () => authorityValid }).assemble(
+        const envelope = await new ContextAssembler({
+            verify: () => authorityValid,
+        }).assemble(
             contextAuthority,
             [
                 {
@@ -190,7 +196,11 @@ describe("J1.3 integration with J1.1 and J1.2", () => {
                 now: 20,
             },
         );
-        await sessions.transition(conversationAuthority, turn.id, "awaiting_model");
+        await sessions.transition(
+            conversationAuthority,
+            turn.id,
+            "awaiting_model",
+        );
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(modelDescriptor));
         let operation = 0;

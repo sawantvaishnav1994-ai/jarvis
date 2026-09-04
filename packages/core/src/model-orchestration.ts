@@ -31,10 +31,7 @@ export type J13FailureCode =
     | "MODEL_OPERATION_CONFLICT";
 
 export type ModelHealthState =
-    | "healthy"
-    | "degraded"
-    | "unavailable"
-    | "circuit-open";
+    "healthy" | "degraded" | "unavailable" | "circuit-open";
 
 export interface J13AuthorityVerifier {
     verify(authority: ContextAssemblyAuthority): boolean | Promise<boolean>;
@@ -179,11 +176,17 @@ function normalizeFailure(error: unknown): J13FailureCode {
 function assertEnvelopeBinding(input: J13ExecutionInput): void {
     const request = J06ModelRequestSchema.parse(input.request);
     if (input.context.turnId !== input.authority.turnId)
-        throw new J13ModelRuntimeError("MODEL_POLICY_DENIED", "Context turn mismatch");
+        throw new J13ModelRuntimeError(
+            "MODEL_POLICY_DENIED",
+            "Context turn mismatch",
+        );
     if (request.ownerId !== input.authority.ownerId)
         throw new J13ModelRuntimeError("MODEL_POLICY_DENIED", "Owner mismatch");
     if ((request.projectId ?? null) !== (input.authority.projectId ?? null))
-        throw new J13ModelRuntimeError("MODEL_POLICY_DENIED", "Project mismatch");
+        throw new J13ModelRuntimeError(
+            "MODEL_POLICY_DENIED",
+            "Project mismatch",
+        );
     if (request.context.classification === "D5")
         throw new J13ModelRuntimeError(
             "MODEL_POLICY_DENIED",
@@ -269,7 +272,10 @@ export class J13ProviderHealth {
 }
 
 export class J13ModelOrchestrator {
-    private readonly operations = new Map<string, Promise<J13ExecutionResult>>();
+    private readonly operations = new Map<
+        string,
+        Promise<J13ExecutionResult>
+    >();
 
     constructor(
         private readonly router: ModelRouter,
@@ -304,21 +310,24 @@ export class J13ModelOrchestrator {
         assertEnvelopeBinding(input);
         if (!(await this.authorityVerifier.verify(input.authority)))
             throw new J13ModelRuntimeError("MODEL_AUTHORITY_INVALID");
-        if (signal.aborted)
-            throw new J13ModelRuntimeError("MODEL_CANCELLED");
+        if (signal.aborted) throw new J13ModelRuntimeError("MODEL_CANCELLED");
 
         const operationId = this.ids.create();
         if (!operationId)
             throw new J13ModelRuntimeError("MODEL_OPERATION_CONFLICT");
         const correlationId = `${input.authority.turnId}:${operationId}`;
         const now = this.clock.now();
-        const preDecision = this.router.select(input.request, input.policy.route);
+        const preDecision = this.router.select(
+            input.request,
+            input.policy.route,
+        );
         const circuitDenied = preDecision.candidates
             .map((candidate) => candidate.providerId)
             .filter(
                 (providerId, index, all) =>
                     all.indexOf(providerId) === index &&
-                    this.health.snapshot(providerId, now).state === "circuit-open",
+                    this.health.snapshot(providerId, now).state ===
+                        "circuit-open",
             );
         const route: ModelRoutePolicy = {
             ...input.policy.route,
@@ -393,8 +402,9 @@ export class J13ModelOrchestrator {
                 decision: executed.decision,
                 attemptsBound: route.maxAttempts,
                 fallbackPossible:
-                    executed.decision.candidates.filter((candidate) => candidate.eligible)
-                        .length > 1,
+                    executed.decision.candidates.filter(
+                        (candidate) => candidate.eligible,
+                    ).length > 1,
                 acceptedAsContentOnly: true,
             };
             await this.audit?.append({

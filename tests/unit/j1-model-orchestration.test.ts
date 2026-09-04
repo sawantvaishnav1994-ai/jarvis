@@ -71,7 +71,9 @@ const request = (over: Partial<J06ModelRequest> = {}): J06ModelRequest =>
         requestId: "request-1",
         ownerId: "owner",
         projectId: "jarvis",
-        messages: [{ role: "user", content: "answer using authorized context" }],
+        messages: [
+            { role: "user", content: "answer using authorized context" },
+        ],
         requiredCapabilities: ["text", "reasoning"],
         processingTarget: "APPROVED_EXTERNAL",
         dataPolicy,
@@ -218,7 +220,10 @@ describe("J1.3 model orchestration runtime", () => {
                             ...dataPolicy,
                             classification: "D5",
                             privacy: "local-only",
-                            consent: { ...dataPolicy.consent, externalAI: false },
+                            consent: {
+                                ...dataPolicy.consent,
+                                externalAI: false,
+                            },
                         },
                         context: {
                             packageId: "d5",
@@ -239,11 +244,12 @@ describe("J1.3 model orchestration runtime", () => {
     it("preserves external disclosure boundary from J1.2", async () => {
         const registry = new ModelProviderRegistry();
         registry.register(new SyntheticModelAdapter(descriptor()));
-        const privateEnvelope = await new ContextAssembler({ verify: () => true }).assemble(
-            authority,
-            [contextSource()],
-            { ...contextPolicy, disclosureTarget: "private" },
-        );
+        const privateEnvelope = await new ContextAssembler({
+            verify: () => true,
+        }).assemble(authority, [contextSource()], {
+            ...contextPolicy,
+            disclosureTarget: "private",
+        });
         await expect(
             runtime(registry).execute(
                 {
@@ -262,12 +268,20 @@ describe("J1.3 model orchestration runtime", () => {
         const registry = new ModelProviderRegistry();
         registry.register(
             new SyntheticModelAdapter(
-                descriptor({ providerId: "b", modelId: "m", inputCostPerMillion: 2 }),
+                descriptor({
+                    providerId: "b",
+                    modelId: "m",
+                    inputCostPerMillion: 2,
+                }),
             ),
         );
         registry.register(
             new SyntheticModelAdapter(
-                descriptor({ providerId: "a", modelId: "m", inputCostPerMillion: 1 }),
+                descriptor({
+                    providerId: "a",
+                    modelId: "m",
+                    inputCostPerMillion: 1,
+                }),
             ),
         );
         const router = new ModelRouter(registry);
@@ -343,7 +357,9 @@ describe("J1.3 model orchestration runtime", () => {
             controller.signal,
         );
         controller.abort();
-        await expect(pending).rejects.toMatchObject({ code: "MODEL_CANCELLED" });
+        await expect(pending).rejects.toMatchObject({
+            code: "MODEL_CANCELLED",
+        });
     });
 
     it("deduplicates the same logical operation key", async () => {
@@ -388,7 +404,10 @@ describe("J1.3 model orchestration runtime", () => {
                 {
                     invoke: async (model, input, signal) => {
                         if (signal.aborted)
-                            throw new ModelProviderFailure("MODEL_CANCELLED", false);
+                            throw new ModelProviderFailure(
+                                "MODEL_CANCELLED",
+                                false,
+                            );
                         return {
                             version: 1,
                             requestId: input.requestId,

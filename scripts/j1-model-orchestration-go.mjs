@@ -6,16 +6,23 @@ const letters = "ABCDEFGHIJKLMNOPQRST".split("");
 try {
     if (process.env.J1_3_CI_SEQUENCE !== "complete")
         throw new Error("J1_3_REAL_STACK_SEQUENCE_NOT_ATTESTED");
-    const [gates, runtime, roadmap, architecture, contracts, security, modelsIndex] =
-        await Promise.all([
-            json("tests/acceptance/j1.3-gates.json"),
-            read("packages/core/src/model-orchestration.ts"),
-            read("docs/roadmap/j1.3.md"),
-            read("docs/architecture/j1-model-orchestration-architecture.md"),
-            read("docs/contracts/j1-model-orchestration-contracts.md"),
-            read("docs/security/j1-model-orchestration-security.md"),
-            read("packages/models/src/index.ts"),
-        ]);
+    const [
+        gates,
+        runtime,
+        roadmap,
+        architecture,
+        contracts,
+        security,
+        modelsIndex,
+    ] = await Promise.all([
+        json("tests/acceptance/j1.3-gates.json"),
+        read("packages/core/src/model-orchestration.ts"),
+        read("docs/roadmap/j1.3.md"),
+        read("docs/architecture/j1-model-orchestration-architecture.md"),
+        read("docs/contracts/j1-model-orchestration-contracts.md"),
+        read("docs/security/j1-model-orchestration-security.md"),
+        read("packages/models/src/index.ts"),
+    ]);
     const checks = {
         A:
             gates.milestone === "J1.3" &&
@@ -51,7 +58,9 @@ try {
             architecture.includes("Retry count is bounded"),
         J:
             architecture.includes("fallback") &&
-            security.includes("Provider locality cannot be broadened by fallback"),
+            security.includes(
+                "Provider locality cannot be broadened by fallback",
+            ),
         K:
             runtime.includes("circuit-open") &&
             runtime.includes("J13ProviderHealth"),
@@ -78,7 +87,9 @@ try {
             architecture.includes("ConversationSessionEngine") &&
             architecture.includes("ContextAssembler"),
         R: process.env.J1_3_CI_SEQUENCE === "complete",
-        S: process.env.J1_3_CI_SEQUENCE === "complete" && runtime.length > 10_000,
+        S:
+            process.env.J1_3_CI_SEQUENCE === "complete" &&
+            runtime.length > 10_000,
         T:
             roadmap.includes("J1.4 response generation") &&
             roadmap.includes("not part of J1.3"),
