@@ -12,6 +12,5 @@
     {"version":11,"file":"0011_event_system.sql","sha256":"a097d3baebdc91244b9657a3fd8ad1ea2508829a4b2bba6f7b63a921b7bdd268","destructive":false},
     {"version":12,"file":"0012_event_retention.sql","sha256":"8d3fb9e657ff98c346b1e71dc7b8ae64a827ae3a4b9247cac81c6f734785d7d4","destructive":false},
     {"version":13,"file":"0013_audit_observability.sql","sha256":"8b082762a0dd41f5f627077d609be473ed04c60d0d8d0989be76650c61dd4756","destructive":false},
-    {"version":14,"file":"0014_recovery_sovereignty.sql","sha256":"d8e65d1c0d53af2399ab913d4196b2b36485a71c016d609bbcbbd467ae5cb18b","destructive":false},
-    {"version":15,"file":"0015_conversation_session_engine.sql","sha256":"6ba48de71fa3ea88be709ab67fa22066fc7136e31ab9556d75f9c84f25921a9e","destructive":false}
+    {"version":14,"file":"0014_recovery_sovereignty.sql","sha256":"d8e65d1c0d53af2399ab913d4196b2b36485a71c016d609bbcbbd467ae5cb18b","destructive":false}
 ]
