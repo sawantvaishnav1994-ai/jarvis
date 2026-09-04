@@ -1,9 +1,5 @@
 export type ContextDataClass = "D0" | "D1" | "D2" | "D3" | "D4" | "D5";
-export type ContextRetentionMode =
-    | "keep"
-    | "until"
-    | "session"
-    | "never-store";
+export type ContextRetentionMode = "keep" | "until" | "session" | "never-store";
 export type ContextTrust = "trusted" | "untrusted";
 export type ContextOperatingMode =
     | "assistant"
@@ -145,7 +141,10 @@ function retentionAllowed(
     return "ok";
 }
 
-function stableOrder(a: ContextCandidateSource, b: ContextCandidateSource): number {
+function stableOrder(
+    a: ContextCandidateSource,
+    b: ContextCandidateSource,
+): number {
     if (a.priority !== b.priority) return b.priority - a.priority;
     if (a.freshness !== b.freshness) return b.freshness - a.freshness;
     if (a.sourceType !== b.sourceType)
@@ -179,7 +178,8 @@ export class ContextAssembler {
 
         for (const source of [...candidates].sort(stableOrder)) {
             let reason: ContextSourceExclusion["reason"] | null = null;
-            if (source.ownerId !== authority.ownerId) reason = "OWNER_SCOPE_DENIED";
+            if (source.ownerId !== authority.ownerId)
+                reason = "OWNER_SCOPE_DENIED";
             else if (
                 authority.projectId &&
                 source.projectId &&
