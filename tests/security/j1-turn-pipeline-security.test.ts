@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-    J14TurnPipeline,
-    type J14TurnPipelineInput,
-} from "@jarvis/core";
+import { J14TurnPipeline, type J14TurnPipelineInput } from "@jarvis/core";
 import type { J06ModelRequest } from "@jarvis/models";
 
 const authority = {
@@ -186,7 +183,10 @@ describe("J1.4 security boundaries", () => {
             { execute: async () => modelResult() },
             { now: () => 100 },
         );
-        const response = await pipeline.execute(base, new AbortController().signal);
+        const response = await pipeline.execute(
+            base,
+            new AbortController().signal,
+        );
         expect(response.state).toBe("REVOKED");
         expect(response.response).toBeNull();
     });
@@ -258,13 +258,21 @@ describe("J1.4 security boundaries", () => {
     it("fails malformed turn binding before model dispatch", () => {
         const pipeline = new J14TurnPipeline(
             { verify: () => ({ valid: true, reason: "OK" }) },
-            { assemble: async () => { throw new Error("must not run"); } },
+            {
+                assemble: async () => {
+                    throw new Error("must not run");
+                },
+            },
             { execute: async () => modelResult() },
             { now: () => 100 },
         );
         expect(() =>
             pipeline.execute(
-                { ...base, turnId: "other-turn", idempotencyKey: "bad-binding" },
+                {
+                    ...base,
+                    turnId: "other-turn",
+                    idempotencyKey: "bad-binding",
+                },
                 new AbortController().signal,
             ),
         ).toThrow("J14_TURN_BINDING_INVALID");
