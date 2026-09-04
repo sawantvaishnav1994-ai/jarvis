@@ -9,7 +9,8 @@ try {
         throw new Error("J1_1_REAL_STACK_SEQUENCE_NOT_ATTESTED");
     const [
         gates,
-        migrations,
+        foundationMigrations,
+        j1Migrations,
         foundationSchema,
         migrationSql,
         engine,
@@ -18,13 +19,16 @@ try {
     ] = await Promise.all([
         json("tests/acceptance/j1.1-gates.json"),
         json("infrastructure/migrations/manifest.json"),
+        json("infrastructure/migrations/j1/manifest.json"),
         json("foundation/schema-v1.json"),
-        read("infrastructure/migrations/0015_conversation_session_engine.sql"),
+        read(
+            "infrastructure/migrations/j1/0015_conversation_session_engine.sql",
+        ),
         read("packages/core/src/conversation-session.ts"),
         read("packages/storage/src/conversation-session-store.ts"),
         read("docs/roadmap/j1.1-schema-decision.md"),
     ]);
-    const m15 = migrations.find((m) => m.version === 15);
+    const m15 = j1Migrations[0];
     const hash = createHash("sha256").update(migrationSql).digest("hex");
     const exactCatalog =
         gates.milestone === "J1.1" &&
@@ -37,8 +41,10 @@ try {
             foundationSchema.schemaVersion === 14 &&
             foundationSchema.migrationCount === 14,
         B:
-            migrations.length === 15 &&
-            migrations.slice(0, 14).every((m, i) => m.version === i + 1) &&
+            foundationMigrations.length === 14 &&
+            foundationMigrations.every((m, i) => m.version === i + 1) &&
+            j1Migrations.length === 1 &&
+            m15?.version === 15 &&
             m15?.file === "0015_conversation_session_engine.sql" &&
             m15.sha256 === hash &&
             m15.destructive === false,
