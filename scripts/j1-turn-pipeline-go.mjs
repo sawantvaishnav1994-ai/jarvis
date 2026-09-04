@@ -6,16 +6,25 @@ const letters = "ABCDEFGHIJKLMNOPQRST".split("");
 try {
     if (process.env.J1_4_CI_SEQUENCE !== "complete")
         throw new Error("J1_4_REAL_STACK_SEQUENCE_NOT_ATTESTED");
-    const [gates, runtime, roadmap, unit, integration, security, workflow] =
-        await Promise.all([
-            json("tests/acceptance/j1.4-gates.json"),
-            read("packages/core/src/turn-pipeline.ts"),
-            read("docs/roadmap/j1.4.md"),
-            read("tests/unit/j1-turn-pipeline.test.ts"),
-            read("tests/unit/j1-turn-pipeline-integration.test.ts"),
-            read("tests/security/j1-turn-pipeline-security.test.ts"),
-            read(".github/workflows/ci.yml"),
-        ]);
+    const [
+        gates,
+        runtime,
+        roadmap,
+        unit,
+        integration,
+        postgres,
+        security,
+        workflow,
+    ] = await Promise.all([
+        json("tests/acceptance/j1.4-gates.json"),
+        read("packages/core/src/turn-pipeline.ts"),
+        read("docs/roadmap/j1.4.md"),
+        read("tests/unit/j1-turn-pipeline.test.ts"),
+        read("tests/unit/j1-turn-pipeline-integration.test.ts"),
+        read("tests/integration/j1-turn-pipeline-postgres.test.ts"),
+        read("tests/security/j1-turn-pipeline-security.test.ts"),
+        read(".github/workflows/ci.yml"),
+    ]);
     const checks = {
         A:
             gates.milestone === "J1.4" &&
@@ -31,7 +40,8 @@ try {
         C:
             roadmap.includes("J1.1 Conversation/Session") &&
             runtime.includes("sessionId") &&
-            integration.includes("ConversationSessionEngine"),
+            integration.includes("ConversationSessionEngine") &&
+            postgres.includes("PostgresConversationSessionRepository"),
         D:
             runtime.includes("currentAuthority") &&
             runtime.split("await currentAuthority()").length >= 6 &&
@@ -80,6 +90,7 @@ try {
         O:
             unit.includes("governed response turn pipeline") &&
             integration.includes("J1.1 -> J1.2 -> J1.3 composition") &&
+            postgres.includes("J1.4 PostgreSQL turn coordination") &&
             security.includes("J1.4 security boundaries"),
         P:
             roadmap.includes("J1.7 tool-aware conversation") &&
@@ -94,6 +105,7 @@ try {
         S:
             process.env.J1_4_CI_SEQUENCE === "complete" &&
             workflow.includes("Real PostgreSQL integration") &&
+            workflow.includes("j1-turn-pipeline-postgres.test.ts") &&
             workflow.includes("Owner identity and device trust GO flow") &&
             workflow.includes("Dependency outage and recovery") &&
             workflow.includes("Stop and verify processes"),
