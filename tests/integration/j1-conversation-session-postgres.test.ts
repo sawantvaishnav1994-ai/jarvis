@@ -18,10 +18,12 @@ const actor = {
     kind: "service" as const,
     environment: "development" as const,
 };
+const syntheticOwnerId = "j11-owner-" + randomUUID();
 const deviceId = "j11-device-" + randomUUID();
 const identitySessionId = "j11-session-" + randomUUID();
 const conversationId = randomUUID();
 let ownerId: string;
+
 beforeAll(async () => {
     const manager = new FileSecretManager(
         process.env.JARVIS_VAULT_FILE ?? ".jarvis/development/vault.json",
@@ -40,9 +42,13 @@ beforeAll(async () => {
     );
     pool = databasePool(config.storage.postgres, lease.value.toString("utf8"));
     lease.destroy();
+    await pool.query(
+        "INSERT INTO identity.root_owner(singleton,id,payload) VALUES(true,$1,'synthetic') ON CONFLICT (singleton) DO NOTHING",
+        [syntheticOwnerId],
+    );
     ownerId = (
         await pool.query<{ id: string }>(
-            "SELECT id FROM identity.root_owner LIMIT 1",
+            "SELECT id FROM identity.root_owner WHERE singleton=true",
         )
     ).rows[0]!.id;
     await pool.query(
@@ -62,6 +68,7 @@ beforeAll(async () => {
         [conversationId, ownerId],
     );
 });
+
 afterAll(async () => {
     if (!pool) return;
     await pool.query(
@@ -84,6 +91,7 @@ afterAll(async () => {
     await pool.query("DELETE FROM identity.devices WHERE id=$1", [deviceId]);
     await pool.end();
 });
+
 describe("J1.1 PostgreSQL conversation coordination", () => {
     it("persists session binding, prevents duplicate idempotency and enforces terminal monotonicity", async () => {
         const repo = new PostgresConversationSessionRepository(pool);
