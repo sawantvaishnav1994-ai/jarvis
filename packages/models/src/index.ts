@@ -10,6 +10,7 @@ export * from "./j06-contracts.js";
 export * from "./router.js";
 export * from "./streaming.js";
 export * from "./synthetic-adapter.js";
+export * from "./reference-adapter.js";
 export * from "./verification.js";
 
 export const ModelRequestSchema = z.strictObject({

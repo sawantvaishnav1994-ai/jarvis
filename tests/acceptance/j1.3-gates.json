@@ -1,0 +1,27 @@
+{
+  "milestone": "J1.3",
+  "name": "Model Orchestration Runtime",
+  "baseline": "2e2302a9aa8553e4971db21842c858098183a233",
+  "gates": [
+    { "id": "A", "name": "Exact accepted J1.2 baseline" },
+    { "id": "B", "name": "Provider-neutral architecture" },
+    { "id": "C", "name": "Registry and configuration validation" },
+    { "id": "D", "name": "Model eligibility and capability filtering" },
+    { "id": "E", "name": "Deterministic routing" },
+    { "id": "F", "name": "Privacy and classification enforcement" },
+    { "id": "G", "name": "Context token and cost budgets" },
+    { "id": "H", "name": "Timeout handling" },
+    { "id": "I", "name": "Retry boundedness" },
+    { "id": "J", "name": "Fallback safety" },
+    { "id": "K", "name": "Provider health and circuit breaker" },
+    { "id": "L", "name": "Cancellation revocation and emergency behavior" },
+    { "id": "M", "name": "Error normalization" },
+    { "id": "N", "name": "Provider interchangeability" },
+    { "id": "O", "name": "Idempotency concurrency and correlation" },
+    { "id": "P", "name": "Audit and privacy safety" },
+    { "id": "Q", "name": "J1.1 and J1.2 integration" },
+    { "id": "R", "name": "Foundation and J1 regression green" },
+    { "id": "S", "name": "Full real-stack cloud qualification" },
+    { "id": "T", "name": "J1.4 not started and main unchanged during qualification" }
+  ]
+}
