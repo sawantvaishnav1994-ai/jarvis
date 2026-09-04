@@ -27,7 +27,6 @@ export const j14TurnStates = [
     "EMERGENCY_STOPPED",
 ] as const;
 export type J14TurnState = (typeof j14TurnStates)[number];
-
 export type J14TerminalState = Extract<
     J14TurnState,
     | "COMPLETED"
@@ -38,7 +37,6 @@ export type J14TerminalState = Extract<
     | "SAFE_MODE_BLOCKED"
     | "EMERGENCY_STOPPED"
 >;
-
 export type J14AuthorityReason =
     | "OK"
     | "INVALID"
@@ -52,13 +50,11 @@ export interface J14AuthorityCheck {
     valid: boolean;
     reason: J14AuthorityReason;
 }
-
 export interface J14AuthorityVerifier {
     verify(authority: ContextAssemblyAuthority):
         | J14AuthorityCheck
         | Promise<J14AuthorityCheck>;
 }
-
 export interface J14ContextPort {
     assemble(
         authority: ContextAssemblyAuthority,
@@ -66,7 +62,6 @@ export interface J14ContextPort {
         policy: ContextAssemblyPolicy,
     ): Promise<ContextEnvelope>;
 }
-
 export interface J14ModelPort {
     execute(
         input: {
@@ -80,7 +75,6 @@ export interface J14ModelPort {
         signal: AbortSignal,
     ): Promise<J13ExecutionResult>;
 }
-
 export interface J14AuditRecord {
     correlationId: string;
     conversationId: string;
@@ -90,15 +84,12 @@ export interface J14AuditRecord {
     state: J14TurnState;
     reasonCode: string | null;
 }
-
 export interface J14AuditSink {
     append(record: J14AuditRecord): void | Promise<void>;
 }
-
 export interface J14Clock {
     now(): number;
 }
-
 export interface J14TurnPipelineInput {
     authority: ContextAssemblyAuthority;
     conversationId: string;
@@ -114,14 +105,12 @@ export interface J14TurnPipelineInput {
     modelRequest: J06ModelRequest;
     modelPolicy: J13RuntimePolicy;
 }
-
 export interface J14ResponseEvent {
     sequence: number;
     state: J14TurnState;
     kind: "state" | "content" | "terminal";
     content: string | null;
 }
-
 export interface J14TurnPipelineResult {
     correlationId: string;
     conversationId: string;
@@ -135,7 +124,6 @@ export interface J14TurnPipelineResult {
     events: readonly J14ResponseEvent[];
     reasonCode: string | null;
 }
-
 export class J14TurnPipelineError extends Error {
     constructor(
         readonly code: string,
@@ -150,8 +138,16 @@ interface CachedTurn {
     digest: string;
     promise: Promise<J14TurnPipelineResult>;
 }
-
 const DIGEST = /^[0-9a-f]{64}$/i;
+const terminalStates: readonly J14TerminalState[] = [
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+    "REVOKED",
+    "TIMED_OUT",
+    "SAFE_MODE_BLOCKED",
+    "EMERGENCY_STOPPED",
+];
 const transitions: Record<J14TurnState, readonly J14TurnState[]> = {
     ACCEPTED: ["AUTHORITY_VALIDATING", "CANCELLED", "FAILED"],
     AUTHORITY_VALIDATING: [
@@ -217,7 +213,6 @@ function assertTransition(from: J14TurnState, to: J14TurnState): void {
     if (!transitions[from].includes(to))
         throw new J14TurnPipelineError("J14_TURN_TRANSITION_DENIED");
 }
-
 function requireBoundInput(input: J14TurnPipelineInput): void {
     if (
         !input.conversationId ||
@@ -241,7 +236,6 @@ function requireBoundInput(input: J14TurnPipelineInput): void {
     )
         throw new J14TurnPipelineError("J14_PROJECT_BINDING_INVALID");
 }
-
 function mapAuthorityFailure(reason: J14AuthorityReason): J14TurnPipelineError {
     if (reason === "SAFE_MODE")
         return new J14TurnPipelineError(
@@ -257,7 +251,6 @@ function mapAuthorityFailure(reason: J14AuthorityReason): J14TurnPipelineError {
         return new J14TurnPipelineError("J14_AUTHORITY_REVOKED", "REVOKED");
     return new J14TurnPipelineError("J14_AUTHORITY_INVALID", "FAILED");
 }
-
 function mapExecutionFailure(error: unknown): J14TurnPipelineError {
     const code = error instanceof Error ? error.message : String(error);
     const upper = code.toUpperCase();
@@ -271,17 +264,16 @@ function mapExecutionFailure(error: unknown): J14TurnPipelineError {
         return new J14TurnPipelineError("J14_MODEL_RESULT_INVALID", "FAILED");
     return new J14TurnPipelineError("J14_MODEL_EXECUTION_FAILED", "FAILED");
 }
-
 function contentFrom(result: J13ExecutionResult): string {
-    const output = result.result.output;
-    if (typeof output !== "string")
+    if (result.result.finishReason === "cancelled")
+        throw new J14TurnPipelineError("J14_MODEL_CANCELLED", "CANCELLED");
+    if (result.result.finishReason === "error")
         throw new J14TurnPipelineError("J14_MODEL_RESULT_INVALID");
-    return output;
+    return result.result.text;
 }
 
 export class J14TurnPipeline {
     private readonly executions = new Map<string, CachedTurn>();
-
     constructor(
         private readonly authority: J14AuthorityVerifier,
         private readonly context: J14ContextPort,
@@ -326,7 +318,6 @@ export class J14TurnPipeline {
         let state: J14TurnState = "ACCEPTED";
         let sequence = 0;
         const events: J14ResponseEvent[] = [];
-        let response: string | null = null;
         const emit = async (
             next: J14TurnState,
             kind: J14ResponseEvent["kind"] = "state",
@@ -365,17 +356,7 @@ export class J14TurnPipeline {
                     null,
                     error.code,
                 );
-            } else if (
-                ![
-                    "COMPLETED",
-                    "FAILED",
-                    "CANCELLED",
-                    "REVOKED",
-                    "TIMED_OUT",
-                    "SAFE_MODE_BLOCKED",
-                    "EMERGENCY_STOPPED",
-                ].includes(state)
-            ) {
+            } else if (!terminalStates.includes(state as J14TerminalState)) {
                 await emit("FAILED", "terminal", null, error.code);
             }
             return {
@@ -396,7 +377,6 @@ export class J14TurnPipeline {
         try {
             await emit("AUTHORITY_VALIDATING");
             await currentAuthority();
-
             await emit("CONTEXT_ASSEMBLING");
             const envelope = await this.context.assemble(
                 input.authority,
@@ -406,7 +386,6 @@ export class J14TurnPipeline {
             if (envelope.turnId !== input.turnId)
                 throw new J14TurnPipelineError("J14_CONTEXT_BINDING_INVALID");
             await currentAuthority();
-
             await emit("MODEL_PENDING");
             await currentAuthority();
             await emit("MODEL_RUNNING");
@@ -432,11 +411,10 @@ export class J14TurnPipeline {
                 modelResult.acceptedAsContentOnly !== true
             )
                 throw new J14TurnPipelineError("J14_MODEL_RESULT_INVALID");
-
             await emit("MODEL_RESULT_RECEIVED");
             await currentAuthority();
             await emit("RESPONSE_PROCESSING");
-            response = contentFrom(modelResult);
+            const response = contentFrom(modelResult);
             events.push({
                 sequence: ++sequence,
                 state,
