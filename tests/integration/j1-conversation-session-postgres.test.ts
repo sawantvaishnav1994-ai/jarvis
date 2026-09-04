@@ -1,15 +1,18 @@
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { loadConfig } from "@jarvis/config";
 import { FileSecretManager } from "@jarvis/security";
 import {
     databasePool,
+    migrate,
     PostgresConversationSessionRepository,
     type DatabasePool,
 } from "@jarvis/storage";
 
+let admin: DatabasePool;
+let migratorPool: DatabasePool;
 let pool: DatabasePool;
 const config = await loadConfig("config/development.json");
 const actor = {
@@ -18,11 +21,11 @@ const actor = {
     kind: "service" as const,
     environment: "development" as const,
 };
-const syntheticOwnerId = "j11-owner-" + randomUUID();
+const database = "jarvis_j11_test_" + randomBytes(8).toString("hex");
+const ownerId = "j11-owner-" + randomUUID();
 const deviceId = "j11-device-" + randomUUID();
 const identitySessionId = "j11-session-" + randomUUID();
 const conversationId = randomUUID();
-let ownerId: string;
 
 beforeAll(async () => {
     const manager = new FileSecretManager(
@@ -34,23 +37,53 @@ beforeAll(async () => {
             ),
         "development",
         actor.id,
-        new Set([config.storage.postgres.passwordRef]),
+        new Set([
+            config.storage.postgres.passwordRef,
+            config.storage.postgres.migratorPasswordRef,
+        ]),
     );
-    const lease = await manager.lease(
+    const runtime = await manager.lease(
         config.storage.postgres.passwordRef,
         actor,
     );
-    pool = databasePool(config.storage.postgres, lease.value.toString("utf8"));
-    lease.destroy();
-    await pool.query(
-        "INSERT INTO identity.root_owner(singleton,id,payload) VALUES(true,$1,'synthetic') ON CONFLICT (singleton) DO NOTHING",
-        [syntheticOwnerId],
+    const migrator = await manager.lease(
+        config.storage.postgres.migratorPasswordRef,
+        actor,
     );
-    ownerId = (
-        await pool.query<{ id: string }>(
-            "SELECT id FROM identity.root_owner WHERE singleton=true",
-        )
-    ).rows[0]!.id;
+    try {
+        if (!/^jarvis_j11_test_[a-f0-9]{16}$/.test(database))
+            throw new Error("UNSAFE_TEST_DATABASE");
+        admin = databasePool(
+            config.storage.postgres,
+            migrator.value.toString("utf8"),
+            true,
+        );
+        await admin.query(`CREATE DATABASE ${database}`);
+        migratorPool = databasePool(
+            { ...config.storage.postgres, database },
+            migrator.value.toString("utf8"),
+            true,
+        );
+        await migrate(
+            migratorPool,
+            "infrastructure/migrations",
+            "development",
+            config.storage.postgres.runtimeUser,
+            runtime.value.toString("utf8"),
+        );
+        pool = databasePool(
+            { ...config.storage.postgres, database },
+            runtime.value.toString("utf8"),
+        );
+    } finally {
+        runtime.destroy();
+        migrator.destroy();
+    }
+
+    await pool.query(
+        "INSERT INTO identity.root_owner(singleton,id,payload) VALUES(true,$1,'synthetic')",
+        [ownerId],
+    );
     await pool.query(
         "INSERT INTO identity.devices(id,payload) VALUES($1,'synthetic')",
         [deviceId],
@@ -67,29 +100,17 @@ beforeAll(async () => {
         "INSERT INTO conversations.conversations(id,owner_id,payload,metadata) VALUES($1,$2,'synthetic','{}')",
         [conversationId, ownerId],
     );
-});
+}, 30000);
 
 afterAll(async () => {
-    if (!pool) return;
-    await pool.query(
-        "DELETE FROM conversations.turns WHERE owner_id=$1 AND conversation_id=$2",
-        [ownerId, conversationId],
-    );
-    await pool.query(
-        "DELETE FROM conversations.sessions WHERE owner_id=$1 AND device_id=$2",
-        [ownerId, deviceId],
-    );
-    await pool.query("DELETE FROM conversations.conversations WHERE id=$1", [
-        conversationId,
-    ]);
-    await pool.query("DELETE FROM storage.record_catalog WHERE id=$1", [
-        conversationId,
-    ]);
-    await pool.query("DELETE FROM identity.sessions WHERE id=$1", [
-        identitySessionId,
-    ]);
-    await pool.query("DELETE FROM identity.devices WHERE id=$1", [deviceId]);
-    await pool.end();
+    await pool?.end();
+    await migratorPool?.end();
+    if (admin) {
+        if (!/^jarvis_j11_test_[a-f0-9]{16}$/.test(database))
+            throw new Error("UNSAFE_TEST_DATABASE");
+        await admin.query(`DROP DATABASE ${database}`);
+        await admin.end();
+    }
 });
 
 describe("J1.1 PostgreSQL conversation coordination", () => {
