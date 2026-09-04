@@ -70,6 +70,7 @@ export interface ContextSourceSelection {
 export interface ContextSourceExclusion {
     sourceId: string;
     reason:
+        | "MALFORMED_SOURCE_DENIED"
         | "OWNER_SCOPE_DENIED"
         | "PROJECT_SCOPE_DENIED"
         | "D5_GENERIC_CONTEXT_DENIED"
@@ -110,6 +111,28 @@ const CLASS_RANK: Record<ContextDataClass, number> = {
     D4: 4,
     D5: 5,
 };
+const OPERATING_MODES: readonly ContextOperatingMode[] = [
+    "assistant",
+    "copilot",
+    "autonomous",
+    "focus",
+    "private",
+    "guest",
+    "safe",
+    "emergency",
+];
+const RETENTION_MODES: readonly ContextRetentionMode[] = [
+    "keep",
+    "until",
+    "session",
+    "never-store",
+];
+const TRUST_LEVELS: readonly ContextTrust[] = ["trusted", "untrusted"];
+const DISCLOSURE_TARGETS: readonly ContextAssemblyPolicy["disclosureTarget"][] = [
+    "local",
+    "private",
+    "external-ai",
+];
 
 function validAuthority(authority: ContextAssemblyAuthority): boolean {
     return (
@@ -118,7 +141,54 @@ function validAuthority(authority: ContextAssemblyAuthority): boolean {
         authority.sessionId.length > 0 &&
         authority.turnId.length > 0 &&
         Number.isSafeInteger(authority.securityEpoch) &&
-        authority.securityEpoch >= 0
+        authority.securityEpoch >= 0 &&
+        OPERATING_MODES.includes(authority.operatingMode) &&
+        (authority.projectId === undefined ||
+            authority.projectId === null ||
+            (typeof authority.projectId === "string" &&
+                authority.projectId.length > 0))
+    );
+}
+
+function validPolicy(policy: ContextAssemblyPolicy): boolean {
+    return (
+        DISCLOSURE_TARGETS.includes(policy.disclosureTarget) &&
+        policy.classificationCeiling in CLASS_RANK &&
+        Number.isSafeInteger(policy.maximumSize) &&
+        policy.maximumSize >= 0 &&
+        Number.isSafeInteger(policy.minimumFreshness) &&
+        policy.minimumFreshness >= 0 &&
+        typeof policy.allowUntrusted === "boolean" &&
+        Number.isSafeInteger(policy.now) &&
+        policy.now >= 0
+    );
+}
+
+function validCandidate(source: ContextCandidateSource): boolean {
+    return (
+        typeof source.sourceType === "string" &&
+        source.sourceType.length > 0 &&
+        typeof source.sourceId === "string" &&
+        source.sourceId.length > 0 &&
+        typeof source.ownerId === "string" &&
+        source.ownerId.length > 0 &&
+        (source.projectId === undefined ||
+            source.projectId === null ||
+            (typeof source.projectId === "string" && source.projectId.length > 0)) &&
+        typeof source.provenance === "string" &&
+        source.classification in CLASS_RANK &&
+        Number.isSafeInteger(source.freshness) &&
+        source.freshness >= 0 &&
+        RETENTION_MODES.includes(source.retention) &&
+        typeof source.disclosureEligibility === "boolean" &&
+        typeof source.digest === "string" &&
+        TRUST_LEVELS.includes(source.trust) &&
+        Number.isSafeInteger(source.priority) &&
+        Number.isSafeInteger(source.size) &&
+        source.size >= 0 &&
+        typeof source.payload === "string" &&
+        (source.deleted === undefined || typeof source.deleted === "boolean") &&
+        (source.revoked === undefined || typeof source.revoked === "boolean")
     );
 }
 
@@ -162,21 +232,29 @@ export class ContextAssembler {
     ): Promise<ContextEnvelope> {
         if (
             !validAuthority(authority) ||
-            !Number.isSafeInteger(policy.maximumSize) ||
-            policy.maximumSize < 0 ||
-            !Number.isSafeInteger(policy.minimumFreshness) ||
-            policy.minimumFreshness < 0 ||
-            !Number.isSafeInteger(policy.now) ||
-            policy.now < 0 ||
+            !validPolicy(policy) ||
             !(await this.verifier.verify(authority))
         )
             throw new ContextAssemblyError("CONTEXT_AUTHORITY_INVALID");
 
         const selected: ContextSourceSelection[] = [];
         const excluded: ContextSourceExclusion[] = [];
+        const validCandidates: ContextCandidateSource[] = [];
         let usedSize = 0;
 
-        for (const source of [...candidates].sort(stableOrder)) {
+        for (const source of candidates) {
+            if (!validCandidate(source)) {
+                excluded.push({
+                    sourceId:
+                        typeof source.sourceId === "string" ? source.sourceId : "",
+                    reason: "MALFORMED_SOURCE_DENIED",
+                });
+                continue;
+            }
+            validCandidates.push(source);
+        }
+
+        for (const source of validCandidates.sort(stableOrder)) {
             let reason: ContextSourceExclusion["reason"] | null = null;
             if (source.ownerId !== authority.ownerId)
                 reason = "OWNER_SCOPE_DENIED";
