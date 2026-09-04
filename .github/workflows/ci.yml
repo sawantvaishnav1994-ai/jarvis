@@ -34,14 +34,18 @@ jobs:
           diff -u tests/acceptance/j11-gates.json /tmp/j11-gates.formatted.json
       - name: J0.12 Foundation v1 freeze formatting
         run: npx prettier --check foundation/*.json tests/acceptance/j12-gates.json tests/unit/j12-acceptance.test.ts scripts/j12-foundation-v1-go.mjs
+      - name: J1.0 specification formatting
+        run: npx prettier --check tests/acceptance/j1.0-gates.json tests/unit/j1-core-acceptance.test.ts scripts/j1-core-conversation-go.mjs
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
+      - name: J1.0 specification integrity
+        run: npx vitest run tests/unit/j1-core-acceptance.test.ts --reporter=default
       - name: Static and contract checks
         run: npm run check
       - name: J0.12 critical security repeatability
         run: |
           for i in 1 2 3; do
-            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/identity.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j12-acceptance.test.ts --reporter=default
+            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/identity.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j12-acceptance.test.ts tests/unit/j1-core-acceptance.test.ts --reporter=default
           done
       - name: Real PostgreSQL integration
         run: npm run test:integration
@@ -133,6 +137,13 @@ jobs:
       - name: J0.12 evidence on failure
         if: failure()
         run: npm run test:j12:go
+      - name: Explicit J1.0 Core + Conversation A-T acceptance
+        if: success()
+        env: {J1_0_CI_SEQUENCE: 'complete'}
+        run: npm run test:j1.0:go
+      - name: J1.0 evidence on failure
+        if: failure()
+        run: npm run test:j1.0:go
       - name: Cleanup
         if: always()
         run: |
