@@ -20,21 +20,16 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
+          import re
           from pathlib import Path
           p = Path('packages/core/src/model-orchestration.ts')
           s = p.read_text()
-          old = '''                const code = normalizeFailure(
-                    new ModelRoutingError(
-                        attempt.code ?? "MODEL_PROVIDER_ERROR",
-                        attempt.code ?? "MODEL_PROVIDER_ERROR",
-                    ),
-                );'''
-          new = '''                const code = normalizeFailure(
-                    new Error(attempt.code ?? "MODEL_PROVIDER_ERROR"),
-                );'''
-          if s.count(old) != 1:
-              raise SystemExit('expected provider-attempt normalization block not found exactly once')
-          p.write_text(s.replace(old, new))
+          pattern = re.compile(r'const code = normalizeFailure\(\s*new ModelRoutingError\(\s*attempt\.code \?\? "MODEL_PROVIDER_ERROR",\s*attempt\.code \?\? "MODEL_PROVIDER_ERROR",\s*\),\s*\);')
+          replacement = 'const code = normalizeFailure(\n                    new Error(attempt.code ?? "MODEL_PROVIDER_ERROR"),\n                );'
+          updated, count = pattern.subn(replacement, s)
+          if count != 1:
+              raise SystemExit(f'expected provider-attempt normalization block exactly once, found {count}')
+          p.write_text(updated)
           PY
           npx prettier --write packages/core/src/model-orchestration.ts
           npx prettier --check packages/core/src/model-orchestration.ts
