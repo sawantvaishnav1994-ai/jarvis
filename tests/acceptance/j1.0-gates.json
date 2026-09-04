@@ -1,25 +1,85 @@
 {
-  "milestone": "J1.0",
-  "gates": [
-    {"id":"A","name":"Exact released Foundation baseline"},
-    {"id":"B","name":"J1.0 scope and exclusions freeze"},
-    {"id":"C","name":"Conversation contract version freeze"},
-    {"id":"D","name":"Canonical conversation lifecycle freeze"},
-    {"id":"E","name":"Identity session device and security epoch preservation"},
-    {"id":"F","name":"Conversation ownership and isolation"},
-    {"id":"G","name":"Context provenance classification and minimization"},
-    {"id":"H","name":"Memory boundary and NEVER_STORE preservation"},
-    {"id":"I","name":"Provider-neutral model privacy boundary"},
-    {"id":"J","name":"Tool proposal execution separation"},
-    {"id":"K","name":"Policy risk approval and permit preservation"},
-    {"id":"L","name":"Operating mode and emergency override semantics"},
-    {"id":"M","name":"Persistence retention deletion and export semantics"},
-    {"id":"N","name":"Streaming cancellation retry and idempotency"},
-    {"id":"O","name":"Audit and event correlation"},
-    {"id":"P","name":"Dependency failure degraded and recovery behavior"},
-    {"id":"Q","name":"Web conversation security contract"},
-    {"id":"R","name":"J1.1 through J1.12 milestone boundaries"},
-    {"id":"S","name":"Release metadata debt explicitly recorded"},
-    {"id":"T","name":"No runtime implementation migration credential or J1.1 start"}
-  ]
+    "milestone": "J1.0",
+    "gates": [
+        {
+            "id": "A",
+            "name": "Exact released Foundation baseline"
+        },
+        {
+            "id": "B",
+            "name": "J1.0 scope and exclusions freeze"
+        },
+        {
+            "id": "C",
+            "name": "Conversation contract version freeze"
+        },
+        {
+            "id": "D",
+            "name": "Canonical conversation lifecycle freeze"
+        },
+        {
+            "id": "E",
+            "name": "Identity session device and security epoch preservation"
+        },
+        {
+            "id": "F",
+            "name": "Conversation ownership and isolation"
+        },
+        {
+            "id": "G",
+            "name": "Context provenance classification and minimization"
+        },
+        {
+            "id": "H",
+            "name": "Memory boundary and NEVER_STORE preservation"
+        },
+        {
+            "id": "I",
+            "name": "Provider-neutral model privacy boundary"
+        },
+        {
+            "id": "J",
+            "name": "Tool proposal execution separation"
+        },
+        {
+            "id": "K",
+            "name": "Policy risk approval and permit preservation"
+        },
+        {
+            "id": "L",
+            "name": "Operating mode and emergency override semantics"
+        },
+        {
+            "id": "M",
+            "name": "Persistence retention deletion and export semantics"
+        },
+        {
+            "id": "N",
+            "name": "Streaming cancellation retry and idempotency"
+        },
+        {
+            "id": "O",
+            "name": "Audit and event correlation"
+        },
+        {
+            "id": "P",
+            "name": "Dependency failure degraded and recovery behavior"
+        },
+        {
+            "id": "Q",
+            "name": "Web conversation security contract"
+        },
+        {
+            "id": "R",
+            "name": "J1.1 through J1.12 milestone boundaries"
+        },
+        {
+            "id": "S",
+            "name": "Release metadata debt explicitly recorded"
+        },
+        {
+            "id": "T",
+            "name": "No runtime implementation migration credential or J1.1 start"
+        }
+    ]
 }
