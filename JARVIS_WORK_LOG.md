@@ -3786,3 +3786,150 @@ Appended this prompt without changing previous entries and backfilled the exact 
 ### Validation for this documentation-only update
 
 `npm run check` passed lint, import/migration boundaries, full TypeScript checking and all 60 tests across 8 files. `NEXT_TELEMETRY_DISABLED=1 npm run build:web` passed. Python architecture/syntax checks and all 68 regression tests passed (16.045 seconds). `git diff --check` passed; the only changed file is `JARVIS_WORK_LOG.md`. Real PostgreSQL/browser acceptance remains evidenced by the successful published full-stack runs above, not by an invented local Docker run. The updated log is saved under its existing identity and synchronized to the private repository without changing runtime code.
+
+# JARVIS work-log addendum — J0.11
+
+**Date:** 2026-09-04  
+**Milestone:** J0.11 — Full Foundation Integration, Adversarial Validation & Release-Candidate Qualification  
+**Protected J0.10 baseline:** `f00eabba0bf4cda66b906d61a8e050b95123463f`  
+**Validation branch:** `validation/j0.11-full-foundation-integration-20260904`
+
+## Recording note
+
+The repository's standing instruction requires appending each work session to `JARVIS_WORK_LOG.md` without rewriting history. The available GitHub connector in this session exposes whole-file replacement but no safe append/patch operation. The cumulative log is approximately 3,800 historical lines, and replacing it from partial retrieval would risk truncating or silently rewriting prior evidence. This addendum therefore preserves the J0.11 session separately rather than corrupting the cumulative log. It should be appended verbatim to the cumulative log when a safe append-capable repository interface is available. This limitation does not affect J0.11 runtime or acceptance evidence.
+
+## Owner authorization and supplied specification
+
+The owner authorized full implementation of **PROJECT JARVIS — J0.11 FULL FOUNDATION INTEGRATION, ADVERSARIAL VALIDATION & RELEASE-CANDIDATE QUALIFICATION**, explicitly accepting J0.10 for development and authorizing J0.11 only. The supplied specification required phases A–T covering clean reproducibility, database/migrations, Redis/BullMQ/events, system readiness, Root Owner/device trust, policy/risk/approvals, private storage/encryption, memory, model abstraction/privacy, tool gateway, events, audit, backup/recovery, adversarial recovery, dependency failure/recovery, concurrency/replay/races, emergency controls, shutdown/restart, a canonical full-foundation journey, and complete regression/acceptance evidence. It also prohibited J0.12, J1, Foundation v1 GO, unrelated product features, production credentials/data/deployment, architecture weakening, skipped tests, and silent main merges.
+
+The complete controlling specification is preserved in `docs/roadmap/j0.11.md` and the machine acceptance catalog `tests/acceptance/j11-gates.json`. No production data or credentials were introduced.
+
+## Repository audit
+
+- Confirmed accepted J0.10 validation branch `validation/j0.10-recovery-data-sovereignty-20260903` at `f00eabba0bf4cda66b906d61a8e050b95123463f`.
+- Confirmed J0.10 recovery candidate and prior cloud evidence before beginning J0.11.
+- Created isolated branch `validation/j0.11-full-foundation-integration-20260904` from the exact accepted J0.10 SHA.
+- Preserved `main`; no merge, release or Foundation v1 tag was performed.
+- Inspected package scripts, GitHub Actions, 14-migration manifest, unit/security/integration/browser suites, recovery drill, outage drill and emergency/governance controls.
+- Determined that J0.11 required additive cross-foundation qualification evidence rather than new runtime architecture or migration 0015.
+
+## Implementation
+
+Added:
+
+- `tests/acceptance/j11-gates.json` — exact A–T catalog and protected baseline.
+- `tests/unit/j11-acceptance.test.ts` — exactly one meaningful assertion group for every J0.11 A–T phase.
+- `scripts/j11-go.mjs` — fail-closed machine verifier requiring unique passing phase assertions, successful unit/integration reports, J0.4 A–S, J0.5–J0.10 A–T and `J11_CI_SEQUENCE=complete` real-stack attestation.
+- `package.json` command `test:j11:go`.
+- GitHub Actions J0.11 sequence covering fresh setup, acceptance formatting, static/contracts/security, repeated critical security checks, real PostgreSQL/pgvector, live services, Redis/BullMQ transport, browser acceptance, Root Owner/device-trust acceptance, J0.10 recovery, dependency outage/recovery, verified shutdown, all previous machine gates and J0.11 A–T.
+- `docs/roadmap/j0.11.md` and `docs/roadmap/j0.11-report.md`.
+- Updated `docs/STATUS.md` with the J0.11 qualification evidence while retaining historical sections.
+
+No database migration, production connector, autonomous agent, production deployment, real owner data or real production credential was added.
+
+## Failed attempts preserved
+
+### Candidate 1
+
+Commit `a223eadd92c2d540e7c2f30d214ca2dc6d06aac8`, GitHub Actions `33800548093`.
+
+Fresh setup succeeded, but the newly introduced J0.11 acceptance-catalog formatting check failed before behavioral validation. No accepted runtime/security assertion failed and no test was weakened or skipped.
+
+### Candidate 2
+
+Commit `c88ed636701483bd6a383705d67db4609ae1b27a`, GitHub Actions `33800858623`.
+
+The formatting gate remained fail-closed but was changed to emit an exact Prettier diff. The diff showed the repository's JSON convention required four-space indentation. The catalog was corrected rather than bypassing the check.
+
+## Passing behavioral validation
+
+Commit `f5c1df7ccc2926caeddc3f60a8f344aea5c511c8`, GitHub Actions `33801036155`.
+
+Both workflow jobs passed. Evidence:
+
+- 447 TypeScript unit/contract/security tests passed across 37 files.
+- J0.11 acceptance suite: 20/20 phase tests passed.
+- Governance + governed gateway + J0.10 hardening: 50 critical tests repeated three consecutive times with no failure.
+- 77 real PostgreSQL/pgvector tests passed across 10 integration files.
+- Real service startup/readiness passed.
+- Queue/health smoke passed.
+- Real Redis/BullMQ event transport passed with event-ID idempotency.
+- Four foundation browser tests passed.
+- Full synthetic Root Owner/passkey/second-device/restricted-agent/revocation/recovery browser ceremony passed.
+- J0.10 keyed recovery authenticity, wrong-key, component-substitution, cross-owner, future-version, expiry, epoch and obligation checks passed.
+- Real Redis and PostgreSQL outage/recovery drill passed.
+- Verified supervisor shutdown and orphan-process check passed.
+- J0.4 machine gate reported `A-S_PASS`.
+- J0.5, J0.6, J0.7, J0.8, J0.9 and J0.10 machine gates each reported `A-T_PASS`.
+- J0.11 machine verifier recorded exact baseline `f00eabba0bf4cda66b906d61a8e050b95123463f`, exact candidate `f5c1df7ccc2926caeddc3f60a8f344aea5c511c8`, run `33801036155`, `realStackSequence: true`, and every phase A through T `PASS` with one unique passing assertion.
+
+## Boundaries and unfinished work
+
+- `main` was not changed.
+- J0 Foundation v1 GO was not issued.
+- J0.12 was not started.
+- J1 was not started.
+- Production HSM/KMS custody, physical-device ceremonies, independently separated/offline disaster-recovery infrastructure, hostile-host containment, production connector credentials and geographically independent production recovery remain outside this development qualification unless separately proven.
+- The only documentation limitation is that this session could not safely append to the existing `JARVIS_WORK_LOG.md` with the available whole-file-only connector. This addendum preserves the session without corrupting prior history.
+
+## Recommendation
+
+Subject to a final exact-SHA green CI run for the documentation-closeout branch head, the engineering evidence supports:
+
+`J0.11 DEVELOPMENT GO RECOMMENDED`
+
+This recommendation does not authorize J0.12, J1, main merge or J0 Foundation v1 GO.
+
+# JARVIS work-log addendum — J0.12
+
+**Date:** 2026-09-04  
+**Milestone:** J0.12 — Foundation Contract Freeze, Final Architecture & Security Review, Foundation v1 Acceptance  
+**Starting accepted J0.11 SHA:** `581badf38ed3d85c75a652ac87111c8aa4e62da9`  
+**Validation branch:** `validation/j0.12-foundation-v1-freeze-20260904`
+
+## Authorization and scope
+
+The owner authorized J0.12 only after J0.11 DEVELOPMENT GO. The milestone freezes and qualifies the existing J0 foundation; it does not start J1, add phone/voice/vision/agent/product capability, merge to main, create a Foundation v1 tag or independently issue Foundation v1 GO.
+
+## Baseline verification
+
+Before changes, the accepted J0.11 branch was verified at `581badf38ed3d85c75a652ac87111c8aa4e62da9`, GitHub Actions run `33803306108` was verified successful on that exact SHA, and `main` remained `f00eabba0bf4cda66b906d61a8e050b95123463f`.
+
+The isolated branch `validation/j0.12-foundation-v1-freeze-20260904` was created from the exact accepted J0.11 SHA.
+
+## Gap analysis
+
+The audit found no verified reason for migration 0015 or a runtime redesign. J0.1-J0.11 already provide the accepted identity, governance, classified storage, memory, model abstraction, tool gateway, events, audit, recovery, outage handling and shutdown behavior. The J0.12 gap is the final explicit freeze/versioning and machine qualification layer.
+
+## Implementation
+
+J0.12 adds:
+
+- `foundation/foundation-v1.manifest.json` — Foundation 1.0.0-rc baseline, 22 versioned contract families, runtime assumptions, 55 security invariants and production exclusions.
+- `foundation/permissions-v1.json` — P0-P5 explanatory freeze with no self/model/agent/tool escalation.
+- `foundation/operating-modes-v1.json` — Assistant, Copilot, Autonomous, Focus, Private, Guest, Safe and Emergency semantics plus PAUSE/FREEZE/DISCONNECT/SAFE MODE/REVOKE/SHUTDOWN constraints.
+- `foundation/data-classification-v1.json` — D0-D5, disclosure, retention and NEVER_STORE semantics.
+- `foundation/schema-v1.json` — schema version 14 and exact SHA-256 bindings for migrations 0001-0014.
+- final architecture, trust-boundary, contract and security-review documentation.
+- `tests/acceptance/j12-gates.json` and `tests/unit/j12-acceptance.test.ts` with exactly one A-T assertion title for every phase.
+- `scripts/j12-foundation-v1-go.mjs`, which fails closed without `J12_CI_SEQUENCE=complete`, all prior J0 gates, J0.11 real-stack evidence, freeze manifests/reviews and exactly one passing J0.12 assertion per A-T phase.
+- `npm run test:j12:go`.
+- CI stages for freeze formatting/integrity, repeated critical identity/governance/gateway/event/recovery checks, Foundation candidate recovery/adversarial hardening, replay/concurrency/emergency regression and final J0.12 A-T after all J0.4-J0.11 gates.
+
+No historical migration was modified and no migration 0015 was added.
+
+## Failed candidate evidence
+
+Candidate `cabe3295ddd3214c4861e945bf25360c41df4148`, GitHub Actions run `33805970164`, failed only the newly introduced J0.12 freeze-formatting gate. Fresh locked setup and the preserved Python foundation job passed. The failure occurred before J0.12 behavioral/security validation; no accepted security test was weakened or skipped to correct it.
+
+A one-time branch-only formatter using the repository-pinned toolchain formatted only the allowlisted new J0.12 freeze/test/verifier artifacts and committed `069327ba9ff469f46785a5182aff3a52bbf38d42`. The formatting workflow itself succeeded in run `33806180043`. The helper is temporary and must be removed before the final exact-SHA qualification.
+
+## Security and architecture conclusion before final CI
+
+The review records all 55 required invariants and explicit residual production exclusions. No blocking foundation-level architecture/security defect was identified in the source audit; that conclusion remains conditional on the complete final exact-SHA J0.12 pipeline.
+
+Production HSM/KMS custody, real physical-device A4 ceremonies, geographically independent DR, independently immutable production audit archival, hostile-host/process containment, production connector credential rotation, independently managed offline backup infrastructure, full production PITR, regulated compliance certification, external penetration testing, complete mobile security and J1+ product capability remain unclaimed.
+
+## Final evidence recording rule
+
+The final candidate SHA and final GitHub Actions run are recorded in the owner delivery after all documentation and temporary-helper cleanup are complete. This avoids recursively changing the SHA merely to write its own final SHA into the work log. `J0 FOUNDATION v1 GO RECOMMENDED` may be reported only if that final exact-SHA pipeline passes every required stage. The recommendation does not merge, tag, start J1 or itself execute the owner-controlled GO decision.

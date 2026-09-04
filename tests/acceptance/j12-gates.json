@@ -1,0 +1,26 @@
+{
+    "milestone": "J0.12 Foundation Contract Freeze, Final Architecture & Security Review, Foundation v1 Acceptance",
+    "baseline": "581badf38ed3d85c75a652ac87111c8aa4e62da9",
+    "gates": [
+        "J0.12 A exact accepted baseline and reproducible freeze inputs",
+        "J0.12 B Foundation v1 architecture and trust boundaries are frozen",
+        "J0.12 C every foundation-critical contract family is explicitly versioned",
+        "J0.12 D schema is frozen at immutable migrations 0001 through 0014",
+        "J0.12 E Root Owner identity device trust session revocation and recovery stay governed",
+        "J0.12 F P0 through P5 policy risk approval permit and delegation semantics are frozen",
+        "J0.12 G privacy storage encryption D5 retention deletion export secrets and NEVER_STORE are frozen",
+        "J0.12 H memory scope provenance disclosure expiry purge and owner isolation are frozen",
+        "J0.12 I model providers remain replaceable non-authoritative adapters behind privacy controls",
+        "J0.12 J executable tools remain behind schema proposal policy approval permit and gateway execution",
+        "J0.12 K events remain versioned persisted privacy-aware idempotent and constrained through transport workers",
+        "J0.12 L audit remains correlated append-oriented integrity-checked and protected-plaintext safe",
+        "J0.12 M recovery preserves owner revocation deletion policy memory audit events encryption and epochs",
+        "J0.12 N adversarial recovery rejects wrong key owner tamper substitution expiry and unsupported versions",
+        "J0.12 O critical dependency failure reduces readiness and never creates authorization",
+        "J0.12 P replay concurrency and race-sensitive authority remains one-shot fail-closed and regression-covered",
+        "J0.12 Q PAUSE FREEZE DISCONNECT SAFE MODE REVOKE and SHUTDOWN only reduce or terminate capability",
+        "J0.12 R shutdown restart and lifecycle integrity reject new work and leave no authorized orphan processing",
+        "J0.12 S canonical Foundation v1 lifecycle is explicitly ordered from clean checkout through recovery and shutdown",
+        "J0.12 T all J0.1 through J0.11 gates plus the fail-closed J0.12 verifier are required together"
+    ]
+}

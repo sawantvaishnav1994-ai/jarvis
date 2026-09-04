@@ -1,0 +1,26 @@
+{
+    "milestone": "J0.11 Full Foundation Integration, Adversarial Validation & Release-Candidate Qualification",
+    "baseline": "f00eabba0bf4cda66b906d61a8e050b95123463f",
+    "gates": [
+        "J0.11-A — Clean repository and reproducible build",
+        "J0.11-B — Database and migration integrity",
+        "J0.11-C — Redis, BullMQ and event infrastructure",
+        "J0.11-D — Complete system startup and readiness",
+        "J0.11-E — Root Owner and device trust",
+        "J0.11-F — Security policy, risk and approval integration",
+        "J0.11-G — Private storage and encryption",
+        "J0.11-H — Memory integration",
+        "J0.11-I — Model abstraction and privacy",
+        "J0.11-J — Universal Tool Gateway",
+        "J0.11-K — Event Nervous System",
+        "J0.11-L — Audit and observability",
+        "J0.11-M — Backup and recovery",
+        "J0.11-N — Recovery attacks fail closed",
+        "J0.11-O — Dependency outage and recovery",
+        "J0.11-P — Concurrency, replay and race resistance",
+        "J0.11-Q — Emergency controls",
+        "J0.11-R — Clean shutdown and restart safety",
+        "J0.11-S — Full end-to-end foundation journey",
+        "J0.11-T — Regression and acceptance matrix"
+    ]
+}

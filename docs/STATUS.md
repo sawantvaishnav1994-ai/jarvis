@@ -46,8 +46,8 @@ TypeScript identity implementation and tests. No real owner data was migrated.
 | J0.8 | Event schema, encrypted persistence and constrained queue worker | Outbox, subscriptions, authenticated ingress, replay/dead-letter semantics |
 | J0.9 | Operational metadata and database append-only audit controls | Independently immutable archive, external witnesses and operations |
 | J0.10 | Historical Python encrypted recovery/export/delete tests | Active-runtime full data sovereignty and off-host disaster drill |
-| J0.11 | Unit/contracts/security and real-stack acceptance suite | Complete authenticated full-J0 workflow and host/deployment tests |
-| J0.12 | Contract versions and acceptance criteria recorded | Close applicable gates, freeze interfaces, owner GO |
+| J0.11 | Full Foundation integration and adversarial qualification passed on exact-SHA cloud CI; J0.11 A–T PASS | Development qualification complete; production-only controls remain outside J0.11 |
+| J0.12 | Foundation v1 freeze manifests, architecture/security/trust reviews and fail-closed A-T qualification pipeline implemented on isolated validation branch | Exact-SHA qualification and owner-controlled Foundation v1 GO decision; production exclusions remain explicitly unclaimed |
 
 The private GitHub repository already exists. Branch ruleset enforcement was
 previously rejected by GitHub HTTP 403 under the current private-repository plan;
@@ -154,3 +154,17 @@ independently immutable/offline backups, PostgreSQL PITR, multi-region disaster
 recovery, hostile-process containment, real connector credential rotation, secure
 enclave validation and regulatory retention. J0 Foundation v1 GO remains NOT ISSUED,
 and J1/J0.5 have not been started. Any merge to main requires a separate owner decision.
+
+## J0.11 development qualification — 2026-09-04
+
+**J0.11 — Full Foundation Integration, Adversarial Validation & Release-Candidate Qualification: COMPLETE for development validation. J0.11 Development GO is recommended for owner review.**
+
+Protected J0.10 baseline: `f00eabba0bf4cda66b906d61a8e050b95123463f`. Validation branch: `validation/j0.11-full-foundation-integration-20260904`. The behaviorally validated candidate `f5c1df7ccc2926caeddc3f60a8f344aea5c511c8` passed GitHub Actions run `33801036155` from a fresh checkout with disposable PostgreSQL/pgvector and Redis/BullMQ.
+
+The exact run passed 447 TypeScript unit/contract/security tests, 77 real PostgreSQL/pgvector integration tests, four foundation browser tests, the full synthetic Root Owner/passkey/second-device/restricted-agent/revocation/recovery browser ceremony, real queue transport, J0.10 disaster-recovery authenticity and substitution attacks, PostgreSQL/Redis outage and recovery, verified service shutdown, J0.4 `A-S_PASS`, J0.5–J0.10 `A-T_PASS`, and J0.11 `A-T_PASS`. Critical governance, governed-gateway and J0.10-hardening tests were repeated three consecutive times without failure. No migration 0015 or runtime redesign was introduced.
+
+Earlier J0.11 runs `33800548093` and `33800858623` failed only the newly added acceptance-catalog formatting harness. Those failures were retained as evidence; the harness was diagnosed and corrected without skipping or weakening any behavioral/security requirement.
+
+This is development qualification, not production security certification. Production HSM/KMS custody, physical-device ceremonies, independently separated/offline recovery infrastructure, hostile-host containment, production connector credentials and geographically independent disaster recovery remain unclaimed unless separately proven.
+
+Main has not been changed by J0.11. No release or Foundation v1 tag was created. **J0 Foundation v1 GO remains NOT ISSUED. J0.12 and J1 remain NOT STARTED.**

@@ -1,0 +1,110 @@
+{
+    "version": 1,
+    "modes": [
+        {
+            "id": "Assistant",
+            "modelAccess": "allowed-by-data-policy",
+            "memoryAccess": "authorized-read-write",
+            "toolAccess": "suggest-and-prepare-by-default",
+            "networkAccess": "policy-controlled",
+            "backgroundActivity": "off-by-default",
+            "autonomy": "reactive",
+            "approvalPolicy": "normal-governance",
+            "dataDisclosure": "classification-and-consent-controlled",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Copilot",
+            "modelAccess": "allowed-by-data-policy",
+            "memoryAccess": "authorized-read-write",
+            "toolAccess": "governed-execution-within-permission",
+            "networkAccess": "policy-controlled",
+            "backgroundActivity": "bounded",
+            "autonomy": "owner-supervised",
+            "approvalPolicy": "normal-governance",
+            "dataDisclosure": "classification-and-consent-controlled",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Autonomous",
+            "modelAccess": "allowed-by-data-policy",
+            "memoryAccess": "authorized-read-write",
+            "toolAccess": "governed-execution-within-explicit-autonomy-budget",
+            "networkAccess": "policy-controlled",
+            "backgroundActivity": "bounded-and-audited",
+            "autonomy": "explicitly-authorized",
+            "approvalPolicy": "sensitive-and-critical-actions-remain-governed",
+            "dataDisclosure": "classification-and-consent-controlled",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Focus",
+            "modelAccess": "allowed-by-data-policy",
+            "memoryAccess": "authorized-scope-only",
+            "toolAccess": "task-scope-only",
+            "networkAccess": "task-policy-controlled",
+            "backgroundActivity": "task-scope-only",
+            "autonomy": "bounded-to-focus-scope",
+            "approvalPolicy": "normal-governance",
+            "dataDisclosure": "minimum-necessary",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Private",
+            "modelAccess": "local-or-explicitly-permitted-only",
+            "memoryAccess": "authorized-local-private-scope",
+            "toolAccess": "restricted",
+            "networkAccess": "restricted-by-private-mode-policy",
+            "backgroundActivity": "restricted",
+            "autonomy": "reduced",
+            "approvalPolicy": "normal-or-stricter",
+            "dataDisclosure": "minimum-local-first",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Guest",
+            "modelAccess": "restricted",
+            "memoryAccess": "guest-authorized-scope-only",
+            "toolAccess": "restricted-and-non-privileged",
+            "networkAccess": "restricted",
+            "backgroundActivity": "off",
+            "autonomy": "none",
+            "approvalPolicy": "guest-cannot-authorize-owner-sensitive-actions",
+            "dataDisclosure": "guest-scope-only",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Safe",
+            "modelAccess": "restricted",
+            "memoryAccess": "read-only-or-restricted-by-policy",
+            "toolAccess": "non-mutating-or-explicitly-safe-only",
+            "networkAccess": "restricted",
+            "backgroundActivity": "off-or-minimal",
+            "autonomy": "disabled",
+            "approvalPolicy": "stricter-than-normal",
+            "dataDisclosure": "minimum-necessary",
+            "emergencyOverrides": true
+        },
+        {
+            "id": "Emergency",
+            "modelAccess": "restricted-or-disabled",
+            "memoryAccess": "minimum-required",
+            "toolAccess": "emergency-policy-only",
+            "networkAccess": "disconnectable",
+            "backgroundActivity": "stopped-or-emergency-only",
+            "autonomy": "disabled",
+            "approvalPolicy": "emergency-control-authoritative",
+            "dataDisclosure": "minimum-required",
+            "emergencyOverrides": true
+        }
+    ],
+    "transitionRule": "A mode transition may not increase effective authority without valid identity, policy, authorization and approval requirements. Emergency transitions may only reduce or revoke normal capability.",
+    "controls": [
+        "PAUSE",
+        "FREEZE",
+        "DISCONNECT",
+        "SAFE MODE",
+        "REVOKE",
+        "SHUTDOWN"
+    ]
+}
