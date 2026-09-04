@@ -9,3 +9,4 @@ export * from "./j09-accountability-bridge.js";
 export * from "./conversation-session.js";
 export * from "./context-assembly.js";
 export * from "./model-orchestration.js";
+export * from "./turn-pipeline.js";
