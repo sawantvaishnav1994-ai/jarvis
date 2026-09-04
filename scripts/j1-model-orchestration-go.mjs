@@ -15,6 +15,7 @@ try {
         security,
         modelsIndex,
         modelContracts,
+        router,
     ] = await Promise.all([
         json("tests/acceptance/j1.3-gates.json"),
         read("packages/core/src/model-orchestration.ts"),
@@ -24,6 +25,7 @@ try {
         read("docs/security/j1-model-orchestration-security.md"),
         read("packages/models/src/index.ts"),
         read("packages/models/src/j06-contracts.ts"),
+        read("packages/models/src/router.ts"),
     ]);
     const checks = {
         A:
@@ -43,7 +45,9 @@ try {
         D:
             architecture.includes("eligible model") &&
             architecture.includes("capability") &&
-            runtime.includes("requiredCapabilities"),
+            modelContracts.includes("requiredCapabilities") &&
+            router.includes("request.requiredCapabilities") &&
+            router.includes("CAPABILITY_MISMATCH"),
         E:
             architecture.includes("deterministic") &&
             runtime.includes("router.select") &&
