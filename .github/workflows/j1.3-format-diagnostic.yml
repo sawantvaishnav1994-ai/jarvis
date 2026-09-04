@@ -1,0 +1,35 @@
+name: J1.3 format diagnostic
+on:
+  push:
+    branches:
+      - validation/j1.3-model-orchestration-runtime-20260904
+permissions:
+  contents: read
+jobs:
+  format-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: {node-version-file: .nvmrc, cache: npm}
+      - run: npm ci --ignore-scripts
+      - name: Emit exact Prettier output
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            tests/unit/j1-model-orchestration.test.ts
+            tests/unit/j1-model-orchestration-integration.test.ts
+            tests/security/j1-model-orchestration-security.test.ts
+            packages/core/src/model-orchestration.ts
+            packages/models/src/router.ts
+          )
+          npx prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "J13_FORMAT_BEGIN:${f}"
+            base64 -w0 "$f"
+            echo
+            echo "J13_FORMAT_END:${f}"
+          done
+          exit 1
