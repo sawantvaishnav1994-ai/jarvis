@@ -179,7 +179,7 @@ describe("J1.4 PostgreSQL turn coordination", () => {
                     version: 1,
                     classification: "D1",
                     privacy: "local-only",
-                    retention: { mode: "session" },
+                    retention: { mode: "session", sessionId: session.id },
                     consent: {
                         storeConversation: false,
                         createMemory: false,
