@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: {node-version-file: .nvmrc, cache: npm}
       - run: npm ci --ignore-scripts
+      - run: npm run build:packages
       - name: Apply narrow provider-attempt normalization fix
         shell: bash
         run: |
@@ -33,6 +34,7 @@ jobs:
           PY
           npx prettier --write packages/core/src/model-orchestration.ts
           npx prettier --check packages/core/src/model-orchestration.ts
+          npm run build:packages
           npx vitest run tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/security/j1-model-orchestration-security.test.ts --reporter=default
           git rm .github/workflows/j1.3-health-fix.yml
           git config user.name "github-actions[bot]"
