@@ -101,11 +101,14 @@ function requireNullableUuid(value: unknown): string | null {
     return value === null ? null : requireUuid(value);
 }
 function requireObject(value: unknown): Record<string, unknown> {
-    if (!value || typeof value !== "object" || Array.isArray(value)) failInput();
+    if (!value || typeof value !== "object" || Array.isArray(value))
+        failInput();
     return value as Record<string, unknown>;
 }
 
-export function parseConversationAuthority(value: unknown): ConversationAuthority {
+export function parseConversationAuthority(
+    value: unknown,
+): ConversationAuthority {
     const input = requireObject(value);
     return {
         ownerId: requireId(input.ownerId),
@@ -237,7 +240,9 @@ export class ConversationSessionEngine {
         const authority = await this.requireAuthority(input.authority);
         const sessionId = requireUuid(input.sessionId);
         const conversationId = requireUuid(input.conversationId);
-        const inputMessageId = requireNullableUuid(input.inputMessageId ?? null);
+        const inputMessageId = requireNullableUuid(
+            input.inputMessageId ?? null,
+        );
         const idempotencyKey = requireId(input.idempotencyKey);
         const correlationId = requireId(input.correlationId);
         const session = await this.repository.getSession(
