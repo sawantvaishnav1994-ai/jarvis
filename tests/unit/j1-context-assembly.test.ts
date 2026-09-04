@@ -110,7 +110,9 @@ describe("J1.2 context assembly", () => {
             ],
             policy,
         );
-        expect(envelope.sources.map((item) => item.sourceId)).toEqual(["valid"]);
+        expect(envelope.sources.map((item) => item.sourceId)).toEqual([
+            "valid",
+        ]);
         expect(envelope.excluded).toContainEqual({
             sourceId: "negative-size",
             reason: "MALFORMED_SOURCE_DENIED",
