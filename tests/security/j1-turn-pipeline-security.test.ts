@@ -210,7 +210,11 @@ describe("J1.4 security boundaries", () => {
             },
             { execute: async () => modelResult() },
             { now: () => 100 },
-            { append: (record) => audit.push(record) },
+            {
+                append: (record) => {
+                    audit.push(record);
+                },
+            },
         );
         const response = await pipeline.execute(
             { ...base, idempotencyKey: "audit-key" },
