@@ -31,7 +31,7 @@ function runtime() {
     };
     const admission: ConversationMemoryAdmissionPort = {
         submit: vi.fn(async () => ({
-            decision: "REJECT",
+            decision: "REJECT" as const,
             canonicalMemoryId: null,
             reasonCodes: ["TEST"],
         })),
