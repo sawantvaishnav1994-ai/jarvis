@@ -89,7 +89,9 @@ function pending(
         sessionId: authority.sessionId,
         turnId: authority.turnId,
         ownerId: authority.ownerId,
-        projectId: authority.projectId,
+        ...(authority.projectId !== null && authority.projectId !== undefined
+            ? { projectId: authority.projectId }
+            : {}),
         securityEpoch: authority.securityEpoch,
         expiresAtEpochMs: Date.now() + 60_000,
         status: "PENDING",
@@ -102,9 +104,12 @@ function approvals(
 ): J18ApprovalAuthorityPort {
     return {
         requestApproval: vi.fn(async () => binding),
-        decide: vi.fn(async (decision) => ({
+        decide: vi.fn(async (decision): Promise<J18ApprovalBinding> => ({
             ...binding,
-            status: decision.decision === "APPROVE" ? "APPROVED" : "DENIED",
+            status:
+                decision.decision === "APPROVE"
+                    ? ("APPROVED" as const)
+                    : ("DENIED" as const),
         })),
         read: vi.fn(async () => binding),
     };
