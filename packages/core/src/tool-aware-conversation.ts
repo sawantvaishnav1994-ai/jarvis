@@ -55,7 +55,8 @@ function nonEmptyBoundedString(
 }
 
 function parseConversationToolProposal(value: unknown): ProposalParseResult {
-    if (!isRecord(value)) return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (!isRecord(value))
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
     if (Object.keys(value).some((key) => !PROPOSAL_KEYS.has(key)))
         return { success: false, error: "INVALID_TOOL_PROPOSAL" };
     if (!Object.prototype.hasOwnProperty.call(value, "input"))
@@ -91,7 +92,8 @@ function parseConversationToolProposal(value: unknown): ProposalParseResult {
             operation: value.operation,
             input: value.input,
             resource: value.resource,
-            privacyClass: value.privacyClass as ConversationToolProposal["privacyClass"],
+            privacyClass:
+                value.privacyClass as ConversationToolProposal["privacyClass"],
             requestedMode:
                 value.requestedMode as ConversationToolProposal["requestedMode"],
             ...(value.idempotencyKey !== undefined
