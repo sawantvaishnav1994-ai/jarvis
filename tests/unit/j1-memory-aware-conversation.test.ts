@@ -33,7 +33,7 @@ const base: ContextCandidateSource = {
     sourceType: "conversation-history",
     sourceId: "message:test",
     ownerId: authority.ownerId,
-    projectId: authority.projectId,
+    projectId: authority.projectId ?? null,
     provenance: "j1.5",
     classification: "D2",
     freshness: 10,
@@ -46,11 +46,13 @@ const base: ContextCandidateSource = {
     payload: "base",
 };
 
-function ports(overrides: Partial<{
-    retrieval: ConversationMemoryRetrievalPort;
-    admission: ConversationMemoryAdmissionPort;
-}> = {}) {
-    const retrieval: ConversationMemoryRetrievalPort = overrides.retrieval ?? {
+function ports(
+    overrides: Partial<{
+        retrieval: ConversationMemoryRetrievalPort;
+        admission: ConversationMemoryAdmissionPort;
+    }> = {},
+) {
+    const defaultRetrieval: ConversationMemoryRetrievalPort = {
         retrieve: vi.fn(async () => ({
             ownerId: authority.ownerId,
             projectId: authority.projectId ?? null,
@@ -64,26 +66,29 @@ function ports(overrides: Partial<{
                     ownerId: authority.ownerId,
                     projectId: authority.projectId ?? null,
                     provenance: "j0.5:owner-asserted",
-                    classification: "D2",
+                    classification: "D2" as const,
                     freshness: 20,
-                    retention: "keep",
+                    retention: "keep" as const,
                     disclosureEligibility: true,
                     digest: "b".repeat(64),
-                    trust: "trusted",
+                    trust: "trusted" as const,
                     priority: 90,
                     payload: "remembered preference",
                 },
             ],
         })),
     };
-    const admission: ConversationMemoryAdmissionPort = overrides.admission ?? {
+    const defaultAdmission: ConversationMemoryAdmissionPort = {
         submit: vi.fn(async () => ({
-            decision: "ACCEPT",
+            decision: "ACCEPT" as const,
             canonicalMemoryId: "22222222-2222-4222-8222-222222222222",
             reasonCodes: ["NEW_SEMANTIC_FACT"],
         })),
     };
-    return { retrieval, admission };
+    return {
+        retrieval: overrides.retrieval ?? defaultRetrieval,
+        admission: overrides.admission ?? defaultAdmission,
+    };
 }
 
 function service(overrides: Parameters<typeof ports>[0] = {}) {
@@ -99,11 +104,16 @@ function service(overrides: Parameters<typeof ports>[0] = {}) {
 describe("J1.6 memory-aware conversation", () => {
     it("retrieves J0 memory and passes it through J1.2 context assembly", async () => {
         const { runtime, retrieval } = service();
-        const result = await runtime.assembleContext(authority, [base], policy, "status style");
+        const result = await runtime.assembleContext(
+            authority,
+            [base],
+            policy,
+            "status style",
+        );
 
         expect(retrieval.retrieve).toHaveBeenCalledWith({
             ownerId: authority.ownerId,
-            projectId: authority.projectId,
+            projectId: authority.projectId ?? null,
             conversationId: authority.conversationId,
             sessionId: authority.sessionId,
             turnId: authority.turnId,
@@ -132,9 +142,9 @@ describe("J1.6 memory-aware conversation", () => {
         };
         const { runtime } = service({ retrieval: badRetrieval });
 
-        await expect(runtime.assembleContext(authority, [base], policy, "query")).rejects.toThrow(
-            "J16_MEMORY_AUTHORITY_MISMATCH",
-        );
+        await expect(
+            runtime.assembleContext(authority, [base], policy, "query"),
+        ).rejects.toThrow("J16_MEMORY_AUTHORITY_MISMATCH");
     });
 
     it("lets J1.2 exclude revoked, D5, or disclosure-denied memory", async () => {
@@ -180,7 +190,12 @@ describe("J1.6 memory-aware conversation", () => {
             }),
         };
         const { runtime } = service({ retrieval });
-        const result = await runtime.assembleContext(authority, [base], policy, "query");
+        const result = await runtime.assembleContext(
+            authority,
+            [base],
+            policy,
+            "query",
+        );
 
         expect(result.context.sources).toHaveLength(1);
         expect(result.context.excluded.map((entry) => entry.reason)).toEqual([
@@ -202,7 +217,12 @@ describe("J1.6 memory-aware conversation", () => {
             }),
         };
         const { runtime } = service({ retrieval });
-        const result = await runtime.assembleContext(authority, [base], policy, "query");
+        const result = await runtime.assembleContext(
+            authority,
+            [base],
+            policy,
+            "query",
+        );
 
         expect(result.memoryDegraded).toBe(true);
         expect(result.memoryDegradationReasons).toEqual(["VECTOR_UNAVAILABLE"]);
