@@ -131,3 +131,40 @@ export function requireDevelopment(config: JarvisConfig): void {
     if (config.environment !== "development")
         throw new BoundaryError("ENVIRONMENT_NOT_ENABLED");
 }
+
+export function runtimeIdentity(config: JarvisConfig) {
+    const remoteOrigin = process.env.JARVIS_REMOTE_ORIGIN?.trim();
+    const remoteRpID = process.env.JARVIS_REMOTE_RP_ID?.trim();
+    if (!remoteOrigin && !remoteRpID) return config.identity;
+    if (
+        config.environment !== "development" ||
+        !remoteOrigin ||
+        !remoteRpID
+    )
+        throw new BoundaryError("INVALID_REMOTE_IDENTITY");
+    let origin: URL;
+    try {
+        origin = new URL(remoteOrigin);
+    } catch {
+        throw new BoundaryError("INVALID_REMOTE_IDENTITY");
+    }
+    if (
+        origin.protocol !== "https:" ||
+        origin.origin !== remoteOrigin ||
+        origin.hostname !== remoteRpID ||
+        origin.username ||
+        origin.password ||
+        origin.port ||
+        origin.pathname !== "/" ||
+        origin.search ||
+        origin.hash ||
+        remoteRpID === "localhost" ||
+        !/^[a-z0-9.-]+$/i.test(remoteRpID)
+    )
+        throw new BoundaryError("INVALID_REMOTE_IDENTITY");
+    return {
+        ...config.identity,
+        rpID: remoteRpID,
+        origin: remoteOrigin,
+    };
+}
