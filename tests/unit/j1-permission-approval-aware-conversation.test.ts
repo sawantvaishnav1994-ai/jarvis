@@ -143,7 +143,7 @@ describe("J1.8 permission/approval-aware conversation", () => {
 
         expect(result.state).toBe("PENDING_APPROVAL");
         expect(result.approvalCommitted).toBe(false);
-        expect(result.approval.requesterActorId).toBe(input.actorId);
+        expect(result.approval?.requesterActorId).toBe(input.actorId);
         expect(approvalPort.requestApproval).toHaveBeenCalledTimes(1);
     });
 
