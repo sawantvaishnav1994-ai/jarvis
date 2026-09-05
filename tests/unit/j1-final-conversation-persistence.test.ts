@@ -191,7 +191,10 @@ describe("J1.12 governed durable conversation persistence", () => {
                 correlationId: "j112-refused-correlation",
             }),
         ).rejects.toThrow("J112_CONVERSATION_NOT_DURABLE");
-        expect(f.order).toEqual(["record.conversation"]);
+        expect(f.records.persistConversation).toHaveBeenCalledTimes(1);
+        expect(f.records.persistMessage).not.toHaveBeenCalled();
+        expect(f.historyRepo.registerConversation).not.toHaveBeenCalled();
+        expect(f.order).toEqual([]);
     });
 
     it("rejects a response commit when the J1 session binding is confused with the Foundation session", async () => {
