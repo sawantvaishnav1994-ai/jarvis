@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { loadConfig, requireDevelopment } from "@jarvis/config";
+import {
+    loadConfig,
+    requireDevelopment,
+    runtimeIdentity,
+} from "@jarvis/config";
 import { FileSecretManager } from "@jarvis/security";
 import { signService } from "@jarvis/identity";
 
@@ -88,8 +92,9 @@ export async function POST(request: Request) {
                 resolve(root, "config/development.json"),
         );
         requireDevelopment(config);
+        const identity = runtimeIdentity(config);
         if (
-            request.headers.get("origin") !== config.identity.origin ||
+            request.headers.get("origin") !== identity.origin ||
             request.headers.get("content-type") !== "application/json"
         )
             return NextResponse.json(
@@ -112,7 +117,7 @@ export async function POST(request: Request) {
         const token = (await cookies()).get("jarvis_session")?.value ?? "";
         const contextHash = createHash("sha256")
             .update(
-                config.identity.origin +
+                identity.origin +
                     ":" +
                     (request.headers.get("user-agent") ?? "").slice(0, 512),
             )
