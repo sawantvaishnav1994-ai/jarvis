@@ -44,6 +44,7 @@ try {
             runtime.includes("this.approvals.requestApproval(input)") &&
             unit.includes("only after J1.7 reports approval required"),
         D:
+            runtime.includes("approval.requesterActorId !== input.actorId") &&
             runtime.includes("approval.requestId !== input.requestId") &&
             runtime.includes(
                 "approval.correlationId !== input.correlationId",
@@ -67,9 +68,11 @@ try {
             unit.includes("trusted owner A3 decision material"),
         F:
             roadmap.includes("cannot approve their own requests") &&
-            runtime.includes("J18OwnerDecisionInput") &&
-            !runtime.includes("modelResult.approval") &&
-            !runtime.includes('actorRole === "AGENT"'),
+            runtime.includes("pending.requesterActorId === decision.ownerId") &&
+            runtime.includes("J18_SELF_APPROVAL_DENIED") &&
+            unit.includes("owner self-approval") &&
+            security.includes("rejects self approval") &&
+            !runtime.includes("modelResult.approval"),
         G:
             runtime.includes('state: "DENIED"') &&
             runtime.includes('state: "EXPIRED"') &&
@@ -77,6 +80,7 @@ try {
             runtime.includes('approval.status !== "APPROVED"') &&
             security.includes('status: "CONSUMED"'),
         H:
+            security.includes("agent:attacker") &&
             security.includes("owner:attacker") &&
             security.includes("project:attacker") &&
             security.includes("conversation:attacker") &&
@@ -101,6 +105,9 @@ try {
             ),
         L:
             security.includes("consumed approval replay") &&
+            security.includes("approval state races") &&
+            security.includes("mutates the approval binding") &&
+            runtime.includes("assertStableBinding") &&
             roadmap.includes("replay and race handling") &&
             runtime.includes("J18_APPROVAL_NOT_READY"),
         M:
