@@ -77,7 +77,9 @@ const input = {
     externalAllowed: false,
 };
 
-function pending(overrides: Partial<J18ApprovalBinding> = {}): J18ApprovalBinding {
+function pending(
+    overrides: Partial<J18ApprovalBinding> = {},
+): J18ApprovalBinding {
     return {
         approvalId: "approval:test",
         approvalReference: "approval-reference:test",
@@ -95,7 +97,9 @@ function pending(overrides: Partial<J18ApprovalBinding> = {}): J18ApprovalBindin
     };
 }
 
-function approvals(binding: J18ApprovalBinding = pending()): J18ApprovalAuthorityPort {
+function approvals(
+    binding: J18ApprovalBinding = pending(),
+): J18ApprovalAuthorityPort {
     return {
         requestApproval: vi.fn(async () => binding),
         decide: vi.fn(async (decision) => ({
@@ -106,7 +110,9 @@ function approvals(binding: J18ApprovalBinding = pending()): J18ApprovalAuthorit
     };
 }
 
-function tools(execute: J17ToolAwareConversationService["execute"]): J17ToolAwareConversationService {
+function tools(
+    execute: J17ToolAwareConversationService["execute"],
+): J17ToolAwareConversationService {
     return { execute } as J17ToolAwareConversationService;
 }
 
@@ -115,9 +121,13 @@ describe("J1.8 permission/approval-aware conversation", () => {
         const approvalPort = approvals();
         const runtime = new J18PermissionApprovalCoordinator(
             approvalPort,
-            tools(vi.fn(async () => {
-                throw new J17ToolAwareConversationError("J17_APPROVAL_REQUIRED");
-            })),
+            tools(
+                vi.fn(async () => {
+                    throw new J17ToolAwareConversationError(
+                        "J17_APPROVAL_REQUIRED",
+                    );
+                }),
+            ),
         );
 
         const result = await runtime.executeOrRequestApproval(
@@ -133,13 +143,20 @@ describe("J1.8 permission/approval-aware conversation", () => {
     it("rejects stale security-epoch approval binding", async () => {
         const runtime = new J18PermissionApprovalCoordinator(
             approvals(pending({ securityEpoch: authority.securityEpoch + 1 })),
-            tools(vi.fn(async () => {
-                throw new J17ToolAwareConversationError("J17_APPROVAL_REQUIRED");
-            })),
+            tools(
+                vi.fn(async () => {
+                    throw new J17ToolAwareConversationError(
+                        "J17_APPROVAL_REQUIRED",
+                    );
+                }),
+            ),
         );
 
         await expect(
-            runtime.executeOrRequestApproval(input, new AbortController().signal),
+            runtime.executeOrRequestApproval(
+                input,
+                new AbortController().signal,
+            ),
         ).rejects.toBeInstanceOf(J18PermissionApprovalError);
     });
 
