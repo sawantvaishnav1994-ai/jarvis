@@ -231,8 +231,9 @@ function harness(structured: unknown, gatewayOverride?: J17ToolGatewayPort) {
         capture,
         { now: () => 100 },
     );
-    const gateway: J17ToolGatewayPort =
-        gatewayOverride ?? ({ invoke: vi.fn(async () => toolResult()) } as const);
+    const gateway: J17ToolGatewayPort = gatewayOverride ?? {
+        invoke: vi.fn(async () => toolResult()),
+    };
     const tools = new J17ToolAwareConversationService(
         { verify: async () => ({ valid: true, reason: "OK" }) },
         gateway,
@@ -273,7 +274,10 @@ describe("J1.7 tool-aware turn bridge", () => {
     });
 
     it("does not execute a tool for ordinary structured model content", async () => {
-        const { coordinator, gateway } = harness({ kind: "answer", value: "ok" });
+        const { coordinator, gateway } = harness({
+            kind: "answer",
+            value: "ok",
+        });
         const output = await coordinator.execute(
             coordinatorInput(),
             new AbortController().signal,
