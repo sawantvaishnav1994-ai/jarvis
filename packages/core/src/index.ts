@@ -12,3 +12,4 @@ export * from "./model-orchestration.js";
 export * from "./turn-pipeline.js";
 export * from "./conversation-history.js";
 export * from "./memory-aware-conversation.js";
+export * from "./tool-aware-conversation.js";
