@@ -229,6 +229,26 @@ export class ConversationSessionEngine {
         );
     }
 
+    async verifySession(
+        authority: ConversationAuthority,
+        sessionId: string,
+    ): Promise<ConversationSession> {
+        const validated = await this.requireAuthority(authority);
+        const id = requireUuid(sessionId);
+        const session = await this.repository.getSession(validated.ownerId, id);
+        if (
+            !session ||
+            session.state !== "ACTIVE" ||
+            session.actorId !== validated.actorId ||
+            session.deviceId !== validated.deviceId ||
+            session.identitySessionId !== validated.identitySessionId ||
+            session.securityEpoch !== validated.securityEpoch ||
+            session.operatingMode !== validated.operatingMode
+        )
+            throw new BoundaryError("CONVERSATION_SESSION_BINDING_INVALID");
+        return session;
+    }
+
     async acceptTurn(input: {
         authority: ConversationAuthority;
         sessionId: string;
@@ -245,19 +265,7 @@ export class ConversationSessionEngine {
         );
         const idempotencyKey = requireId(input.idempotencyKey);
         const correlationId = requireId(input.correlationId);
-        const session = await this.repository.getSession(
-            authority.ownerId,
-            sessionId,
-        );
-        if (
-            !session ||
-            session.state !== "ACTIVE" ||
-            session.actorId !== authority.actorId ||
-            session.deviceId !== authority.deviceId ||
-            session.identitySessionId !== authority.identitySessionId ||
-            session.securityEpoch !== authority.securityEpoch
-        )
-            throw new BoundaryError("CONVERSATION_SESSION_BINDING_INVALID");
+        await this.verifySession(authority, sessionId);
         return this.repository.createTurn(
             parseConversationTurn({
                 id: this.nextId(),
