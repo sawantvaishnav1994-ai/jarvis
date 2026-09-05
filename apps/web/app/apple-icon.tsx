@@ -17,16 +17,16 @@ export default function AppleIcon() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#18282b",
-                    color: "#f5f5f0",
-                    fontSize: 78,
-                    fontWeight: 800,
-                    letterSpacing: "-0.06em",
-                    fontFamily: "sans-serif",
+                    background: "#050505",
+                    color: "#d9a326",
+                    fontSize: 104,
+                    fontWeight: 700,
+                    fontFamily: "serif",
                     borderRadius: 36,
+                    border: "4px solid #d9a326",
                 }}
             >
-                J
+                ॐ
             </div>
         ),
         size,
