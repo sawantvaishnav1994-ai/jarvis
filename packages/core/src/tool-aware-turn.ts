@@ -79,7 +79,10 @@ export class J17ToolAwareTurnCoordinator {
             return { turn, tool: null };
         }
         if (modelResult === undefined) return { turn, tool: null };
-        if (turn.toolExecutionCommitted !== false || turn.approvalCommitted !== false)
+        if (
+            turn.toolExecutionCommitted !== false ||
+            turn.approvalCommitted !== false
+        )
             throw new Error("J17_J14_BOUNDARY_INVALID");
         if (!isToolProposalCandidate(modelResult.result.structured)) {
             this.capture.clear(input.turn.turnId);
