@@ -4,5 +4,11 @@
         "file": "0015_conversation_session_engine.sql",
         "sha256": "6ba48de71fa3ea88be709ab67fa22066fc7136e31ab9556d75f9c84f25921a9e",
         "destructive": false
+    },
+    {
+        "version": 16,
+        "file": "0016_conversation_persistence_history.sql",
+        "sha256": "651849c78eeb62caeb3d7aedfed62dc1a7e6259f15cb5f93b16c787914a37c91",
+        "destructive": false
     }
 ]

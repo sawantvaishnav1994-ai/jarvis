@@ -1,0 +1,27 @@
+{
+    "milestone": "J1.5",
+    "name": "Conversation Persistence and History",
+    "baseline": "c454bc7f9198f3b9b549d2239183cd0d83c67ddf",
+    "gates": [
+        { "id": "A", "name": "Exact frozen J1.4 baseline" },
+        { "id": "B", "name": "Additive non-destructive runtime migration" },
+        { "id": "C", "name": "J0.4 encrypted payload source of truth preserved" },
+        { "id": "D", "name": "Owner project security epoch conversation turn bindings" },
+        { "id": "E", "name": "Conversation registration exact idempotency" },
+        { "id": "F", "name": "Archive optimistic versioning and append denial" },
+        { "id": "G", "name": "Stable owner-scoped conversation pagination" },
+        { "id": "H", "name": "Deterministic ordered message pagination" },
+        { "id": "I", "name": "Transactional concurrent ordinal allocation" },
+        { "id": "J", "name": "Message exact replay and conflict handling" },
+        { "id": "K", "name": "J1.4 terminal result binding preserved" },
+        { "id": "L", "name": "Digest-only history metadata excludes plaintext" },
+        { "id": "M", "name": "Terminal result exact idempotency" },
+        { "id": "N", "name": "PostgreSQL restart reconstruction recovery" },
+        { "id": "O", "name": "Dedicated unit security and PostgreSQL tests" },
+        { "id": "P", "name": "No J1.6 memory promotion behavior" },
+        { "id": "Q", "name": "No J1.7 tool or J1.8 approval execution" },
+        { "id": "R", "name": "Foundation and J1.0-J1.4 regression preserved" },
+        { "id": "S", "name": "Full real-stack cloud qualification" },
+        { "id": "T", "name": "J1.9-J1.12 not started and no production credentials" }
+    ]
+}
