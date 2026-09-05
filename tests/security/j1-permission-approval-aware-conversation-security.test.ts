@@ -82,6 +82,7 @@ function binding(
     return {
         approvalId: "approval:security",
         approvalReference: "approval-reference:security",
+        requesterActorId: input.actorId,
         requestId: input.requestId,
         correlationId: input.correlationId,
         conversationId: authority.conversationId,
@@ -112,6 +113,7 @@ function toolPort(execute = vi.fn()): J17ToolAwareConversationService {
 
 describe("J1.8 approval lifecycle security", () => {
     it.each([
+        ["requester", { requesterActorId: "agent:attacker" }],
         ["owner", { ownerId: "owner:attacker" }],
         ["project", { projectId: "project:attacker" }],
         ["conversation", { conversationId: "conversation:attacker" }],
@@ -189,14 +191,57 @@ describe("J1.8 approval lifecycle security", () => {
         expect(execute).not.toHaveBeenCalled();
     });
 
-    it("rejects mismatched owner decision response", async () => {
+    it("rejects self approval before the J0 decision command", async () => {
         const port = approvalPort(
-            binding({ approvalId: "approval:other", status: "APPROVED" }),
+            binding({ requesterActorId: authority.ownerId, status: "PENDING" }),
         );
         const runtime = new J18PermissionApprovalCoordinator(port, toolPort());
         await expect(
             runtime.decideAsOwner({
                 approvalId: "approval:security",
+                decision: "APPROVE",
+                ownerId: authority.ownerId,
+                ownerSessionId: authority.sessionId,
+                ownerDeviceId: "device:test",
+                assurance: "A3",
+                proofId: "proof:test",
+            }),
+        ).rejects.toThrow("J18_SELF_APPROVAL_DENIED");
+        expect(port.decide).not.toHaveBeenCalled();
+    });
+
+    it("rejects approval state races before the J0 decision command", async () => {
+        const port = approvalPort(binding({ status: "CONSUMED" }));
+        const runtime = new J18PermissionApprovalCoordinator(port, toolPort());
+        await expect(
+            runtime.decideAsOwner({
+                approvalId: "approval:security",
+                decision: "APPROVE",
+                ownerId: authority.ownerId,
+                ownerSessionId: authority.sessionId,
+                ownerDeviceId: "device:test",
+                assurance: "A3",
+                proofId: "proof:test",
+            }),
+        ).rejects.toThrow("J18_APPROVAL_NOT_PENDING");
+        expect(port.decide).not.toHaveBeenCalled();
+    });
+
+    it("rejects a J0 decision response that mutates the approval binding", async () => {
+        const pending = binding({ status: "PENDING" });
+        const port: J18ApprovalAuthorityPort = {
+            requestApproval: vi.fn(async () => pending),
+            read: vi.fn(async () => pending),
+            decide: vi.fn(async () => ({
+                ...pending,
+                requestId: "request:attacker",
+                status: "APPROVED" as const,
+            })),
+        };
+        const runtime = new J18PermissionApprovalCoordinator(port, toolPort());
+        await expect(
+            runtime.decideAsOwner({
+                approvalId: pending.approvalId,
                 decision: "APPROVE",
                 ownerId: authority.ownerId,
                 ownerSessionId: authority.sessionId,
