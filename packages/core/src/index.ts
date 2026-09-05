@@ -17,3 +17,4 @@ export * from "./tool-aware-turn.js";
 export * from "./permission-approval-aware-conversation.js";
 export * from "./operating-modes.js";
 export * from "./streaming-resilience.js";
+export * from "./final-conversation-persistence.js";
