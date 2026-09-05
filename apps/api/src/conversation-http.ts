@@ -77,9 +77,7 @@ const descriptor: ModelDescriptor = {
 };
 
 function bindingDigest(request: z.infer<typeof TurnRequestSchema>): string {
-    return createHash("sha256")
-        .update(JSON.stringify(request))
-        .digest("hex");
+    return createHash("sha256").update(JSON.stringify(request)).digest("hex");
 }
 
 async function readBody(req: IncomingMessage): Promise<string> {
@@ -177,7 +175,11 @@ export function conversationHandler(
                     rpc.contextHash,
                 );
                 res.writeHead(200);
-                res.end(JSON.stringify({ result: { ...challenge, bindingDigest: digest } }));
+                res.end(
+                    JSON.stringify({
+                        result: { ...challenge, bindingDigest: digest },
+                    }),
+                );
                 return true;
             }
 

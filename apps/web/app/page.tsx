@@ -89,8 +89,8 @@ export default async function Page() {
                     <p className="eyebrow">CORE + CONVERSATION</p>
                     <h2>Authenticated JARVIS conversation</h2>
                     <p>
-                        Device-bound turns with local model processing, provenance,
-                        privacy and ordered event visibility.
+                        Device-bound turns with local model processing,
+                        provenance, privacy and ordered event visibility.
                     </p>
                     <a href="/conversation">Open conversation</a>
                 </div>
@@ -98,7 +98,9 @@ export default async function Page() {
             </section>
             <footer>
                 <span>Interface skeleton · v0.3.0</span>
-                <span>Protected actions remain governed by Foundation policy.</span>
+                <span>
+                    Protected actions remain governed by Foundation policy.
+                </span>
             </footer>
         </main>
     );

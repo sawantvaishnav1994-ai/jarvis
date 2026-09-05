@@ -223,7 +223,10 @@ export const ActionSchema = z.enum([
 export type IdentityAction = z.infer<typeof ActionSchema>;
 export const ActionInputSchemas = {
     "identity.inspect": z.strictObject({
-        requestBindingDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+        requestBindingDigest: z
+            .string()
+            .regex(/^[a-f0-9]{64}$/)
+            .optional(),
     }),
     "device.approve": z.strictObject({
         deviceId: IdentifierSchema,

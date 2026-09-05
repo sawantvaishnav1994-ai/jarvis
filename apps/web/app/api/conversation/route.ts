@@ -19,7 +19,11 @@ type BrowserRequest = {
 function normalize(input: BrowserRequest) {
     if (!input || (input.phase !== "begin" && input.phase !== "turn"))
         throw new Error("Invalid phase");
-    if (!input.request || typeof input.request !== "object" || Array.isArray(input.request))
+    if (
+        !input.request ||
+        typeof input.request !== "object" ||
+        Array.isArray(input.request)
+    )
         throw new Error("Invalid request");
     const request = input.request as Record<string, unknown>;
     if (
@@ -42,7 +46,11 @@ function normalize(input: BrowserRequest) {
     };
     if (input.phase === "begin")
         return { phase: "begin" as const, request: normalizedRequest };
-    if (!input.proof || typeof input.proof !== "object" || Array.isArray(input.proof))
+    if (
+        !input.proof ||
+        typeof input.proof !== "object" ||
+        Array.isArray(input.proof)
+    )
         throw new Error("Invalid proof");
     const proof = input.proof as Record<string, unknown>;
     if (
@@ -66,20 +74,30 @@ export async function POST(request: Request) {
     try {
         const root = resolve(process.cwd(), "../..");
         const config = await loadConfig(
-            process.env.JARVIS_CONFIG ?? resolve(root, "config/development.json"),
+            process.env.JARVIS_CONFIG ??
+                resolve(root, "config/development.json"),
         );
         requireDevelopment(config);
         if (
             request.headers.get("origin") !== config.identity.origin ||
             request.headers.get("content-type") !== "application/json"
         )
-            return NextResponse.json({ error: "ORIGIN_DENIED" }, { status: 403 });
+            return NextResponse.json(
+                { error: "ORIGIN_DENIED" },
+                { status: 403 },
+            );
         if (Number(request.headers.get("content-length") ?? 0) > 65_536)
-            return NextResponse.json({ error: "REQUEST_TOO_LARGE" }, { status: 413 });
+            return NextResponse.json(
+                { error: "REQUEST_TOO_LARGE" },
+                { status: 413 },
+            );
 
         const raw = await request.text();
         if (raw.length > 65_536)
-            return NextResponse.json({ error: "REQUEST_TOO_LARGE" }, { status: 413 });
+            return NextResponse.json(
+                { error: "REQUEST_TOO_LARGE" },
+                { status: 413 },
+            );
         const normalized = normalize(JSON.parse(raw) as BrowserRequest);
         const token = (await cookies()).get("jarvis_session")?.value ?? "";
         const contextHash = createHash("sha256")

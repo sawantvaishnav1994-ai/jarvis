@@ -29,9 +29,11 @@ describe("J1.11 conversational Web UI security contract", () => {
     });
 
     it("keeps the session HttpOnly while allowing sibling trusted API routes", async () => {
-        const identityRoute = await source("apps/web/app/api/identity/route.ts");
-        expect(identityRoute).toContain('httpOnly: true');
-        expect(identityRoute).toContain('secure: true');
+        const identityRoute = await source(
+            "apps/web/app/api/identity/route.ts",
+        );
+        expect(identityRoute).toContain("httpOnly: true");
+        expect(identityRoute).toContain("secure: true");
         expect(identityRoute).toContain('sameSite: "strict"');
         expect(identityRoute).toContain('path: "/api"');
         expect(identityRoute).not.toContain('path: "/"');
@@ -39,9 +41,11 @@ describe("J1.11 conversational Web UI security contract", () => {
 
     it("constructs conversation authority server-side and never accepts a browser token", async () => {
         const proxy = await source("apps/web/app/api/conversation/route.ts");
-        const client = await source("apps/web/app/conversation/conversation-console.tsx");
+        const client = await source(
+            "apps/web/app/conversation/conversation-console.tsx",
+        );
         expect(proxy).toContain('get("jarvis_session")');
-        expect(proxy).toContain('signService(');
+        expect(proxy).toContain("signService(");
         expect(proxy).toContain('"conversation.rpc"');
         expect(proxy).toContain("const normalizedRequest");
         expect(proxy).not.toContain("request.ownerId");
@@ -52,7 +56,9 @@ describe("J1.11 conversational Web UI security contract", () => {
     });
 
     it("renders privacy, source, approval, tool and ordered event evidence explicitly", async () => {
-        const client = await source("apps/web/app/conversation/conversation-console.tsx");
+        const client = await source(
+            "apps/web/app/conversation/conversation-console.tsx",
+        );
         for (const text of [
             "Privacy:",
             "Processing:",
