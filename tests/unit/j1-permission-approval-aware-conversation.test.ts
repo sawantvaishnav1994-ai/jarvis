@@ -83,6 +83,7 @@ function pending(
     return {
         approvalId: "approval:test",
         approvalReference: "approval-reference:test",
+        requesterActorId: input.actorId,
         requestId: input.requestId,
         correlationId: input.correlationId,
         conversationId: authority.conversationId,
@@ -142,6 +143,7 @@ describe("J1.8 permission/approval-aware conversation", () => {
 
         expect(result.state).toBe("PENDING_APPROVAL");
         expect(result.approvalCommitted).toBe(false);
+        expect(result.approval.requesterActorId).toBe(input.actorId);
         expect(approvalPort.requestApproval).toHaveBeenCalledTimes(1);
     });
 
@@ -183,6 +185,50 @@ describe("J1.8 permission/approval-aware conversation", () => {
                 proofId: "",
             }),
         ).rejects.toThrow("J18_OWNER_DECISION_INVALID");
+        expect(approvalPort.decide).not.toHaveBeenCalled();
+    });
+
+    it("rejects a decision from a different owner before J0 decision", async () => {
+        const approvalPort = approvals();
+        const runtime = new J18PermissionApprovalCoordinator(
+            approvalPort,
+            tools(vi.fn()),
+        );
+
+        await expect(
+            runtime.decideAsOwner({
+                approvalId: "approval:test",
+                decision: "APPROVE",
+                ownerId: "owner:attacker",
+                ownerSessionId: authority.sessionId,
+                ownerDeviceId: "device:test",
+                assurance: "A3",
+                proofId: "proof:test",
+            }),
+        ).rejects.toThrow("J18_APPROVAL_OWNER_MISMATCH");
+        expect(approvalPort.decide).not.toHaveBeenCalled();
+    });
+
+    it("rejects owner self-approval of an owner-originated request", async () => {
+        const approvalPort = approvals(
+            pending({ requesterActorId: authority.ownerId }),
+        );
+        const runtime = new J18PermissionApprovalCoordinator(
+            approvalPort,
+            tools(vi.fn()),
+        );
+
+        await expect(
+            runtime.decideAsOwner({
+                approvalId: "approval:test",
+                decision: "APPROVE",
+                ownerId: authority.ownerId,
+                ownerSessionId: authority.sessionId,
+                ownerDeviceId: "device:test",
+                assurance: "A3",
+                proofId: "proof:test",
+            }),
+        ).rejects.toThrow("J18_SELF_APPROVAL_DENIED");
         expect(approvalPort.decide).not.toHaveBeenCalled();
     });
 
