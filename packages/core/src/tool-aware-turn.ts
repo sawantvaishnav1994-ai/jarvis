@@ -5,9 +5,10 @@ import type {
     J14TurnPipelineInput,
     J14TurnPipelineResult,
 } from "./turn-pipeline.js";
-import type {
-    J17ToolAwareConversationService,
-    J17ToolExecutionResult,
+import {
+    J17ToolAwareConversationError,
+    type J17ToolAwareConversationService,
+    type J17ToolExecutionResult,
 } from "./tool-aware-conversation.js";
 
 export class J17CapturingModelPort implements J14ModelPort {
@@ -60,6 +61,13 @@ function isToolProposalCandidate(value: unknown): boolean {
     );
 }
 
+function mayRetryWithApproval(error: unknown): boolean {
+    return (
+        error instanceof J17ToolAwareConversationError &&
+        ["J17_APPROVAL_REQUIRED", "J17_APPROVAL_MISMATCH"].includes(error.code)
+    );
+}
+
 export class J17ToolAwareTurnCoordinator {
     constructor(
         private readonly pipeline: J14TurnPipeline,
@@ -89,25 +97,30 @@ export class J17ToolAwareTurnCoordinator {
             return { turn, tool: null };
         }
 
-        const tool = await this.tools.execute(
-            {
-                authority: input.turn.authority,
-                actorId: input.actorId,
-                actorRole: input.actorRole,
-                modelResult,
-                requestId: input.toolRequestId,
-                correlationId: input.toolCorrelationId,
-                deadlineEpochMs: input.toolDeadlineEpochMs,
-                maxCostMinor: input.toolMaxCostMinor,
-                externalAllowed: input.externalAllowed,
-                ...(input.approvalReference !== undefined
-                    ? { approvalReference: input.approvalReference }
-                    : {}),
-            },
-            signal,
-        );
-        this.capture.clear(input.turn.turnId);
-
-        return { turn, tool };
+        try {
+            const tool = await this.tools.execute(
+                {
+                    authority: input.turn.authority,
+                    actorId: input.actorId,
+                    actorRole: input.actorRole,
+                    modelResult,
+                    requestId: input.toolRequestId,
+                    correlationId: input.toolCorrelationId,
+                    deadlineEpochMs: input.toolDeadlineEpochMs,
+                    maxCostMinor: input.toolMaxCostMinor,
+                    externalAllowed: input.externalAllowed,
+                    ...(input.approvalReference !== undefined
+                        ? { approvalReference: input.approvalReference }
+                        : {}),
+                },
+                signal,
+            );
+            this.capture.clear(input.turn.turnId);
+            return { turn, tool };
+        } catch (error) {
+            if (!mayRetryWithApproval(error))
+                this.capture.clear(input.turn.turnId);
+            throw error;
+        }
     }
 }
