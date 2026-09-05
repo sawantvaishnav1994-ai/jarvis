@@ -104,10 +104,6 @@ function modelResult(structured: unknown): J13ExecutionResult {
     };
 }
 
-function input(structured: unknown, overrides: Partial<ReturnType<typeof baseInput>> = {}) {
-    return { ...baseInput(structured), ...overrides };
-}
-
 function baseInput(structured: unknown) {
     return {
         authority,
@@ -120,6 +116,13 @@ function baseInput(structured: unknown) {
         maxCostMinor: 10,
         externalAllowed: false,
     };
+}
+
+function input(
+    structured: unknown,
+    overrides: Partial<ReturnType<typeof baseInput>> = {},
+) {
+    return { ...baseInput(structured), ...overrides };
 }
 
 function runtime(tools = [syntheticTool("mock.read", "read")]) {
@@ -252,7 +255,7 @@ describe("J1.7 -> J0.7 gateway integration", () => {
     it("preserves cost limits before adapter dispatch", async () => {
         const adapter = new SyntheticToolAdapter("read");
         const { service } = runtime([
-            syntheticTool("mock.read", "read", { operations: undefined }, adapter),
+            syntheticTool("mock.read", "read", {}, adapter),
         ]);
 
         await expect(
