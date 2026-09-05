@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { createServer, connect } from "node:net";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import pg from "pg";
 import { RecordCipher } from "@jarvis/security";
 
 const root = resolve(import.meta.dirname, "..");
@@ -40,6 +41,114 @@ function hex64(name) {
     if (!/^[0-9a-f]{64}$/i.test(value))
         throw new Error("REMOTE_SECRET_INVALID");
     return value.toLowerCase();
+}
+
+function sqlLiteral(value) {
+    return `'${value.replaceAll("'", "''")}'`;
+}
+
+async function initializeRemotePostgres(postgresHost, postgresPort) {
+    const adminUser = required("JARVIS_REMOTE_POSTGRES_ADMIN_USER", 128);
+    const adminPassword = required("JARVIS_REMOTE_POSTGRES_ADMIN_PASSWORD", 512);
+    const adminDatabase = required("JARVIS_REMOTE_POSTGRES_ADMIN_DATABASE", 128);
+    const runtimePassword = required(
+        "JARVIS_REMOTE_DATABASE_RUNTIME_PASSWORD",
+        512,
+    );
+    const migratorPassword = required(
+        "JARVIS_REMOTE_DATABASE_MIGRATOR_PASSWORD",
+        512,
+    );
+    const admin = new pg.Client({
+        host: postgresHost,
+        port: postgresPort,
+        user: adminUser,
+        password: adminPassword,
+        database: adminDatabase,
+        connectionTimeoutMillis: 5000,
+    });
+    try {
+        await admin.connect();
+        const migrator = await admin.query(
+            "SELECT 1 FROM pg_roles WHERE rolname = 'jarvis_development_migrator'",
+        );
+        await admin.query(
+            migrator.rowCount === 0
+                ? `CREATE ROLE jarvis_development_migrator LOGIN PASSWORD ${sqlLiteral(migratorPassword)}`
+                : `ALTER ROLE jarvis_development_migrator LOGIN PASSWORD ${sqlLiteral(migratorPassword)}`,
+        );
+        const runtime = await admin.query(
+            "SELECT 1 FROM pg_roles WHERE rolname = 'jarvis_development_runtime'",
+        );
+        await admin.query(
+            runtime.rowCount === 0
+                ? `CREATE ROLE jarvis_development_runtime LOGIN PASSWORD ${sqlLiteral(runtimePassword)}`
+                : `ALTER ROLE jarvis_development_runtime LOGIN PASSWORD ${sqlLiteral(runtimePassword)}`,
+        );
+        const database = await admin.query(
+            "SELECT 1 FROM pg_database WHERE datname = 'jarvis_development'",
+        );
+        if (database.rowCount === 0)
+            await admin.query(
+                "CREATE DATABASE jarvis_development OWNER jarvis_development_migrator",
+            );
+        else
+            await admin.query(
+                "ALTER DATABASE jarvis_development OWNER TO jarvis_development_migrator",
+            );
+    } finally {
+        await admin.end().catch(() => {});
+    }
+
+    const database = new pg.Client({
+        host: postgresHost,
+        port: postgresPort,
+        user: adminUser,
+        password: adminPassword,
+        database: "jarvis_development",
+        connectionTimeoutMillis: 5000,
+    });
+    try {
+        await database.connect();
+        await database.query("CREATE EXTENSION IF NOT EXISTS vector");
+        await database.query(
+            "ALTER SCHEMA public OWNER TO jarvis_development_migrator",
+        );
+        await database.query(
+            "GRANT ALL PRIVILEGES ON SCHEMA public TO jarvis_development_migrator",
+        );
+        await database.query(
+            "GRANT CONNECT ON DATABASE jarvis_development TO jarvis_development_runtime",
+        );
+        await database.query(
+            "GRANT USAGE ON SCHEMA public TO jarvis_development_runtime",
+        );
+        await database.query(
+            "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO jarvis_development_runtime",
+        );
+        await database.query(
+            "GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO jarvis_development_runtime",
+        );
+        await database.query(
+            "ALTER DEFAULT PRIVILEGES FOR ROLE jarvis_development_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO jarvis_development_runtime",
+        );
+        await database.query(
+            "ALTER DEFAULT PRIVILEGES FOR ROLE jarvis_development_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO jarvis_development_runtime",
+        );
+        const verification = await database.query(
+            "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') AS vector, pg_get_userbyid((SELECT datdba FROM pg_database WHERE datname = 'jarvis_development')) AS owner",
+        );
+        if (
+            verification.rows[0]?.vector !== true ||
+            verification.rows[0]?.owner !== "jarvis_development_migrator"
+        )
+            throw new Error("REMOTE_DATABASE_VERIFICATION_FAILED");
+    } finally {
+        await database.end().catch(() => {});
+        delete process.env.JARVIS_REMOTE_POSTGRES_ADMIN_USER;
+        delete process.env.JARVIS_REMOTE_POSTGRES_ADMIN_PASSWORD;
+        delete process.env.JARVIS_REMOTE_POSTGRES_ADMIN_DATABASE;
+    }
 }
 
 async function materializeVault() {
@@ -173,6 +282,7 @@ try {
     required("JARVIS_REMOTE_RP_ID", 253);
     process.env.JARVIS_CONFIG = resolve(root, "config/development.json");
     process.env.NEXT_TELEMETRY_DISABLED = "1";
+    await initializeRemotePostgres(postgresHost, postgresPort);
     await materializeVault();
     await proxy(5433, postgresHost, postgresPort);
     await proxy(6380, redisHost, redisPort);
