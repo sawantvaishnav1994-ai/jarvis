@@ -6,10 +6,14 @@ import {
     IdentityFault,
     type ServiceProof,
 } from "@jarvis/identity";
+import { BoundaryError } from "@jarvis/shared";
 import {
     ContextAssembler,
+    ConversationSessionEngine,
     J13ModelOrchestrator,
     J14TurnPipeline,
+    type ConversationAuthority,
+    type ConversationSessionRepository,
 } from "@jarvis/core";
 import {
     ModelProviderRegistry,
@@ -22,6 +26,7 @@ import {
 const TurnRequestSchema = z.strictObject({
     message: z.string().trim().min(1).max(20_000),
     conversationId: z.string().uuid().nullable().default(null),
+    conversationSessionId: z.string().uuid().nullable().default(null),
 });
 const ProofSchema = z.strictObject({
     challengeId: z.string().min(1).max(128),
@@ -138,6 +143,7 @@ function localModelRequest(
 export function conversationHandler(
     engine: IdentityEngine,
     serviceKey: Buffer,
+    sessions: ConversationSessionRepository,
 ) {
     return async (
         req: IncomingMessage,
@@ -205,13 +211,42 @@ export function conversationHandler(
             )
                 throw new IdentityFault("SESSION_INVALID");
 
+            const conversationAuthority: ConversationAuthority = {
+                ownerId: inspected.owner.id,
+                actorId: inspected.owner.id,
+                deviceId: current.deviceId,
+                identitySessionId: current.id,
+                securityEpoch: current.epoch,
+                operatingMode: "assistant",
+            };
+            const sessionEngine = new ConversationSessionEngine(
+                sessions,
+                async (candidate) =>
+                    candidate.ownerId === conversationAuthority.ownerId &&
+                    candidate.actorId === conversationAuthority.actorId &&
+                    candidate.deviceId === conversationAuthority.deviceId &&
+                    candidate.identitySessionId ===
+                        conversationAuthority.identitySessionId &&
+                    candidate.securityEpoch ===
+                        conversationAuthority.securityEpoch &&
+                    candidate.operatingMode ===
+                        conversationAuthority.operatingMode,
+                randomUUID,
+            );
+            const conversationSession = rpc.request.conversationSessionId
+                ? await sessionEngine.verifySession(
+                      conversationAuthority,
+                      rpc.request.conversationSessionId,
+                  )
+                : await sessionEngine.openSession(conversationAuthority);
+
             const conversationId = rpc.request.conversationId ?? randomUUID();
             const turnId = randomUUID();
             const authority = {
                 ownerId: inspected.owner.id,
                 projectId: "jarvis",
                 conversationId,
-                sessionId: current.id,
+                sessionId: conversationSession.id,
                 turnId,
                 securityEpoch: current.epoch,
                 operatingMode: "assistant" as const,
@@ -256,7 +291,7 @@ export function conversationHandler(
                 {
                     authority,
                     conversationId,
-                    sessionId: current.id,
+                    sessionId: conversationSession.id,
                     turnId,
                     correlationId: `j1.11:${randomUUID()}`,
                     idempotencyKey: `j1.11:${digest}`,
@@ -273,7 +308,7 @@ export function conversationHandler(
                             classification: "D2",
                             freshness: Date.now(),
                             retention: "session",
-                            retentionBoundary: current.id,
+                            retentionBoundary: conversationSession.id,
                             disclosureEligibility: true,
                             digest: inputDigest,
                             trust: "trusted",
@@ -292,7 +327,7 @@ export function conversationHandler(
                     },
                     modelRequest: localModelRequest(
                         inspected.owner.id,
-                        current.id,
+                        conversationSession.id,
                         rpc.request.message,
                         `j1.11:${turnId}`,
                     ),
@@ -321,6 +356,7 @@ export function conversationHandler(
                 JSON.stringify({
                     result: {
                         conversationId,
+                        conversationSessionId: conversationSession.id,
                         turnId,
                         response: result.response,
                         state: result.state,
@@ -344,7 +380,7 @@ export function conversationHandler(
             );
         } catch (error) {
             const code =
-                error instanceof IdentityFault
+                error instanceof BoundaryError
                     ? error.code
                     : error instanceof z.ZodError
                       ? "CONVERSATION_INPUT_INVALID"
