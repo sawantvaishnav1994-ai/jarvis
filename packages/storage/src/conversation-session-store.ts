@@ -110,6 +110,21 @@ function postgresErrorCode(error: unknown): string | null {
     return null;
 }
 
+function classifySessionStorageError(error: unknown): BoundaryError | null {
+    switch (postgresErrorCode(error)) {
+        case "23503":
+            return new BoundaryError("CONVERSATION_SESSION_REFERENCE_INVALID");
+        case "42501":
+            return new BoundaryError("CONVERSATION_SESSION_STORAGE_DENIED");
+        case "42P01":
+            return new BoundaryError("CONVERSATION_SESSION_STORAGE_UNAVAILABLE");
+        case "22P02":
+            return new BoundaryError("CONVERSATION_SESSION_STORAGE_INVALID");
+        default:
+            return null;
+    }
+}
+
 function sameSessionBinding(a: Session, b: Session): boolean {
     return (
         a.ownerId === b.ownerId &&
@@ -143,7 +158,12 @@ export class PostgresConversationSessionRepository {
             );
             return sessionFrom(result.rows[0]!);
         } catch (error: unknown) {
-            if (postgresErrorCode(error) !== "23505") throw error;
+            const code = postgresErrorCode(error);
+            if (code !== "23505") {
+                const classified = classifySessionStorageError(error);
+                if (classified) throw classified;
+                throw error;
+            }
             const existing = await this.pool.query<SessionRow>(
                 "SELECT * FROM conversations.sessions WHERE owner_id=$1 AND identity_session_id=$2 AND device_id=$3",
                 [session.ownerId, session.identitySessionId, session.deviceId],
