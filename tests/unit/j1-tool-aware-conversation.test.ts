@@ -102,21 +102,25 @@ function service(gateway?: J17ToolGatewayPort) {
     };
 }
 
+function executionInput(structured: unknown = proposal) {
+    return {
+        authority,
+        actorId: "actor:test",
+        actorRole: "OWNER" as const,
+        modelResult: modelResult(structured),
+        requestId: "tool-request:test",
+        correlationId: "correlation:test",
+        deadlineEpochMs: Date.now() + 60_000,
+        maxCostMinor: 100,
+        externalAllowed: false,
+    };
+}
+
 describe("J1.7 tool-aware conversation", () => {
     it("injects trusted authority binding and invokes only the J0 tool gateway port", async () => {
         const { runtime, gateway } = service();
         const output = await runtime.execute(
-            {
-                authority,
-                actorId: "actor:test",
-                actorRole: "OWNER",
-                modelResult: modelResult(proposal),
-                requestId: "tool-request:test",
-                correlationId: "correlation:test",
-                deadlineEpochMs: Date.now() + 60_000,
-                maxCostMinor: 100,
-                externalAllowed: false,
-            },
+            executionInput(),
             new AbortController().signal,
         );
 
@@ -139,17 +143,7 @@ describe("J1.7 tool-aware conversation", () => {
         const { runtime, gateway } = service();
         await expect(
             runtime.execute(
-                {
-                    authority,
-                    actorId: "actor:test",
-                    actorRole: "OWNER",
-                    modelResult: modelResult({ ownerId: "owner:attacker" }),
-                    requestId: "tool-request:test",
-                    correlationId: "correlation:test",
-                    deadlineEpochMs: Date.now() + 60_000,
-                    maxCostMinor: 100,
-                    externalAllowed: false,
-                },
+                executionInput({ ownerId: "owner:attacker" }),
                 new AbortController().signal,
             ),
         ).rejects.toThrow("J17_TOOL_PROPOSAL_INVALID");
@@ -160,20 +154,7 @@ describe("J1.7 tool-aware conversation", () => {
         const { runtime, gateway } = service();
         const unsafe = { ...proposal, idempotencyKey: undefined };
         await expect(
-            runtime.execute(
-                {
-                    authority,
-                    actorId: "actor:test",
-                    actorRole: "OWNER",
-                    modelResult: modelResult(unsafe),
-                    requestId: "tool-request:test",
-                    correlationId: "correlation:test",
-                    deadlineEpochMs: Date.now() + 60_000,
-                    maxCostMinor: 100,
-                    externalAllowed: false,
-                },
-                new AbortController().signal,
-            ),
+            runtime.execute(executionInput(unsafe), new AbortController().signal),
         ).rejects.toBeInstanceOf(J17ToolAwareConversationError);
         expect(gateway.invoke).not.toHaveBeenCalled();
     });
@@ -186,20 +167,43 @@ describe("J1.7 tool-aware conversation", () => {
         };
         const { runtime } = service(gateway);
         await expect(
-            runtime.execute(
-                {
-                    authority,
-                    actorId: "actor:test",
-                    actorRole: "OWNER",
-                    modelResult: modelResult(proposal),
-                    requestId: "tool-request:test",
-                    correlationId: "correlation:test",
-                    deadlineEpochMs: Date.now() + 60_000,
-                    maxCostMinor: 100,
-                    externalAllowed: false,
-                },
-                new AbortController().signal,
-            ),
+            runtime.execute(executionInput(), new AbortController().signal),
         ).rejects.toThrow("J17_APPROVAL_REQUIRED");
+    });
+
+    it.each([
+        ["APPROVAL_MISMATCH", "J17_APPROVAL_MISMATCH"],
+        ["UNKNOWN_OUTCOME", "J17_TOOL_OUTCOME_UNKNOWN"],
+        ["CANCELLED", "J17_TOOL_CANCELLED"],
+        ["TIMEOUT", "J17_TOOL_TIMEOUT"],
+        ["EMERGENCY_STOP", "J17_TOOL_EMERGENCY_BLOCKED"],
+        ["PRIVACY_DENIED", "J17_TOOL_PRIVACY_DENIED"],
+        ["COST_BUDGET_EXCEEDED", "J17_TOOL_COST_BUDGET_EXCEEDED"],
+        ["CONCURRENCY_CONFLICT", "J17_TOOL_CONCURRENCY_CONFLICT"],
+        ["CREDENTIAL_UNAVAILABLE", "J17_TOOL_CREDENTIAL_UNAVAILABLE"],
+        ["TOOL_NOT_FOUND", "J17_TOOL_UNAVAILABLE"],
+        ["INVALID_OUTPUT", "J17_TOOL_CONTRACT_INVALID"],
+        ["AUTHORIZATION_INVALID", "J17_TOOL_AUTHORIZATION_DENIED"],
+        ["IDEMPOTENCY_CONFLICT", "J17_TOOL_IDEMPOTENCY_CONFLICT"],
+    ])("maps J0 gateway failure %s without weakening it", async (gatewayCode, expected) => {
+        const gateway: J17ToolGatewayPort = {
+            invoke: vi.fn(async () => {
+                throw new Error(gatewayCode);
+            }),
+        };
+        const { runtime } = service(gateway);
+        await expect(
+            runtime.execute(executionInput(), new AbortController().signal),
+        ).rejects.toThrow(expected);
+    });
+
+    it("fails before the gateway when cancellation is already requested", async () => {
+        const { runtime, gateway } = service();
+        const controller = new AbortController();
+        controller.abort();
+        await expect(runtime.execute(executionInput(), controller.signal)).rejects.toThrow(
+            "J17_TOOL_CANCELLED",
+        );
+        expect(gateway.invoke).not.toHaveBeenCalled();
     });
 });
