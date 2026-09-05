@@ -11,3 +11,4 @@ export * from "./context-assembly.js";
 export * from "./model-orchestration.js";
 export * from "./turn-pipeline.js";
 export * from "./conversation-history.js";
+export * from "./memory-aware-conversation.js";
