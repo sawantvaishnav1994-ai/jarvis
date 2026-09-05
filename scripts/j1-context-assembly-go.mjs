@@ -12,6 +12,11 @@ try {
         read("docs/roadmap/j1.2.md"),
         json("infrastructure/migrations/j1/manifest.json"),
     ]);
+    const j1MigrationsSequential =
+        j1Migrations.length >= 1 &&
+        j1Migrations.every(
+            (migration, index) => migration.version === 15 + index,
+        );
     const checks = {
         A:
             gates.milestone === "J1.2" &&
@@ -19,7 +24,7 @@ try {
             JSON.stringify(gates.gates.map((gate) => gate.id)) ===
                 JSON.stringify(letters),
         B:
-            j1Migrations.length === 1 &&
+            j1MigrationsSequential &&
             j1Migrations[0]?.version === 15 &&
             roadmap.includes("introduces no database migration"),
         C: [
