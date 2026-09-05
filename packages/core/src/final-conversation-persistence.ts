@@ -46,7 +46,8 @@ function requireStored(
     expectedId: string,
     code: string,
 ): void {
-    if (!result.stored || result.id !== expectedId) throw new BoundaryError(code);
+    if (!result.stored || result.id !== expectedId)
+        throw new BoundaryError(code);
 }
 
 export class J112ConversationPersistenceCoordinator {
@@ -100,7 +101,11 @@ export class J112ConversationPersistenceCoordinator {
             classification: input.classification,
             model: null,
         });
-        requireStored(message, input.inputMessageId, "J112_MESSAGE_NOT_DURABLE");
+        requireStored(
+            message,
+            input.inputMessageId,
+            "J112_MESSAGE_NOT_DURABLE",
+        );
 
         const turn = await this.sessions.acceptTurn({
             authority: input.authority,

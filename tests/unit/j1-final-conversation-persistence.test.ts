@@ -85,10 +85,12 @@ function fixture() {
         getTurnResult: vi.fn(async () => null),
     };
     const records = {
-        persistConversation: vi.fn(async (input: { conversationId: string }) => {
-            order.push("record.conversation");
-            return { id: input.conversationId, stored: true };
-        }),
+        persistConversation: vi.fn(
+            async (input: { conversationId: string }) => {
+                order.push("record.conversation");
+                return { id: input.conversationId, stored: true };
+            },
+        ),
         persistMessage: vi.fn(
             async (input: { messageId: string; role: string }) => {
                 order.push(`record.message:${input.role}`);
