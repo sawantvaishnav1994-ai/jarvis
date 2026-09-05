@@ -18,7 +18,13 @@ export interface J18ApprovalBinding {
     projectId?: string;
     securityEpoch: number;
     expiresAtEpochMs: number;
-    status: "PENDING" | "APPROVED" | "DENIED" | "EXPIRED" | "REVOKED" | "CONSUMED";
+    status:
+        | "PENDING"
+        | "APPROVED"
+        | "DENIED"
+        | "EXPIRED"
+        | "REVOKED"
+        | "CONSUMED";
 }
 
 export interface J18ApprovalRequestInput {
@@ -93,13 +99,30 @@ function assertBinding(
         throw new J18PermissionApprovalError("J18_APPROVAL_BINDING_INVALID");
 }
 
-function mapTerminal(approval: J18ApprovalBinding): J18PermissionApprovalResult {
+function mapTerminal(
+    approval: J18ApprovalBinding,
+): J18PermissionApprovalResult {
     if (approval.status === "DENIED")
-        return { state: "DENIED", approvalCommitted: false, approval, tool: null };
+        return {
+            state: "DENIED",
+            approvalCommitted: false,
+            approval,
+            tool: null,
+        };
     if (approval.status === "EXPIRED")
-        return { state: "EXPIRED", approvalCommitted: false, approval, tool: null };
+        return {
+            state: "EXPIRED",
+            approvalCommitted: false,
+            approval,
+            tool: null,
+        };
     if (approval.status === "REVOKED")
-        return { state: "REVOKED", approvalCommitted: false, approval, tool: null };
+        return {
+            state: "REVOKED",
+            approvalCommitted: false,
+            approval,
+            tool: null,
+        };
     throw new J18PermissionApprovalError("J18_APPROVAL_NOT_TERMINAL");
 }
 
