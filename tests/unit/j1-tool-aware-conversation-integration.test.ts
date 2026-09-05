@@ -195,6 +195,31 @@ describe("J1.7 -> J0.7 gateway integration", () => {
 
         await expect(
             service.execute(input(proposal), new AbortController().signal),
-        ).rejects.toThrow("J17_TOOL_EXECUTION_FAILED");
+        ).rejects.toThrow("J17_TOOL_UNAVAILABLE");
+    });
+
+    it("reports a reconciled confirmed effect as committed execution", async () => {
+        const { service, audit } = runtime([
+            syntheticTool("mock.ambiguous", "ambiguous"),
+        ]);
+        const proposal = {
+            ...readProposal,
+            toolId: "mock.ambiguous",
+            idempotencyKey: "turn:j17:tool:ambiguous",
+        };
+
+        const output = await service.execute(
+            input(proposal),
+            new AbortController().signal,
+        );
+        expect(output.result.status).toBe("RECONCILED");
+        expect(output.result.verified).toBe(true);
+        expect(output.toolExecutionCommitted).toBe(true);
+        expect(
+            audit.some((event) => event.event === "TOOL_UNKNOWN_OUTCOME"),
+        ).toBe(true);
+        expect(audit.some((event) => event.event === "TOOL_RECONCILED")).toBe(
+            true,
+        );
     });
 });
