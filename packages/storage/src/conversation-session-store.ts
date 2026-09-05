@@ -90,25 +90,51 @@ function postgresErrorCode(error: unknown): string | null {
     return null;
 }
 
+function sameSessionBinding(a: Session, b: Session): boolean {
+    return (
+        a.ownerId === b.ownerId &&
+        a.actorId === b.actorId &&
+        a.deviceId === b.deviceId &&
+        a.identitySessionId === b.identitySessionId &&
+        a.securityEpoch === b.securityEpoch &&
+        a.operatingMode === b.operatingMode &&
+        a.state === b.state
+    );
+}
+
 export class PostgresConversationSessionRepository {
     constructor(private readonly pool: pg.Pool) {}
 
     async createSession(session: Session): Promise<Session> {
-        const result = await this.pool.query<SessionRow>(
-            "INSERT INTO conversations.sessions(id,owner_id,actor_id,device_id,identity_session_id,security_epoch,operating_mode,state,version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
-            [
-                session.id,
-                session.ownerId,
-                session.actorId,
-                session.deviceId,
-                session.identitySessionId,
-                session.securityEpoch,
-                session.operatingMode,
-                session.state,
-                session.version,
-            ],
-        );
-        return sessionFrom(result.rows[0]!);
+        try {
+            const result = await this.pool.query<SessionRow>(
+                "INSERT INTO conversations.sessions(id,owner_id,actor_id,device_id,identity_session_id,security_epoch,operating_mode,state,version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+                [
+                    session.id,
+                    session.ownerId,
+                    session.actorId,
+                    session.deviceId,
+                    session.identitySessionId,
+                    session.securityEpoch,
+                    session.operatingMode,
+                    session.state,
+                    session.version,
+                ],
+            );
+            return sessionFrom(result.rows[0]!);
+        } catch (error: unknown) {
+            if (postgresErrorCode(error) !== "23505") throw error;
+            const existing = await this.pool.query<SessionRow>(
+                "SELECT * FROM conversations.sessions WHERE owner_id=$1 AND identity_session_id=$2 AND device_id=$3",
+                [session.ownerId, session.identitySessionId, session.deviceId],
+            );
+            const found = existing.rows[0]
+                ? sessionFrom(existing.rows[0])
+                : null;
+            if (!found || !sameSessionBinding(found, session))
+                throw new BoundaryError("CONVERSATION_SESSION_CONFLICT");
+            return found;
+        }
     }
 
     async getSession(ownerId: string, id: string): Promise<Session | null> {
