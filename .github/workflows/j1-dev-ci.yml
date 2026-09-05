@@ -27,7 +27,7 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: J1.11 formatter diagnostic
+      - name: J1.11 formatter capture
         run: |
           npx prettier --write \
             packages/identity/src/contracts.ts \
@@ -36,11 +36,16 @@ jobs:
             apps/web/app/api/conversation/route.ts \
             apps/web/app/conversation/conversation-console.tsx \
             tests/unit/j1-conversational-web-ui.test.ts
-          git diff -- \
+          for file in \
             packages/identity/src/contracts.ts \
             apps/api/src/conversation-http.ts \
             apps/web/app/page.tsx \
             apps/web/app/api/conversation/route.ts \
             apps/web/app/conversation/conversation-console.tsx \
-            tests/unit/j1-conversational-web-ui.test.ts
+            tests/unit/j1-conversational-web-ui.test.ts; do
+            echo "JARVIS_FORMATTED_BEGIN:$file"
+            base64 -w0 "$file"
+            echo
+            echo "JARVIS_FORMATTED_END:$file"
+          done
           exit 1
