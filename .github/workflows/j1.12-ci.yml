@@ -2,6 +2,9 @@ name: J1.12 Final Core Conversation Qualification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - validation/j1.9-j1.12-core-conversation-final-20260905
 
 permissions:
   contents: read
