@@ -19,12 +19,7 @@ export interface J18ApprovalBinding {
     securityEpoch: number;
     expiresAtEpochMs: number;
     status:
-        | "PENDING"
-        | "APPROVED"
-        | "DENIED"
-        | "EXPIRED"
-        | "REVOKED"
-        | "CONSUMED";
+        "PENDING" | "APPROVED" | "DENIED" | "EXPIRED" | "REVOKED" | "CONSUMED";
 }
 
 export interface J18ApprovalRequestInput {
@@ -50,7 +45,9 @@ export interface J18OwnerDecisionInput {
 }
 
 export interface J18ApprovalAuthorityPort {
-    requestApproval(input: J18ApprovalRequestInput): Promise<J18ApprovalBinding>;
+    requestApproval(
+        input: J18ApprovalRequestInput,
+    ): Promise<J18ApprovalBinding>;
     decide(input: J18OwnerDecisionInput): Promise<J18ApprovalBinding>;
     read(approvalId: string): Promise<J18ApprovalBinding | null>;
 }
@@ -160,7 +157,9 @@ export class J18PermissionApprovalCoordinator {
         if (approval.status !== "PENDING")
             throw new J18PermissionApprovalError("J18_APPROVAL_NOT_PENDING");
         if (approval.expiresAtEpochMs <= this.clock())
-            throw new J18PermissionApprovalError("J18_APPROVAL_ALREADY_EXPIRED");
+            throw new J18PermissionApprovalError(
+                "J18_APPROVAL_ALREADY_EXPIRED",
+            );
         return {
             state: "PENDING_APPROVAL",
             approvalCommitted: false,
@@ -184,10 +183,7 @@ export class J18PermissionApprovalCoordinator {
         const approval = await this.approvals.decide(decision);
         if (approval.approvalId !== decision.approvalId)
             throw new J18PermissionApprovalError("J18_APPROVAL_ID_MISMATCH");
-        if (
-            decision.decision === "APPROVE" &&
-            approval.status !== "APPROVED"
-        )
+        if (decision.decision === "APPROVE" && approval.status !== "APPROVED")
             throw new J18PermissionApprovalError("J18_APPROVAL_NOT_APPROVED");
         if (decision.decision === "DENY" && approval.status !== "DENIED")
             throw new J18PermissionApprovalError("J18_APPROVAL_NOT_DENIED");
