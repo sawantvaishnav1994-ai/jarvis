@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { BoundaryError } from "@jarvis/shared";
 import type { J14TurnPipelineInput, J14TurnPipelineResult } from "./turn-pipeline.js";
 
@@ -17,6 +16,7 @@ export type ConversationTerminalState =
     | "TIMED_OUT"
     | "SAFE_MODE_BLOCKED"
     | "EMERGENCY_STOPPED";
+export type ConversationHistoryDigester = (content: string) => string;
 
 export type ConversationHistoryCursor = {
     updatedAt: string;
@@ -141,13 +141,16 @@ function requireOrdinal(value: unknown): number {
     return value;
 }
 
-export function historyDigest(content: string): string {
-    if (typeof content !== "string") invalid();
-    return createHash("sha256").update(content, "utf8").digest("hex");
-}
-
 export class ConversationHistoryService {
-    constructor(private readonly repository: ConversationHistoryRepository) {}
+    constructor(
+        private readonly repository: ConversationHistoryRepository,
+        private readonly digest: ConversationHistoryDigester,
+    ) {}
+
+    private digestContent(content: string): string {
+        if (typeof content !== "string") invalid();
+        return requireDigest(this.digest(content));
+    }
 
     registerConversation(input: {
         ownerId: string;
@@ -197,7 +200,7 @@ export class ConversationHistoryService {
             conversationId: requireUuid(input.conversationId),
             turnId: requireNullableUuid(input.turnId ?? null),
             role: input.role,
-            contentDigest: historyDigest(input.content),
+            contentDigest: this.digestContent(input.content),
         });
     }
 
@@ -295,7 +298,7 @@ export class ConversationHistoryService {
             responseDigest:
                 input.pipelineResult.response === null
                     ? null
-                    : historyDigest(input.pipelineResult.response),
+                    : this.digestContent(input.pipelineResult.response),
         });
     }
 
