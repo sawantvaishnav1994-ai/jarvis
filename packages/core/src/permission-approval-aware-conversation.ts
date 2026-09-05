@@ -215,7 +215,9 @@ export class J18PermissionApprovalCoordinator {
         if (pending.status !== "PENDING")
             throw new J18PermissionApprovalError("J18_APPROVAL_NOT_PENDING");
         if (pending.expiresAtEpochMs <= this.clock())
-            throw new J18PermissionApprovalError("J18_APPROVAL_ALREADY_EXPIRED");
+            throw new J18PermissionApprovalError(
+                "J18_APPROVAL_ALREADY_EXPIRED",
+            );
 
         const approval = await this.approvals.decide(decision);
         assertStableBinding(pending, approval);
