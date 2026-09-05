@@ -14,8 +14,12 @@ try {
             json("tests/acceptance/j1.8-gates.json"),
             read("packages/core/src/permission-approval-aware-conversation.ts"),
             read("docs/roadmap/j1.8.md"),
-            read("tests/unit/j1-permission-approval-aware-conversation.test.ts"),
-            read("tests/security/j1-permission-approval-aware-conversation-security.test.ts"),
+            read(
+                "tests/unit/j1-permission-approval-aware-conversation.test.ts",
+            ),
+            read(
+                "tests/security/j1-permission-approval-aware-conversation-security.test.ts",
+            ),
             read(".github/workflows/j1.8-ci.yml"),
             read("packages/core/src/tool-aware-conversation.ts"),
         ]);
@@ -29,7 +33,9 @@ try {
                 JSON.stringify(letters),
         B:
             roadmap.includes("J0 remains sole authority") &&
-            roadmap.includes("never mints approval proof or execution permits") &&
+            roadmap.includes(
+                "never mints approval proof or execution permits",
+            ) &&
             !runtime.includes("new GovernanceEngine") &&
             !runtime.includes("AuthorizationV3Schema.parse") &&
             !runtime.includes("ExecutionPermit"),
@@ -39,12 +45,20 @@ try {
             unit.includes("only after J1.7 reports approval required"),
         D:
             runtime.includes("approval.requestId !== input.requestId") &&
-            runtime.includes("approval.correlationId !== input.correlationId") &&
-            runtime.includes("approval.conversationId !== input.authority.conversationId") &&
-            runtime.includes("approval.sessionId !== input.authority.sessionId") &&
+            runtime.includes(
+                "approval.correlationId !== input.correlationId",
+            ) &&
+            runtime.includes(
+                "approval.conversationId !== input.authority.conversationId",
+            ) &&
+            runtime.includes(
+                "approval.sessionId !== input.authority.sessionId",
+            ) &&
             runtime.includes("approval.turnId !== input.authority.turnId") &&
             runtime.includes("approval.ownerId !== input.authority.ownerId") &&
-            runtime.includes("approval.securityEpoch !== input.authority.securityEpoch"),
+            runtime.includes(
+                "approval.securityEpoch !== input.authority.securityEpoch",
+            ),
         E:
             runtime.includes('assurance: "A3"') &&
             runtime.includes("ownerSessionId") &&
@@ -55,7 +69,7 @@ try {
             roadmap.includes("cannot approve their own requests") &&
             runtime.includes("J18OwnerDecisionInput") &&
             !runtime.includes("modelResult.approval") &&
-            !runtime.includes("actorRole === \"AGENT\"") ,
+            !runtime.includes('actorRole === "AGENT"'),
         G:
             runtime.includes('state: "DENIED"') &&
             runtime.includes('state: "EXPIRED"') &&
@@ -82,7 +96,9 @@ try {
         K:
             runtime.includes("J18_CANCELLED") &&
             security.includes("fails closed when cancelled") &&
-            roadmap.includes("Policy/risk/security changes remain revalidated by J0"),
+            roadmap.includes(
+                "Policy/risk/security changes remain revalidated by J0",
+            ),
         L:
             security.includes("consumed approval replay") &&
             roadmap.includes("replay and race handling") &&
@@ -90,11 +106,17 @@ try {
         M:
             roadmap.includes("J1.7 gateway attempt") &&
             j17Runtime.includes("J13ExecutionResult") &&
-            workflow.includes("Explicit J1.7 Tool-Aware Conversation A-T acceptance"),
+            workflow.includes(
+                "Explicit J1.7 Tool-Aware Conversation A-T acceptance",
+            ),
         N:
             roadmap.includes("J1.0–J1.7 qualification") &&
-            workflow.includes("Explicit J1.5 Conversation Persistence History A-T acceptance") &&
-            workflow.includes("Explicit J1.6 Memory-Aware Conversation A-T acceptance"),
+            workflow.includes(
+                "Explicit J1.5 Conversation Persistence History A-T acceptance",
+            ) &&
+            workflow.includes(
+                "Explicit J1.6 Memory-Aware Conversation A-T acceptance",
+            ),
         O:
             unit.includes("J1.8 permission/approval-aware conversation") &&
             security.includes("J1.8 approval lifecycle security"),
@@ -111,13 +133,17 @@ try {
             workflow.includes("Owner identity and device trust GO flow"),
         R:
             workflow.includes("Explicit J0.4 A-S acceptance") &&
-            workflow.includes("Explicit J1.7 Tool-Aware Conversation A-T acceptance"),
+            workflow.includes(
+                "Explicit J1.7 Tool-Aware Conversation A-T acceptance",
+            ),
         S:
             process.env.J1_8_CI_SEQUENCE === "complete" &&
             workflow.includes("Real PostgreSQL integration") &&
             workflow.includes("Dependency outage and recovery") &&
             workflow.includes("Stop and verify processes") &&
-            workflow.includes("Explicit J1.8 Permission Approval-Aware Conversation A-T acceptance"),
+            workflow.includes(
+                "Explicit J1.8 Permission Approval-Aware Conversation A-T acceptance",
+            ),
         T:
             roadmap.includes("J1.9") &&
             roadmap.includes("No production third-party credentials"),
