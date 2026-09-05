@@ -49,8 +49,14 @@ function sqlLiteral(value) {
 
 async function initializeRemotePostgres(postgresHost, postgresPort) {
     const adminUser = required("JARVIS_REMOTE_POSTGRES_ADMIN_USER", 128);
-    const adminPassword = required("JARVIS_REMOTE_POSTGRES_ADMIN_PASSWORD", 512);
-    const adminDatabase = required("JARVIS_REMOTE_POSTGRES_ADMIN_DATABASE", 128);
+    const adminPassword = required(
+        "JARVIS_REMOTE_POSTGRES_ADMIN_PASSWORD",
+        512,
+    );
+    const adminDatabase = required(
+        "JARVIS_REMOTE_POSTGRES_ADMIN_DATABASE",
+        128,
+    );
     const runtimePassword = required(
         "JARVIS_REMOTE_DATABASE_RUNTIME_PASSWORD",
         512,
@@ -153,8 +159,10 @@ async function initializeRemotePostgres(postgresHost, postgresPort) {
 
 async function materializeVault() {
     const secretNames = {
-        "development/database/runtime": "JARVIS_REMOTE_DATABASE_RUNTIME_PASSWORD",
-        "development/database/migrator": "JARVIS_REMOTE_DATABASE_MIGRATOR_PASSWORD",
+        "development/database/runtime":
+            "JARVIS_REMOTE_DATABASE_RUNTIME_PASSWORD",
+        "development/database/migrator":
+            "JARVIS_REMOTE_DATABASE_MIGRATOR_PASSWORD",
         "development/redis/runtime": "JARVIS_REMOTE_REDIS_PASSWORD",
         "development/storage/data-key": "JARVIS_REMOTE_STORAGE_DATA_KEY",
         "development/identity/bootstrap": "JARVIS_REMOTE_IDENTITY_BOOTSTRAP",
