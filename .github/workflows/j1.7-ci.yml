@@ -2,6 +2,9 @@ name: J1.7 Tool-Aware Conversation Qualification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - validation/j1.7-tool-aware-conversation-20260905
 
 permissions:
   contents: read
