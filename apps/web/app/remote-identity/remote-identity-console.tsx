@@ -55,7 +55,9 @@ export function RemoteIdentityConsole() {
         try {
             await work();
         } catch (error) {
-            setMessage(error instanceof Error ? error.message : "REQUEST_DENIED");
+            setMessage(
+                error instanceof Error ? error.message : "REQUEST_DENIED",
+            );
         } finally {
             setBusy(false);
         }
@@ -76,7 +78,8 @@ export function RemoteIdentityConsole() {
     }
 
     async function createRootOwner() {
-        if (!claimCode.trim()) throw new Error("INSTALLATION_CLAIM_CODE_REQUIRED");
+        if (!claimCode.trim())
+            throw new Error("INSTALLATION_CLAIM_CODE_REQUIRED");
         const key = await deviceKey();
         const device = await deviceInput(key, deviceName);
         const c = await rpc<Challenge>("root.begin", {
@@ -128,15 +131,18 @@ export function RemoteIdentityConsole() {
                     For the first remote installation, reveal the value of
                     <code> JARVIS_REMOTE_IDENTITY_BOOTSTRAP </code>
                     in Railway on your own device, copy it into the field below,
-                    and never paste it into ChatGPT, email, notes or source code.
-                    JARVIS accepts it only for initial Root Owner creation.
+                    and never paste it into ChatGPT, email, notes or source
+                    code. JARVIS accepts it only for initial Root Owner
+                    creation.
                 </p>
                 <div className="identity-fields">
                     <label>
                         Owner display name
                         <input
                             value={ownerName}
-                            onChange={(event) => setOwnerName(event.target.value)}
+                            onChange={(event) =>
+                                setOwnerName(event.target.value)
+                            }
                             autoComplete="name"
                         />
                     </label>
@@ -144,7 +150,9 @@ export function RemoteIdentityConsole() {
                         Device name
                         <input
                             value={deviceName}
-                            onChange={(event) => setDeviceName(event.target.value)}
+                            onChange={(event) =>
+                                setDeviceName(event.target.value)
+                            }
                             autoComplete="off"
                         />
                     </label>
@@ -153,14 +161,19 @@ export function RemoteIdentityConsole() {
                         <input
                             type="password"
                             value={claimCode}
-                            onChange={(event) => setClaimCode(event.target.value)}
+                            onChange={(event) =>
+                                setClaimCode(event.target.value)
+                            }
                             autoComplete="off"
                             spellCheck={false}
                         />
                     </label>
                 </div>
                 <div className="identity-buttons">
-                    <button disabled={busy} onClick={() => run(createRootOwner)}>
+                    <button
+                        disabled={busy}
+                        onClick={() => run(createRootOwner)}
+                    >
                         Create Root Owner on this iPhone
                     </button>
                     <button disabled={busy} onClick={() => run(signIn)}>
