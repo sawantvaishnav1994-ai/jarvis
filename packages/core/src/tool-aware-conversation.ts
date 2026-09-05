@@ -69,15 +69,22 @@ export class J17ToolAwareConversationError extends Error {
 
 function proposalFrom(result: J13ExecutionResult): ConversationToolProposal {
     if (result.acceptedAsContentOnly !== true)
-        throw new J17ToolAwareConversationError("J17_MODEL_RESULT_NOT_CONTENT_ONLY");
-    const parsed = ConversationToolProposalSchema.safeParse(result.result.structured);
+        throw new J17ToolAwareConversationError(
+            "J17_MODEL_RESULT_NOT_CONTENT_ONLY",
+        );
+    const parsed = ConversationToolProposalSchema.safeParse(
+        result.result.structured,
+    );
     if (!parsed.success)
         throw new J17ToolAwareConversationError("J17_TOOL_PROPOSAL_INVALID");
     return parsed.data;
 }
 
 function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
-    const code = error instanceof Error ? error.message.toUpperCase() : String(error).toUpperCase();
+    const code =
+        error instanceof Error
+            ? error.message.toUpperCase()
+            : String(error).toUpperCase();
     if (code.includes("APPROVAL_REQUIRED"))
         return new J17ToolAwareConversationError("J17_APPROVAL_REQUIRED");
     if (code.includes("APPROVAL_MISMATCH"))
@@ -86,14 +93,26 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
         return new J17ToolAwareConversationError("J17_TOOL_CANCELLED");
     if (code.includes("TIMEOUT"))
         return new J17ToolAwareConversationError("J17_TOOL_TIMEOUT");
-    if (code.includes("EMERGENCY") || code.includes("FREEZE") || code.includes("SHUTDOWN"))
+    if (
+        code.includes("EMERGENCY") ||
+        code.includes("FREEZE") ||
+        code.includes("SHUTDOWN")
+    )
         return new J17ToolAwareConversationError("J17_TOOL_EMERGENCY_BLOCKED");
-    if (code.includes("AUTHORIZATION") || code.includes("CAPABILITY") || code.includes("DENIED"))
-        return new J17ToolAwareConversationError("J17_TOOL_AUTHORIZATION_DENIED");
+    if (
+        code.includes("AUTHORIZATION") ||
+        code.includes("CAPABILITY") ||
+        code.includes("DENIED")
+    )
+        return new J17ToolAwareConversationError(
+            "J17_TOOL_AUTHORIZATION_DENIED",
+        );
     if (code.includes("PRIVACY"))
         return new J17ToolAwareConversationError("J17_TOOL_PRIVACY_DENIED");
     if (code.includes("IDEMPOTENCY"))
-        return new J17ToolAwareConversationError("J17_TOOL_IDEMPOTENCY_CONFLICT");
+        return new J17ToolAwareConversationError(
+            "J17_TOOL_IDEMPOTENCY_CONFLICT",
+        );
     return new J17ToolAwareConversationError("J17_TOOL_EXECUTION_FAILED");
 }
 
@@ -128,7 +147,9 @@ export class J17ToolAwareConversationService {
 
         const proposal = proposalFrom(input.modelResult);
         if (proposal.requestedMode === "EXECUTE" && !proposal.idempotencyKey)
-            throw new J17ToolAwareConversationError("J17_EXECUTION_IDEMPOTENCY_REQUIRED");
+            throw new J17ToolAwareConversationError(
+                "J17_EXECUTION_IDEMPOTENCY_REQUIRED",
+            );
 
         const request = ToolRequestSchema.parse({
             requestId: input.requestId,
@@ -178,7 +199,9 @@ export class J17ToolAwareConversationService {
             result.operation !== request.operation ||
             result.provenance !== "UNTRUSTED_EXTERNAL_DATA"
         )
-            throw new J17ToolAwareConversationError("J17_TOOL_RESULT_BINDING_INVALID");
+            throw new J17ToolAwareConversationError(
+                "J17_TOOL_RESULT_BINDING_INVALID",
+            );
 
         return {
             proposal,
