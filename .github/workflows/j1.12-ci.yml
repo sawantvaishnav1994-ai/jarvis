@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - validation/j1.9-j1.12-core-conversation-final-20260905
+      - main
 
 permissions:
   contents: read
