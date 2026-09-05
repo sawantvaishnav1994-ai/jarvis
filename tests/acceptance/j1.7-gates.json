@@ -4,24 +4,78 @@
     "baseline": "e6657e7f8fea1c01549db65b924c79a6c5048a7c",
     "gates": [
         { "id": "A", "name": "Exact frozen J1.6 baseline" },
-        { "id": "B", "name": "No second tool gateway policy or approval authority" },
-        { "id": "C", "name": "Strict structured model tool proposal contract" },
-        { "id": "D", "name": "Trusted owner project conversation session turn epoch binding" },
-        { "id": "E", "name": "Execution routes only through J0.7 UniversalToolGateway" },
-        { "id": "F", "name": "Capability policy risk and authorization authority preserved" },
-        { "id": "G", "name": "Approval-required state fails closed without J1.8 bypass" },
-        { "id": "H", "name": "Model cannot control authority approval or disclosure fields" },
-        { "id": "I", "name": "Privacy classification and D5 external denial preserved" },
-        { "id": "J", "name": "Execution requires bounded deadline cost and idempotency" },
-        { "id": "K", "name": "Cancellation timeout emergency and revocation fail closed" },
-        { "id": "L", "name": "Tool results remain bound untrusted external data" },
+        {
+            "id": "B",
+            "name": "No second tool gateway policy or approval authority"
+        },
+        {
+            "id": "C",
+            "name": "Strict structured model tool proposal contract"
+        },
+        {
+            "id": "D",
+            "name": "Trusted owner project conversation session turn epoch binding"
+        },
+        {
+            "id": "E",
+            "name": "Execution routes only through J0.7 UniversalToolGateway"
+        },
+        {
+            "id": "F",
+            "name": "Capability policy risk and authorization authority preserved"
+        },
+        {
+            "id": "G",
+            "name": "Approval-required state fails closed without J1.8 bypass"
+        },
+        {
+            "id": "H",
+            "name": "Model cannot control authority approval or disclosure fields"
+        },
+        {
+            "id": "I",
+            "name": "Privacy classification and D5 external denial preserved"
+        },
+        {
+            "id": "J",
+            "name": "Execution requires bounded deadline cost and idempotency"
+        },
+        {
+            "id": "K",
+            "name": "Cancellation timeout emergency and revocation fail closed"
+        },
+        {
+            "id": "L",
+            "name": "Tool results remain bound untrusted external data"
+        },
         { "id": "M", "name": "J1.3 model orchestration boundary preserved" },
-        { "id": "N", "name": "J1.4 turn state-machine compatibility preserved" },
-        { "id": "O", "name": "Dedicated J1.7 unit integration and security coverage" },
-        { "id": "P", "name": "No direct adapter credential or provider bypass" },
-        { "id": "Q", "name": "J1.8 full approval-aware lifecycle not started" },
-        { "id": "R", "name": "Foundation and J1.0-J1.6 regression preserved" },
-        { "id": "S", "name": "Full real-stack cloud qualification reserved for frozen candidate" },
-        { "id": "T", "name": "J1.9-J1.12 not started and no production credentials" }
+        {
+            "id": "N",
+            "name": "J1.4 turn state-machine compatibility preserved"
+        },
+        {
+            "id": "O",
+            "name": "Dedicated J1.7 unit integration and security coverage"
+        },
+        {
+            "id": "P",
+            "name": "No direct adapter credential or provider bypass"
+        },
+        {
+            "id": "Q",
+            "name": "J1.8 full approval-aware lifecycle not started"
+        },
+        {
+            "id": "R",
+            "name": "Foundation and J1.0-J1.6 regression preserved"
+        },
+        {
+            "id": "S",
+            "name": "Full real-stack cloud qualification reserved for frozen candidate"
+        },
+        {
+            "id": "T",
+            "name": "J1.9-J1.12 not started and no production credentials"
+        }
     ]
 }
