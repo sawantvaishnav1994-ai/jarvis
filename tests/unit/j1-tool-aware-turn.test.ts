@@ -193,7 +193,7 @@ function toolResult(): ToolResult {
     };
 }
 
-function harness(structured: unknown) {
+function harness(structured: unknown, gatewayOverride?: J17ToolGatewayPort) {
     const delegate: J14ModelPort = {
         execute: vi.fn(async () => modelResult(structured)),
     };
@@ -231,9 +231,8 @@ function harness(structured: unknown) {
         capture,
         { now: () => 100 },
     );
-    const gateway: J17ToolGatewayPort = {
-        invoke: vi.fn(async () => toolResult()),
-    };
+    const gateway: J17ToolGatewayPort =
+        gatewayOverride ?? ({ invoke: vi.fn(async () => toolResult()) } as const);
     const tools = new J17ToolAwareConversationService(
         { verify: async () => ({ valid: true, reason: "OK" }) },
         gateway,
@@ -244,7 +243,7 @@ function harness(structured: unknown) {
     };
 }
 
-function coordinatorInput() {
+function coordinatorInput(approvalReference?: string) {
     return {
         turn: turnInput,
         actorId: authority.ownerId,
@@ -254,6 +253,7 @@ function coordinatorInput() {
         toolDeadlineEpochMs: Date.now() + 60_000,
         toolMaxCostMinor: 10,
         externalAllowed: false,
+        ...(approvalReference !== undefined ? { approvalReference } : {}),
     };
 }
 
@@ -282,5 +282,33 @@ describe("J1.7 tool-aware turn bridge", () => {
         expect(output.turn.state).toBe("COMPLETED");
         expect(output.tool).toBeNull();
         expect(gateway.invoke).not.toHaveBeenCalled();
+    });
+
+    it("retains the exact captured proposal after approval-required and reuses it on approved retry", async () => {
+        let calls = 0;
+        const gateway: J17ToolGatewayPort = {
+            invoke: vi.fn(async (request) => {
+                calls += 1;
+                if (calls === 1) throw new Error("APPROVAL_REQUIRED");
+                expect(request.approvalReference).toBe("approval:granted");
+                return toolResult();
+            }),
+        };
+        const { coordinator } = harness(proposal, gateway);
+
+        await expect(
+            coordinator.execute(
+                coordinatorInput(),
+                new AbortController().signal,
+            ),
+        ).rejects.toThrow("J17_APPROVAL_REQUIRED");
+
+        const approved = await coordinator.execute(
+            coordinatorInput("approval:granted"),
+            new AbortController().signal,
+        );
+        expect(approved.turn.state).toBe("COMPLETED");
+        expect(approved.tool?.toolExecutionCommitted).toBe(true);
+        expect(gateway.invoke).toHaveBeenCalledTimes(2);
     });
 });
