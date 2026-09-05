@@ -9,6 +9,7 @@ import {
 export interface J18ApprovalBinding {
     approvalId: string;
     approvalReference: string;
+    requesterActorId: string;
     requestId: string;
     correlationId: string;
     conversationId: string;
@@ -84,6 +85,9 @@ function assertBinding(
     input: J18ApprovalRequestInput,
 ): void {
     if (
+        !approval.approvalId ||
+        !approval.approvalReference ||
+        approval.requesterActorId !== input.actorId ||
         approval.requestId !== input.requestId ||
         approval.correlationId !== input.correlationId ||
         approval.conversationId !== input.authority.conversationId ||
@@ -92,6 +96,26 @@ function assertBinding(
         approval.ownerId !== input.authority.ownerId ||
         approval.securityEpoch !== input.authority.securityEpoch ||
         (approval.projectId ?? null) !== (input.authority.projectId ?? null)
+    )
+        throw new J18PermissionApprovalError("J18_APPROVAL_BINDING_INVALID");
+}
+
+function assertStableBinding(
+    before: J18ApprovalBinding,
+    after: J18ApprovalBinding,
+): void {
+    if (
+        before.approvalId !== after.approvalId ||
+        before.approvalReference !== after.approvalReference ||
+        before.requesterActorId !== after.requesterActorId ||
+        before.requestId !== after.requestId ||
+        before.correlationId !== after.correlationId ||
+        before.conversationId !== after.conversationId ||
+        before.sessionId !== after.sessionId ||
+        before.turnId !== after.turnId ||
+        before.ownerId !== after.ownerId ||
+        before.securityEpoch !== after.securityEpoch ||
+        (before.projectId ?? null) !== (after.projectId ?? null)
     )
         throw new J18PermissionApprovalError("J18_APPROVAL_BINDING_INVALID");
 }
@@ -180,7 +204,21 @@ export class J18PermissionApprovalCoordinator {
             !decision.proofId
         )
             throw new J18PermissionApprovalError("J18_OWNER_DECISION_INVALID");
+
+        const pending = await this.approvals.read(decision.approvalId);
+        if (!pending)
+            throw new J18PermissionApprovalError("J18_APPROVAL_UNKNOWN");
+        if (pending.ownerId !== decision.ownerId)
+            throw new J18PermissionApprovalError("J18_APPROVAL_OWNER_MISMATCH");
+        if (pending.requesterActorId === decision.ownerId)
+            throw new J18PermissionApprovalError("J18_SELF_APPROVAL_DENIED");
+        if (pending.status !== "PENDING")
+            throw new J18PermissionApprovalError("J18_APPROVAL_NOT_PENDING");
+        if (pending.expiresAtEpochMs <= this.clock())
+            throw new J18PermissionApprovalError("J18_APPROVAL_ALREADY_EXPIRED");
+
         const approval = await this.approvals.decide(decision);
+        assertStableBinding(pending, approval);
         if (approval.approvalId !== decision.approvalId)
             throw new J18PermissionApprovalError("J18_APPROVAL_ID_MISMATCH");
         if (decision.decision === "APPROVE" && approval.status !== "APPROVED")
