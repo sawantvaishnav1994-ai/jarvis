@@ -315,4 +315,28 @@ describe("J1.7 tool-aware turn bridge", () => {
         expect(approved.tool?.toolExecutionCommitted).toBe(true);
         expect(gateway.invoke).toHaveBeenCalledTimes(2);
     });
+
+    it("clears the captured proposal after unknown outcome so a blind retry cannot dispatch again", async () => {
+        const gateway: J17ToolGatewayPort = {
+            invoke: vi.fn(async () => {
+                throw new Error("UNKNOWN_OUTCOME");
+            }),
+        };
+        const { coordinator } = harness(proposal, gateway);
+
+        await expect(
+            coordinator.execute(
+                coordinatorInput(),
+                new AbortController().signal,
+            ),
+        ).rejects.toThrow("J17_TOOL_OUTCOME_UNKNOWN");
+
+        const retry = await coordinator.execute(
+            coordinatorInput(),
+            new AbortController().signal,
+        );
+        expect(retry.turn.state).toBe("COMPLETED");
+        expect(retry.tool).toBeNull();
+        expect(gateway.invoke).toHaveBeenCalledTimes(1);
+    });
 });
