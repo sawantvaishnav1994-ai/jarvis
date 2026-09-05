@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
     ToolRequestSchema,
     type ToolRequest,
@@ -7,21 +6,104 @@ import {
 import type { J13ExecutionResult } from "./model-orchestration.js";
 import type { ContextAssemblyAuthority } from "./context-assembly.js";
 
-export const ConversationToolProposalSchema = z.strictObject({
-    version: z.literal(1),
-    kind: z.literal("tool-proposal"),
-    toolId: z.string().regex(/^[a-z0-9][a-z0-9._-]{1,79}$/),
-    toolVersion: z.number().int().positive(),
-    operation: z.string().min(1).max(80),
-    input: z.unknown(),
-    resource: z.string().min(1).max(500),
-    privacyClass: z.enum(["D0", "D1", "D2", "D3", "D4", "D5"]),
-    requestedMode: z.enum(["INSPECT", "SIMULATE", "DRY_RUN", "EXECUTE"]),
-    idempotencyKey: z.string().min(1).max(200).optional(),
-});
-export type ConversationToolProposal = z.infer<
-    typeof ConversationToolProposalSchema
->;
+const TOOL_ID = /^[a-z0-9][a-z0-9._-]{1,79}$/;
+const PRIVACY_CLASSES = new Set(["D0", "D1", "D2", "D3", "D4", "D5"]);
+const MODEL_TOOL_MODES = new Set(["INSPECT", "SIMULATE", "DRY_RUN", "EXECUTE"]);
+const PROPOSAL_KEYS = new Set([
+    "version",
+    "kind",
+    "toolId",
+    "toolVersion",
+    "operation",
+    "input",
+    "resource",
+    "privacyClass",
+    "requestedMode",
+    "idempotencyKey",
+]);
+
+export interface ConversationToolProposal {
+    version: 1;
+    kind: "tool-proposal";
+    toolId: string;
+    toolVersion: number;
+    operation: string;
+    input: unknown;
+    resource: string;
+    privacyClass: "D0" | "D1" | "D2" | "D3" | "D4" | "D5";
+    requestedMode: "INSPECT" | "SIMULATE" | "DRY_RUN" | "EXECUTE";
+    idempotencyKey?: string;
+}
+
+type ProposalParseResult =
+    | { success: true; data: ConversationToolProposal }
+    | { success: false; error: "INVALID_TOOL_PROPOSAL" };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function nonEmptyBoundedString(
+    value: unknown,
+    maximumLength: number,
+): value is string {
+    return (
+        typeof value === "string" &&
+        value.length >= 1 &&
+        value.length <= maximumLength
+    );
+}
+
+function parseConversationToolProposal(value: unknown): ProposalParseResult {
+    if (!isRecord(value)) return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (Object.keys(value).some((key) => !PROPOSAL_KEYS.has(key)))
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (!Object.prototype.hasOwnProperty.call(value, "input"))
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (value.version !== 1 || value.kind !== "tool-proposal")
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (
+        !nonEmptyBoundedString(value.toolId, 80) ||
+        !TOOL_ID.test(value.toolId) ||
+        !Number.isSafeInteger(value.toolVersion) ||
+        (value.toolVersion as number) <= 0 ||
+        !nonEmptyBoundedString(value.operation, 80) ||
+        !nonEmptyBoundedString(value.resource, 500) ||
+        typeof value.privacyClass !== "string" ||
+        !PRIVACY_CLASSES.has(value.privacyClass) ||
+        typeof value.requestedMode !== "string" ||
+        !MODEL_TOOL_MODES.has(value.requestedMode)
+    )
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+    if (
+        value.idempotencyKey !== undefined &&
+        !nonEmptyBoundedString(value.idempotencyKey, 200)
+    )
+        return { success: false, error: "INVALID_TOOL_PROPOSAL" };
+
+    return {
+        success: true,
+        data: {
+            version: 1,
+            kind: "tool-proposal",
+            toolId: value.toolId,
+            toolVersion: value.toolVersion as number,
+            operation: value.operation,
+            input: value.input,
+            resource: value.resource,
+            privacyClass: value.privacyClass as ConversationToolProposal["privacyClass"],
+            requestedMode:
+                value.requestedMode as ConversationToolProposal["requestedMode"],
+            ...(value.idempotencyKey !== undefined
+                ? { idempotencyKey: value.idempotencyKey }
+                : {}),
+        },
+    };
+}
+
+export const ConversationToolProposalSchema = {
+    safeParse: parseConversationToolProposal,
+} as const;
 
 export interface J17ToolGatewayPort {
     invoke(request: ToolRequest, signal: AbortSignal): Promise<ToolResult>;
