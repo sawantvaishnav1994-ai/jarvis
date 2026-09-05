@@ -25,10 +25,12 @@ export class J17CapturingModelPort implements J14ModelPort {
         return result;
     }
 
-    take(turnId: string): J13ExecutionResult | undefined {
-        const result = this.captured.get(turnId);
+    read(turnId: string): J13ExecutionResult | undefined {
+        return this.captured.get(turnId);
+    }
+
+    clear(turnId: string): void {
         this.captured.delete(turnId);
-        return result;
     }
 }
 
@@ -70,14 +72,19 @@ export class J17ToolAwareTurnCoordinator {
         signal: AbortSignal,
     ): Promise<J17ToolAwareTurnResult> {
         const turn = await this.pipeline.execute(input.turn, signal);
-        const modelResult = this.capture.take(input.turn.turnId);
+        const modelResult = this.capture.read(input.turn.turnId);
 
-        if (turn.state !== "COMPLETED" || modelResult === undefined)
+        if (turn.state !== "COMPLETED") {
+            this.capture.clear(input.turn.turnId);
             return { turn, tool: null };
+        }
+        if (modelResult === undefined) return { turn, tool: null };
         if (turn.toolExecutionCommitted !== false || turn.approvalCommitted !== false)
             throw new Error("J17_J14_BOUNDARY_INVALID");
-        if (!isToolProposalCandidate(modelResult.result.structured))
+        if (!isToolProposalCandidate(modelResult.result.structured)) {
+            this.capture.clear(input.turn.turnId);
             return { turn, tool: null };
+        }
 
         const tool = await this.tools.execute(
             {
@@ -96,6 +103,7 @@ export class J17ToolAwareTurnCoordinator {
             },
             signal,
         );
+        this.capture.clear(input.turn.turnId);
 
         return { turn, tool };
     }
