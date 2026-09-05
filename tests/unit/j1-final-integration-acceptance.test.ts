@@ -64,14 +64,17 @@ describe("J1.12 final integration release contract", () => {
             expect(roadmap).toContain(required);
     });
 
-    it("marks J1.11 content-only behavior as development scaffolding, not release completion", async () => {
-        const roadmap = await read("docs/roadmap/j1.12.md");
-        const handler = await read("apps/api/src/conversation-http.ts");
-        expect(roadmap).toContain(
-            "J1.11's synthetic content-only adapter is development scaffolding only",
-        );
-        expect(handler).toContain("SyntheticModelAdapter");
-        expect(handler).toContain('approval: null');
-        expect(handler).toContain('tool: null');
-    });
+    it(
+        "marks J1.11 content-only behavior as development scaffolding, not release completion",
+        async () => {
+            const roadmap = await read("docs/roadmap/j1.12.md");
+            const handler = await read("apps/api/src/conversation-http.ts");
+            expect(roadmap).toContain(
+                "J1.11's synthetic content-only adapter is development scaffolding only",
+            );
+            expect(handler).toContain("SyntheticModelAdapter");
+            expect(handler).toContain("approval: null");
+            expect(handler).toContain("tool: null");
+        },
+    );
 });
