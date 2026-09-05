@@ -2,11 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
     ConversationHistoryService,
     type ConversationHistoryRepository,
+    type ConversationTurnResult,
 } from "@jarvis/core";
+
+type RegisterInput = Parameters<ConversationHistoryRepository["registerConversation"]>[0];
+type AppendInput = Parameters<ConversationHistoryRepository["appendMessage"]>[0];
+type PersistInput = Parameters<ConversationHistoryRepository["persistTurnResult"]>[0];
 
 class SpyRepository implements ConversationHistoryRepository {
     calls: unknown[] = [];
-    registerConversation = async (input: any) => ({
+    registerConversation = async (input: RegisterInput) => ({
         ...input,
         state: "ACTIVE" as const,
         createdAt: new Date(0).toISOString(),
@@ -14,10 +19,10 @@ class SpyRepository implements ConversationHistoryRepository {
         archivedAt: null,
         version: 1,
     });
-    archiveConversation = async () => {
+    archiveConversation: ConversationHistoryRepository["archiveConversation"] = async () => {
         throw new Error("unused");
     };
-    appendMessage = async (input: any) => {
+    appendMessage = async (input: AppendInput) => {
         this.calls.push(input);
         return {
             ...input,
@@ -25,13 +30,13 @@ class SpyRepository implements ConversationHistoryRepository {
             createdAt: new Date(0).toISOString(),
         };
     };
-    listConversations = async () => [];
-    listMessages = async () => [];
-    persistTurnResult = async (input: any) => {
+    listConversations: ConversationHistoryRepository["listConversations"] = async () => [];
+    listMessages: ConversationHistoryRepository["listMessages"] = async () => [];
+    persistTurnResult = async (input: PersistInput): Promise<ConversationTurnResult> => {
         this.calls.push(input);
         return { ...input, completedAt: new Date(0).toISOString() };
     };
-    getTurnResult = async () => null;
+    getTurnResult: ConversationHistoryRepository["getTurnResult"] = async () => null;
 }
 
 const ownerId = "owner-j15-security";
