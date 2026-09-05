@@ -149,7 +149,10 @@ describe("J1.9 operating modes", () => {
     });
 
     it("blocks privileged guest behavior and Safe mutation", async () => {
-        const guestAuthority = { ...authority, operatingMode: "guest" as const };
+        const guestAuthority = {
+            ...authority,
+            operatingMode: "guest" as const,
+        };
         const guest = new J19OperatingModeCoordinator(
             port(snapshot({ mode: "guest" })),
             () => now,
