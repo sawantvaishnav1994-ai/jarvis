@@ -1,0 +1,215 @@
+name: J1.7 Tool-Aware Conversation Qualification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify-j1-7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Fresh checkout setup
+        run: npm run setup
+
+      - name: J1.7 focused formatting
+        run: >-
+          npx prettier --check
+          tests/acceptance/j1.7-gates.json
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          packages/core/src/tool-aware-conversation.ts
+          scripts/j1-tool-aware-conversation-go.mjs
+          docs/roadmap/j1.7.md
+          .github/workflows/j1.7-ci.yml
+
+      - name: J1.7 focused integrity
+        run: >-
+          npx vitest run
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/governed-gateway.test.ts
+          --reporter=default
+
+      - name: Static and contract checks
+        run: npm run check
+
+      - name: J1.7 critical security repeatability
+        run: |
+          for i in 1 2 3; do
+            npx vitest run \
+              tests/security/governance.test.ts \
+              tests/security/governed-gateway.test.ts \
+              tests/security/identity.test.ts \
+              tests/security/j1-model-orchestration-security.test.ts \
+              tests/security/j1-turn-pipeline-security.test.ts \
+              tests/security/j1-conversation-history-security.test.ts \
+              tests/security/j1-memory-aware-conversation-security.test.ts \
+              tests/security/j1-tool-aware-conversation-security.test.ts \
+              tests/unit/j1-tool-aware-conversation.test.ts \
+              tests/unit/j1-tool-aware-conversation-integration.test.ts \
+              --reporter=default
+          done
+
+      - name: Real PostgreSQL integration
+        run: npm run test:integration
+
+      - name: Start API, worker and web
+        run: |
+          npm start > /tmp/jarvis-j17-services.log 2>&1 &
+          node scripts/wait-ready.mjs
+
+      - name: Queue and health smoke
+        run: npm run smoke
+
+      - name: J0.8 Redis/BullMQ event transport
+        run: node scripts/j08-queue-smoke.mjs
+
+      - name: Browser installation
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser acceptance
+        run: npm run test:e2e
+
+      - name: Owner identity and device trust GO flow
+        env:
+          JARVIS_IDENTITY_E2E: "1"
+        run: npm run test:e2e:identity
+
+      - name: J0.10 backup and recovery disaster drills
+        run: npm run test:j10:recovery-drill
+
+      - name: Foundation recovery and adversarial hardening
+        run: |
+          npm run test:j10:recovery-drill
+          npx vitest run \
+            tests/security/governance.test.ts \
+            tests/security/governed-gateway.test.ts \
+            tests/security/j1-tool-aware-conversation-security.test.ts \
+            tests/unit/j08-hardening.test.ts \
+            tests/unit/j10-hardening.test.ts \
+            --reporter=default
+
+      - name: Dependency outage and recovery
+        run: npm run test:failures
+
+      - name: Stop and verify processes
+        run: |
+          npm stop
+          node scripts/check-stopped.mjs
+
+      - name: Explicit J0.4 A-S acceptance
+        if: success()
+        run: npm run test:j04:go
+
+      - name: Explicit J0.5 A-T acceptance
+        if: success()
+        run: npm run test:j05:go
+
+      - name: Explicit J0.6 A-T acceptance
+        if: success()
+        run: npm run test:j06:go
+
+      - name: Explicit J0.7 A-T acceptance
+        if: success()
+        run: npm run test:j07:go
+
+      - name: Explicit J0.8 A-T acceptance
+        if: success()
+        run: npm run test:j08:go
+
+      - name: Explicit J0.9 A-T acceptance
+        if: success()
+        run: npm run test:j09:go
+
+      - name: Explicit J0.10 A-T acceptance
+        if: success()
+        run: npm run test:j10:go
+
+      - name: Explicit J0.11 A-T acceptance
+        if: success()
+        env:
+          J11_CI_SEQUENCE: "complete"
+        run: npm run test:j11:go
+
+      - name: Explicit J0.12 Foundation v1 A-T acceptance
+        if: success()
+        env:
+          J12_CI_SEQUENCE: "complete"
+        run: npm run test:j12:go
+
+      - name: Explicit J1.0 Core + Conversation A-T acceptance
+        if: success()
+        env:
+          J1_0_CI_SEQUENCE: "complete"
+        run: npm run test:j1.0:go
+
+      - name: Explicit J1.1 Conversation + Session A-T acceptance
+        if: success()
+        env:
+          J1_1_CI_SEQUENCE: "complete"
+        run: npm run test:j1.1:go
+
+      - name: Explicit J1.2 Context Assembly A-T acceptance
+        if: success()
+        env:
+          J1_2_CI_SEQUENCE: "complete"
+        run: npm run test:j1.2:go
+
+      - name: Explicit J1.3 Model Orchestration A-T acceptance
+        if: success()
+        env:
+          J1_3_CI_SEQUENCE: "complete"
+        run: npm run test:j1.3:go
+
+      - name: Explicit J1.4 Response Turn Pipeline A-T acceptance
+        if: success()
+        env:
+          J1_4_CI_SEQUENCE: "complete"
+        run: npm run test:j1.4:go
+
+      - name: Explicit J1.5 Conversation Persistence History A-T acceptance
+        if: success()
+        env:
+          J1_5_CI_SEQUENCE: "complete"
+        run: npm run test:j1.5:go
+
+      - name: Explicit J1.6 Memory-Aware Conversation A-T acceptance
+        if: success()
+        env:
+          J1_6_CI_SEQUENCE: "complete"
+        run: npm run test:j1.6:go
+
+      - name: Explicit J1.7 Tool-Aware Conversation A-T acceptance
+        if: success()
+        env:
+          J1_7_CI_SEQUENCE: "complete"
+        run: npm run test:j1.7:go
+
+      - name: Qualification failure summary
+        if: failure()
+        run: |
+          echo "J1.7 qualification stopped before complete acceptance attestation."
+          echo "Inspect the first failing required step; do not weaken or bypass a gate."
+
+      - name: Safe service diagnostics
+        if: failure()
+        run: cat /tmp/jarvis-j17-services.log 2>/dev/null || true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          npm stop || true
+          npm run infra:down || true
