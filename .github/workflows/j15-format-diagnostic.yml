@@ -1,0 +1,34 @@
+name: J1.5 formatting diagnostic
+on:
+  push:
+    branches:
+      - validation/j1.5-conversation-persistence-history-20260905
+permissions:
+  contents: read
+jobs:
+  format-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Emit exact Prettier output
+        shell: bash
+        run: |
+          files=(
+            tests/acceptance/j1.5-gates.json
+            tests/unit/j1-conversation-history.test.ts
+            tests/integration/j1-conversation-history-postgres.test.ts
+            tests/security/j1-conversation-history-security.test.ts
+            packages/core/src/conversation-history.ts
+            scripts/j1-conversation-history-go.mjs
+          )
+          for file in "${files[@]}"; do
+            echo "===== J15_FORMAT_BEGIN:${file} ====="
+            npx prettier "${file}"
+            echo "===== J15_FORMAT_END:${file} ====="
+          done
