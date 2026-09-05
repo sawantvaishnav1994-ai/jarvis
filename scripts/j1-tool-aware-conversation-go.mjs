@@ -117,11 +117,15 @@ try {
             runtime.includes("J13ExecutionResult") &&
             turnBridge.includes("J17CapturingModelPort"),
         N:
-            roadmap.includes("J1.4 remains authoritative for the turn state machine") &&
+            roadmap.includes(
+                "J1.4 remains authoritative for the turn state machine",
+            ) &&
             roadmap.includes("frozen J1.4 runtime remains unchanged") &&
             turnBridge.includes("J14TurnPipeline") &&
             turnBridge.includes("turn.toolExecutionCommitted !== false") &&
-            turnBridgeTests.includes("keeps frozen J1.4 content-only semantics"),
+            turnBridgeTests.includes(
+                "keeps frozen J1.4 content-only semantics",
+            ),
         O:
             unit.includes("J1.7 tool-aware conversation") &&
             integration.includes("J1.7 -> J0.7 gateway integration") &&
