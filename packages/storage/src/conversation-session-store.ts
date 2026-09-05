@@ -2,6 +2,26 @@ import type pg from "pg";
 import { BoundaryError } from "@jarvis/shared";
 
 type SessionState = "ACTIVE" | "REVOKED" | "CLOSED" | "CANCELLED";
+type OperatingMode =
+    | "assistant"
+    | "copilot"
+    | "autonomous"
+    | "focus"
+    | "private"
+    | "guest"
+    | "safe"
+    | "emergency";
+type TurnState =
+    | "accepted"
+    | "assembling_context"
+    | "awaiting_model"
+    | "streaming"
+    | "awaiting_approval"
+    | "executing_tool"
+    | "resuming"
+    | "completed"
+    | "failed"
+    | "cancelled";
 
 type Session = {
     id: string;
@@ -10,7 +30,7 @@ type Session = {
     deviceId: string;
     identitySessionId: string;
     securityEpoch: number;
-    operatingMode: string;
+    operatingMode: OperatingMode;
     state: SessionState;
     version: number;
 };
@@ -22,7 +42,7 @@ type SessionRow = {
     device_id: string;
     identity_session_id: string;
     security_epoch: number | string;
-    operating_mode: string;
+    operating_mode: OperatingMode;
     state: SessionState;
     version: number;
 };
@@ -33,7 +53,7 @@ type Turn = {
     conversationId: string;
     sessionId: string;
     inputMessageId: string | null;
-    state: string;
+    state: TurnState;
     idempotencyKey: string;
     correlationId: string;
     reasonCode: string | null;
@@ -46,7 +66,7 @@ type TurnRow = {
     conversation_id: string;
     session_id: string;
     input_message_id: string | null;
-    state: string;
+    state: TurnState;
     idempotency_key: string;
     correlation_id: string;
     reason_code: string | null;
@@ -197,7 +217,7 @@ export class PostgresConversationSessionRepository {
         ownerId: string,
         id: string,
         expectedVersion: number,
-        state: string,
+        state: TurnState,
         reasonCode: string | null,
     ): Promise<Turn> {
         const terminal = ["completed", "failed", "cancelled"].includes(state);
