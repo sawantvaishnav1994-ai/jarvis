@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { loadConfig } from "@jarvis/config";
-import { ConversationHistoryService, historyDigest } from "@jarvis/core";
+import { ConversationHistoryService } from "@jarvis/core";
 import { FileSecretManager } from "@jarvis/security";
 import {
     databasePool,
@@ -13,6 +13,8 @@ import {
     type DatabasePool,
 } from "@jarvis/storage";
 
+const digestContent = (value: string) =>
+    createHash("sha256").update(value, "utf8").digest("hex");
 let admin: DatabasePool;
 let migratorPool: DatabasePool;
 let pool: DatabasePool;
@@ -127,7 +129,7 @@ afterAll(async () => {
 describe("J1.5 PostgreSQL persistence and restart recovery", () => {
     it("persists ordered history and reconstructs it with a new repository instance", async () => {
         const repository = new PostgresConversationHistoryRepository(pool);
-        const service = new ConversationHistoryService(repository);
+        const service = new ConversationHistoryService(repository, digestContent);
         const conversation = await service.registerConversation({
             ownerId,
             conversationId,
@@ -184,18 +186,21 @@ describe("J1.5 PostgreSQL persistence and restart recovery", () => {
             inputDigest: "a".repeat(64),
             contextDigest: "b".repeat(64),
             modelDigest: "c".repeat(64),
-            responseDigest: historyDigest("assistant-content-not-stored-in-history-index"),
+            responseDigest: digestContent(
+                "assistant-content-not-stored-in-history-index",
+            ),
         });
         expect(terminal.terminalState).toBe("COMPLETED");
 
         const restarted = new ConversationHistoryService(
             new PostgresConversationHistoryRepository(pool),
+            digestContent,
         );
         const history = await restarted.listMessages({ ownerId, conversationId });
         expect(history.map((row) => row.ordinal)).toEqual([1, 2]);
-        expect(
-            JSON.stringify(history),
-        ).not.toContain("assistant-content-not-stored-in-history-index");
+        expect(JSON.stringify(history)).not.toContain(
+            "assistant-content-not-stored-in-history-index",
+        );
         expect((await restarted.getTurnResult(ownerId, turn.id))?.turnId).toBe(
             turn.id,
         );
