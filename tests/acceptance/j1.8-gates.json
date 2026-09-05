@@ -1,0 +1,27 @@
+{
+    "milestone": "J1.8",
+    "name": "Permission / Approval-Aware Conversation",
+    "baseline": "7933a626ea058975101e8eb6a0d93dbd1046c065",
+    "gates": [
+        { "id": "A", "name": "Exact frozen J1.7 baseline" },
+        { "id": "B", "name": "J0 remains sole policy risk approval authorization and permit authority" },
+        { "id": "C", "name": "Approval is requested only after J1.7 reports approval required" },
+        { "id": "D", "name": "Pending approval is bound to owner project conversation session turn request correlation and epoch" },
+        { "id": "E", "name": "Only trusted Root Owner A3 decision material can enter approval authority" },
+        { "id": "F", "name": "Models agents delegates services and systems cannot self approve" },
+        { "id": "G", "name": "Denied expired revoked and consumed approvals cannot execute" },
+        { "id": "H", "name": "Cross owner project conversation session turn request correlation and epoch approval replay denied" },
+        { "id": "I", "name": "Only J0 issued approval reference is passed back to J1.7" },
+        { "id": "J", "name": "J1.7 UniversalToolGateway only execution boundary preserved" },
+        { "id": "K", "name": "Cancellation timeout emergency revocation and security epoch changes fail closed" },
+        { "id": "L", "name": "Approval replay race duplicate and consumed state fail closed" },
+        { "id": "M", "name": "J1.3 model orchestration and J1.4 turn boundaries preserved" },
+        { "id": "N", "name": "J1.5 history and J1.6 memory authorities remain unchanged" },
+        { "id": "O", "name": "Dedicated J1.8 unit and adversarial security coverage" },
+        { "id": "P", "name": "No direct provider adapter credential database or permit bypass" },
+        { "id": "Q", "name": "Approval decision and authorization are audited by J0 authority" },
+        { "id": "R", "name": "Foundation and J1.0-J1.7 regression preserved" },
+        { "id": "S", "name": "Full real stack qualification required for exact frozen candidate" },
+        { "id": "T", "name": "J1.9-J1.12 not started and no production credentials" }
+    ]
+}
