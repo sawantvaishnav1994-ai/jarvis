@@ -28,9 +28,7 @@ try {
         read("packages/storage/src/conversation-session-store.ts"),
         read("docs/roadmap/j1.1-schema-decision.md"),
     ]);
-    const m15 = j1Migrations.find(
-        (migration) => migration.version === 15,
-    );
+    const m15 = j1Migrations.find((migration) => migration.version === 15);
     const j1MigrationsSequential =
         j1Migrations.length >= 1 &&
         j1Migrations.every(
