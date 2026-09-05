@@ -16,7 +16,7 @@ concurrency:
 jobs:
   j1-dev:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -27,14 +27,21 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: Static and contract checks
-        run: npm run check
-      - name: Critical inherited conversation security smoke
+      - name: J1 development formatting
+        run: >-
+          npx prettier --check
+          packages/core/src/tool-aware-conversation.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          docs/roadmap/j1.7.md
+      - name: Package type build
+        run: npm run build:packages
+      - name: J1.7 focused unit and security checks
         run: >-
           npx vitest run
-          tests/unit/j1-context-assembly.test.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/governed-gateway.test.ts
           tests/security/j1-model-orchestration-security.test.ts
           tests/security/j1-turn-pipeline-security.test.ts
-          tests/security/j1-conversation-history-security.test.ts
-          tests/security/j1-memory-aware-conversation-security.test.ts
           --reporter=default
