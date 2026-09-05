@@ -119,7 +119,9 @@ describe("J1.8 -> J0.7 approval integration", () => {
             sessionId: authority.sessionId,
             turnId: authority.turnId,
             ownerId: authority.ownerId,
-            projectId: authority.projectId ?? undefined,
+            ...(authority.projectId !== null && authority.projectId !== undefined
+                ? { projectId: authority.projectId }
+                : {}),
             securityEpoch: authority.securityEpoch,
             expiresAtEpochMs: policyNow + 60_000,
             status: "PENDING",
