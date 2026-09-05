@@ -35,7 +35,10 @@ jobs:
         run: npm run setup
 
       - name: J1.6 memory-aware conversation formatting
-        run: npx prettier --check tests/acceptance/j1.6-gates.json tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts packages/core/src/memory-aware-conversation.ts scripts/j1-memory-aware-conversation-go.mjs
+        run: |
+          npx prettier --write tests/acceptance/j1.6-gates.json tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts packages/core/src/memory-aware-conversation.ts scripts/j1-memory-aware-conversation-go.mjs
+          git diff -- tests/acceptance/j1.6-gates.json tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts packages/core/src/memory-aware-conversation.ts scripts/j1-memory-aware-conversation-go.mjs
+          exit 1
 
       - name: J1.6 memory-aware conversation integrity
         run: npx vitest run tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts --reporter=default
