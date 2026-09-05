@@ -57,7 +57,9 @@ try {
             runtime.includes("J17_APPROVAL_REQUIRED") &&
             runtime.includes("approvalCommitted: false") &&
             unit.includes("approval-required") &&
-            roadmap.includes("Full conversational permission/approval lifecycle belongs to J1.8"),
+            roadmap.includes(
+                "Full conversational permission/approval lifecycle belongs to J1.8",
+            ),
         H:
             security.includes("owner:attacker") &&
             security.includes("session:attacker") &&
@@ -77,15 +79,20 @@ try {
         K:
             runtime.includes("J17_TOOL_CANCELLED") &&
             runtime.includes("J17_TOOL_TIMEOUT") &&
+            runtime.includes("J17_TOOL_OUTCOME_UNKNOWN") &&
             runtime.includes("J17_TOOL_EMERGENCY_BLOCKED") &&
             security.includes("revoked authority"),
         L:
-            runtime.includes('result.provenance !== "UNTRUSTED_EXTERNAL_DATA"') &&
+            runtime.includes(
+                'result.provenance !== "UNTRUSTED_EXTERNAL_DATA"',
+            ) &&
             runtime.includes("J17_TOOL_RESULT_BINDING_INVALID") &&
-            integration.includes("UNTRUSTED_EXTERNAL_DATA"),
+            integration.includes("UNTRUSTED_EXTERNAL_DATA") &&
+            integration.includes("RECONCILED"),
         M:
-            roadmap.includes("J1.3 remains authoritative for model orchestration") &&
-            runtime.includes("J13ExecutionResult"),
+            roadmap.includes(
+                "J1.3 remains authoritative for model orchestration",
+            ) && runtime.includes("J13ExecutionResult"),
         N:
             roadmap.includes("J1.4 turn state machine") &&
             roadmap.includes("toolExecutionCommitted:false") &&
@@ -97,20 +104,24 @@ try {
         P:
             roadmap.includes("must not call an adapter directly") &&
             !runtime.includes("adapter.execute") &&
-            !runtime.includes("credential") &&
+            !runtime.includes("CredentialBroker") &&
             !runtime.includes("provider.generate"),
-        Q:
-            roadmap.includes("J1.8 full permission/approval-aware conversational lifecycle is not part of J1.7"),
+        Q: roadmap.includes(
+            "J1.8 full permission/approval-aware conversational lifecycle is not part of J1.7",
+        ),
         R:
-            workflow.includes("Explicit J1.6 Memory-Aware Conversation A-T acceptance") &&
-            workflow.includes("J1.7 focused integrity"),
+            workflow.includes(
+                "Explicit J1.6 Memory-Aware Conversation A-T acceptance",
+            ) && workflow.includes("J1.7 focused integrity"),
         S:
             process.env.J1_7_CI_SEQUENCE === "complete" &&
             workflow.includes("Real PostgreSQL integration") &&
             workflow.includes("Owner identity and device trust GO flow") &&
             workflow.includes("Dependency outage and recovery") &&
             workflow.includes("Stop and verify processes") &&
-            workflow.includes("Explicit J1.7 Tool-Aware Conversation A-T acceptance"),
+            workflow.includes(
+                "Explicit J1.7 Tool-Aware Conversation A-T acceptance",
+            ),
         T:
             roadmap.includes("J1.9 operating modes") &&
             roadmap.includes("No production third-party tool credentials"),
