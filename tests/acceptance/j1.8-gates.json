@@ -14,7 +14,7 @@
         },
         {
             "id": "D",
-            "name": "Pending approval is bound to owner project conversation session turn request correlation and epoch"
+            "name": "Pending approval is bound to requester owner project conversation session turn request correlation and epoch"
         },
         {
             "id": "E",
@@ -22,7 +22,7 @@
         },
         {
             "id": "F",
-            "name": "Models agents delegates services and systems cannot self approve"
+            "name": "Models agents delegates services systems and owner-originated requests cannot self approve"
         },
         {
             "id": "G",
@@ -30,7 +30,7 @@
         },
         {
             "id": "H",
-            "name": "Cross owner project conversation session turn request correlation and epoch approval replay denied"
+            "name": "Cross requester owner project conversation session turn request correlation and epoch approval replay denied"
         },
         {
             "id": "I",
@@ -46,7 +46,7 @@
         },
         {
             "id": "L",
-            "name": "Approval replay race duplicate and consumed state fail closed"
+            "name": "Approval replay decision race duplicate consumed state and post-decision binding mutation fail closed"
         },
         {
             "id": "M",
