@@ -28,7 +28,10 @@ try {
         read("packages/storage/src/conversation-session-store.ts"),
         read("docs/roadmap/j1.1-schema-decision.md"),
     ]);
-    const m15 = j1Migrations[0];
+    const m15 = j1Migrations.find((migration) => migration.version === 15);
+    const j1MigrationsSequential =
+        j1Migrations.length >= 1 &&
+        j1Migrations.every((migration, index) => migration.version === 15 + index);
     const hash = createHash("sha256").update(migrationSql).digest("hex");
     const exactCatalog =
         gates.milestone === "J1.1" &&
@@ -43,8 +46,7 @@ try {
         B:
             foundationMigrations.length === 14 &&
             foundationMigrations.every((m, i) => m.version === i + 1) &&
-            j1Migrations.length === 1 &&
-            m15?.version === 15 &&
+            j1MigrationsSequential &&
             m15?.file === "0015_conversation_session_engine.sql" &&
             m15.sha256 === hash &&
             m15.destructive === false,
