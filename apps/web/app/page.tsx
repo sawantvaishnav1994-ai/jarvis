@@ -22,13 +22,16 @@ async function status(): Promise<Health | null> {
 export default async function Page() {
     const health = await status();
     const ready = health?.status === "ok";
+    const remote = Boolean(process.env.JARVIS_REMOTE_ORIGIN);
     return (
         <main>
             <header>
                 <a className="wordmark" href="/">
                     JARVIS<span>FOUNDATION</span>
                 </a>
-                <span className="environment">LOCAL DEVELOPMENT</span>
+                <span className="environment">
+                    {remote ? "REMOTE DEVELOPMENT" : "LOCAL DEVELOPMENT"}
+                </span>
             </header>
             <section className="intro">
                 <p className="eyebrow">J0.1 / ENGINEERING FOUNDATION</p>
@@ -80,7 +83,11 @@ export default async function Page() {
                         Authentication comes before personal memory or powerful
                         tools.
                     </p>
-                    <a href="/identity">Open owner identity console</a>
+                    <a href={remote ? "/remote-identity" : "/identity"}>
+                        {remote
+                            ? "Open secure iPhone owner setup"
+                            : "Open owner identity console"}
+                    </a>
                 </div>
                 <span className="tag">J0.2</span>
             </section>
@@ -89,7 +96,7 @@ export default async function Page() {
                     <p className="eyebrow">CORE + CONVERSATION</p>
                     <h2>Authenticated JARVIS conversation</h2>
                     <p>
-                        Device-bound turns with local model processing,
+                        Device-bound turns with governed model processing,
                         provenance, privacy and ordered event visibility.
                     </p>
                     <a href="/conversation">Open conversation</a>
