@@ -60,24 +60,24 @@ const turnId = "22222222-2222-4222-8222-222222222222";
 const messageId = "33333333-3333-4333-8333-333333333333";
 
 describe("J1.5 conversation history security boundaries", () => {
-    it("rejects malformed protected digests before repository persistence", async () => {
+    it("rejects malformed protected digests before repository persistence", () => {
         const repo = new SpyRepository();
         const service = new ConversationHistoryService(repo, digestContent);
-        await expect(
+        expect(() =>
             service.persistTurnResult({
                 ownerId,
                 turnId,
                 terminalState: "COMPLETED",
                 inputDigest: "not-a-digest",
             }),
-        ).rejects.toThrow("J15_HISTORY_INPUT_INVALID");
+        ).toThrow("J15_HISTORY_INPUT_INVALID");
         expect(repo.calls).toHaveLength(0);
     });
 
-    it("rejects cross-owner J1.4 pipeline binding before persistence", async () => {
+    it("rejects cross-owner J1.4 pipeline binding before persistence", () => {
         const repo = new SpyRepository();
         const service = new ConversationHistoryService(repo, digestContent);
-        await expect(
+        expect(() =>
             service.persistPipelineResult({
                 ownerId,
                 pipelineInput: {
@@ -95,7 +95,7 @@ describe("J1.5 conversation history security boundaries", () => {
                     response: "content",
                 } as unknown as import("@jarvis/core").J14TurnPipelineResult,
             }),
-        ).rejects.toThrow("J15_PIPELINE_BINDING_INVALID");
+        ).toThrow("J15_PIPELINE_BINDING_INVALID");
         expect(repo.calls).toHaveLength(0);
     });
 
