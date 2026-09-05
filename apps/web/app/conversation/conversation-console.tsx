@@ -16,6 +16,7 @@ type ResponseEvent = {
 };
 type TurnResult = {
     conversationId: string;
+    conversationSessionId: string;
     turnId: string;
     response: string | null;
     state: string;
@@ -48,6 +49,9 @@ async function rpc<T>(body: object): Promise<T> {
 export function ConversationConsole() {
     const [message, setMessage] = useState("");
     const [conversationId, setConversationId] = useState<string | null>(null);
+    const [conversationSessionId, setConversationSessionId] = useState<
+        string | null
+    >(null);
     const [turn, setTurn] = useState<TurnResult | null>(null);
     const [status, setStatus] = useState(
         "Ready. Authenticate in Identity first, then send a local development turn.",
@@ -60,7 +64,11 @@ export function ConversationConsole() {
         setBusy(true);
         setStatus("Binding this turn to your authenticated device…");
         try {
-            const request = { message: text, conversationId };
+            const request = {
+                message: text,
+                conversationId,
+                conversationSessionId,
+            };
             const challenge = await rpc<Challenge>({ phase: "begin", request });
             const key = await deviceKey();
             const proof = await deviceProof(key, challenge);
@@ -73,6 +81,7 @@ export function ConversationConsole() {
                 proof,
             });
             setConversationId(result.conversationId);
+            setConversationSessionId(result.conversationSessionId);
             setTurn(result);
             setMessage("");
             setStatus(
@@ -88,10 +97,13 @@ export function ConversationConsole() {
                     "SESSION_INVALID",
                     "SESSION_EXPIRED",
                     "DEVICE_NOT_TRUSTED",
+                    "CONVERSATION_SESSION_BINDING_INVALID",
+                    "CONVERSATION_AUTHORITY_INVALID",
                 ].includes(code)
-            )
+            ) {
+                setConversationSessionId(null);
                 setStatus(`${code}. Re-authenticate in Identity.`);
-            else if (
+            } else if (
                 [
                     "SAFE_MODE",
                     "FREEZE",
@@ -211,10 +223,10 @@ export function ConversationConsole() {
                 <a href="/identity">Identity & device trust</a>
             </div>
             <p className="conversation-boundary">
-                J1.11 uses the local synthetic development model and does not
-                execute tools or approvals. J1.12 replaces this content-only
-                adapter with the complete persistence, memory, tool, approval,
-                audit and recovery chain.
+                J1.12 now binds browser continuity to a server-verified J1
+                conversation session. Persistence, governed memory, tool,
+                approval and audit composition remain release-gated until the
+                complete J1.12 qualification passes.
             </p>
         </section>
     );
