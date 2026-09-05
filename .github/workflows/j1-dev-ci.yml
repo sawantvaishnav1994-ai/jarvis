@@ -27,12 +27,64 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: Diagnose J1.8 Prettier output
-        run: |
-          npx prettier --write \
-            packages/core/src/permission-approval-aware-conversation.ts \
-            tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
-          git diff -- \
-            packages/core/src/permission-approval-aware-conversation.ts \
-            tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
-          exit 1
+      - name: J1 development formatting
+        run: >-
+          npx prettier --check
+          packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
+          packages/core/src/permission-approval-aware-conversation.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
+          tests/unit/j1-permission-approval-aware-conversation.test.ts
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/acceptance/j1.7-gates.json
+          tests/acceptance/j1.8-gates.json
+          scripts/j1-tool-aware-conversation-go.mjs
+          scripts/j1-permission-approval-aware-conversation-go.mjs
+          docs/roadmap/j1.7.md
+          docs/roadmap/j1.8.md
+          .github/workflows/j1.7-ci.yml
+          .github/workflows/j1.8-ci.yml
+          .github/workflows/j1-dev-ci.yml
+      - name: Package type build
+        run: npm run build:packages
+      - name: J1.8 focused lint
+        run: >-
+          npx eslint
+          packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
+          packages/core/src/permission-approval-aware-conversation.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
+          tests/unit/j1-permission-approval-aware-conversation.test.ts
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          scripts/j1-tool-aware-conversation-go.mjs
+          scripts/j1-permission-approval-aware-conversation-go.mjs
+      - name: Architecture boundary check
+        run: node scripts/check-boundaries.mjs
+      - name: Test contract typecheck
+        run: npx tsc -p tsconfig.tests.json
+      - name: J1.8 focused unit and security checks
+        run: >-
+          npx vitest run
+          tests/unit/j11-acceptance.test.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
+          tests/unit/j1-permission-approval-aware-conversation.test.ts
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/security/governed-gateway.test.ts
+          tests/security/j1-model-orchestration-security.test.ts
+          tests/security/j1-turn-pipeline-security.test.ts
+          --reporter=default
