@@ -99,6 +99,8 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
         code.includes("SHUTDOWN")
     )
         return new J17ToolAwareConversationError("J17_TOOL_EMERGENCY_BLOCKED");
+    if (code.includes("PRIVACY"))
+        return new J17ToolAwareConversationError("J17_TOOL_PRIVACY_DENIED");
     if (
         code.includes("AUTHORIZATION") ||
         code.includes("CAPABILITY") ||
@@ -107,8 +109,6 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
         return new J17ToolAwareConversationError(
             "J17_TOOL_AUTHORIZATION_DENIED",
         );
-    if (code.includes("PRIVACY"))
-        return new J17ToolAwareConversationError("J17_TOOL_PRIVACY_DENIED");
     if (code.includes("IDEMPOTENCY"))
         return new J17ToolAwareConversationError(
             "J17_TOOL_IDEMPOTENCY_CONFLICT",
