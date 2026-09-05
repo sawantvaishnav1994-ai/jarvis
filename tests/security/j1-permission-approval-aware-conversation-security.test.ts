@@ -76,7 +76,9 @@ const input = {
     externalAllowed: false,
 };
 
-function binding(overrides: Partial<J18ApprovalBinding> = {}): J18ApprovalBinding {
+function binding(
+    overrides: Partial<J18ApprovalBinding> = {},
+): J18ApprovalBinding {
     return {
         approvalId: "approval:security",
         approvalReference: "approval-reference:security",
@@ -118,17 +120,24 @@ describe("J1.8 approval lifecycle security", () => {
         ["request", { requestId: "request:attacker" }],
         ["correlation", { correlationId: "correlation:attacker" }],
         ["epoch", { securityEpoch: authority.securityEpoch + 1 }],
-    ])("rejects cross-bound %s approval before tool execution", async (_name, override) => {
-        const execute = vi.fn();
-        const runtime = new J18PermissionApprovalCoordinator(
-            approvalPort(binding(override)),
-            toolPort(execute),
-        );
-        await expect(
-            runtime.resumeApproved(input, "approval:security", new AbortController().signal),
-        ).rejects.toThrow("J18_APPROVAL_BINDING_INVALID");
-        expect(execute).not.toHaveBeenCalled();
-    });
+    ])(
+        "rejects cross-bound %s approval before tool execution",
+        async (_name, override) => {
+            const execute = vi.fn();
+            const runtime = new J18PermissionApprovalCoordinator(
+                approvalPort(binding(override)),
+                toolPort(execute),
+            );
+            await expect(
+                runtime.resumeApproved(
+                    input,
+                    "approval:security",
+                    new AbortController().signal,
+                ),
+            ).rejects.toThrow("J18_APPROVAL_BINDING_INVALID");
+            expect(execute).not.toHaveBeenCalled();
+        },
+    );
 
     it("rejects consumed approval replay before tool execution", async () => {
         const execute = vi.fn();
@@ -137,7 +146,11 @@ describe("J1.8 approval lifecycle security", () => {
             toolPort(execute),
         );
         await expect(
-            runtime.resumeApproved(input, "approval:security", new AbortController().signal),
+            runtime.resumeApproved(
+                input,
+                "approval:security",
+                new AbortController().signal,
+            ),
         ).rejects.toThrow("J18_APPROVAL_NOT_READY");
         expect(execute).not.toHaveBeenCalled();
     });
@@ -173,7 +186,9 @@ describe("J1.8 approval lifecycle security", () => {
     });
 
     it("rejects mismatched owner decision response", async () => {
-        const port = approvalPort(binding({ approvalId: "approval:other", status: "APPROVED" }));
+        const port = approvalPort(
+            binding({ approvalId: "approval:other", status: "APPROVED" }),
+        );
         const runtime = new J18PermissionApprovalCoordinator(port, toolPort());
         await expect(
             runtime.decideAsOwner({
