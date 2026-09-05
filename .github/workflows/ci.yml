@@ -49,6 +49,10 @@ jobs:
         run: npx prettier --check tests/acceptance/j1.4-gates.json tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/integration/j1-turn-pipeline-postgres.test.ts tests/security/j1-turn-pipeline-security.test.ts packages/core/src/turn-pipeline.ts scripts/j1-turn-pipeline-go.mjs
       - name: J1.5 conversation history formatting
         run: npx prettier --check tests/acceptance/j1.5-gates.json tests/unit/j1-conversation-history.test.ts tests/integration/j1-conversation-history-postgres.test.ts tests/security/j1-conversation-history-security.test.ts packages/core/src/conversation-history.ts packages/storage/src/conversation-history-store.ts scripts/j1-conversation-history-go.mjs
+      - name: J1.6 memory-aware conversation formatting
+        run: npx prettier --check tests/acceptance/j1.6-gates.json tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts packages/core/src/memory-aware-conversation.ts scripts/j1-memory-aware-conversation-go.mjs docs/roadmap/j1.6.md
+      - name: J1.7 tool-aware conversation formatting
+        run: npx prettier --check tests/acceptance/j1.7-gates.json tests/unit/j1-tool-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation-integration.test.ts tests/security/j1-tool-aware-conversation-security.test.ts packages/core/src/tool-aware-conversation.ts scripts/j1-tool-aware-conversation-go.mjs docs/roadmap/j1.7.md
 
   typescript-foundation:
     needs: preflight
@@ -75,12 +79,16 @@ jobs:
         run: npx vitest run tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/security/j1-turn-pipeline-security.test.ts --reporter=default
       - name: J1.5 conversation history integrity
         run: npx vitest run tests/unit/j1-conversation-history.test.ts tests/security/j1-conversation-history-security.test.ts --reporter=default
+      - name: J1.6 memory-aware conversation integrity
+        run: npx vitest run tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts --reporter=default
+      - name: J1.7 tool-aware conversation integrity
+        run: npx vitest run tests/unit/j1-tool-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation-integration.test.ts tests/security/j1-tool-aware-conversation-security.test.ts tests/security/governed-gateway.test.ts --reporter=default
       - name: Static and contract checks
         run: npm run check
-      - name: J0.12 critical security repeatability
+      - name: Foundation and J1 critical security repeatability
         run: |
           for i in 1 2 3; do
-            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/identity.test.ts tests/security/j1-model-orchestration-security.test.ts tests/security/j1-turn-pipeline-security.test.ts tests/security/j1-conversation-history-security.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j12-acceptance.test.ts tests/unit/j1-core-acceptance.test.ts tests/unit/j1-conversation-session.test.ts tests/unit/j1-context-assembly.test.ts tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/unit/j1-conversation-history.test.ts --reporter=default
+            npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/identity.test.ts tests/security/j1-model-orchestration-security.test.ts tests/security/j1-turn-pipeline-security.test.ts tests/security/j1-conversation-history-security.test.ts tests/security/j1-memory-aware-conversation-security.test.ts tests/security/j1-tool-aware-conversation-security.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j12-acceptance.test.ts tests/unit/j1-core-acceptance.test.ts tests/unit/j1-conversation-session.test.ts tests/unit/j1-context-assembly.test.ts tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/unit/j1-conversation-history.test.ts tests/unit/j1-memory-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation-integration.test.ts --reporter=default
           done
       - name: Real PostgreSQL integration
         run: npm run test:integration
@@ -105,8 +113,8 @@ jobs:
         run: |
           npm run test:j10:recovery-drill
           npx vitest run tests/unit/j10-hardening.test.ts --reporter=default
-      - name: J0.12 replay concurrency and emergency regression
-        run: npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/j1-model-orchestration-security.test.ts tests/security/j1-turn-pipeline-security.test.ts tests/security/j1-conversation-history-security.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j1-conversation-session.test.ts tests/unit/j1-context-assembly.test.ts tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/unit/j1-conversation-history.test.ts --reporter=default
+      - name: J1.7 replay concurrency and emergency regression
+        run: npx vitest run tests/security/governance.test.ts tests/security/governed-gateway.test.ts tests/security/j1-model-orchestration-security.test.ts tests/security/j1-turn-pipeline-security.test.ts tests/security/j1-conversation-history-security.test.ts tests/security/j1-memory-aware-conversation-security.test.ts tests/security/j1-tool-aware-conversation-security.test.ts tests/unit/j08-hardening.test.ts tests/unit/j10-hardening.test.ts tests/unit/j1-conversation-session.test.ts tests/unit/j1-context-assembly.test.ts tests/unit/j1-model-orchestration.test.ts tests/unit/j1-model-orchestration-integration.test.ts tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/unit/j1-conversation-history.test.ts tests/unit/j1-memory-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation.test.ts tests/unit/j1-tool-aware-conversation-integration.test.ts --reporter=default
       - name: Dependency outage and recovery
         run: npm run test:failures
       - name: Stop and verify processes
@@ -169,6 +177,14 @@ jobs:
         if: success()
         env: {J1_5_CI_SEQUENCE: 'complete'}
         run: npm run test:j1.5:go
+      - name: Explicit J1.6 Memory-Aware Conversation A-T acceptance
+        if: success()
+        env: {J1_6_CI_SEQUENCE: 'complete'}
+        run: npm run test:j1.6:go
+      - name: Explicit J1.7 Tool-Aware Conversation A-T acceptance
+        if: success()
+        env: {J1_7_CI_SEQUENCE: 'complete'}
+        run: npm run test:j1.7:go
       - name: Qualification failure summary
         if: failure()
         run: |
