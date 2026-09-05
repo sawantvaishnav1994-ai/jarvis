@@ -34,6 +34,7 @@ jobs:
           packages/core/src/tool-aware-turn.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
           tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
@@ -49,6 +50,7 @@ jobs:
           npx vitest run
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
           tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
