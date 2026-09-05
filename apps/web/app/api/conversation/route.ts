@@ -40,9 +40,19 @@ function normalize(input: BrowserRequest) {
               : (() => {
                     throw new Error("Invalid conversation");
                 })();
+    const conversationSessionId =
+        request.conversationSessionId === null ||
+        request.conversationSessionId === undefined
+            ? null
+            : typeof request.conversationSessionId === "string"
+              ? request.conversationSessionId
+              : (() => {
+                    throw new Error("Invalid conversation session");
+                })();
     const normalizedRequest = {
         message: request.message.trim(),
         conversationId,
+        conversationSessionId,
     };
     if (input.phase === "begin")
         return { phase: "begin" as const, request: normalizedRequest };
