@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: j1-dev-${{ github.ref }}
@@ -17,6 +17,8 @@ jobs:
   j1-dev:
     runs-on: ubuntu-latest
     timeout-minutes: 6
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -25,21 +27,107 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: J1.12 canonical persistence formatter commit
-        run: |
-          npx prettier --write \
-            packages/core/src/final-conversation-persistence.ts \
-            tests/unit/j1-final-conversation-persistence.test.ts
-          if git diff --quiet -- \
-            packages/core/src/final-conversation-persistence.ts \
-            tests/unit/j1-final-conversation-persistence.test.ts; then
-            echo "Canonical formatting already committed."
-            exit 0
-          fi
-          git config user.name "jarvis-ci"
-          git config user.email "jarvis-ci@users.noreply.github.com"
-          git add \
-            packages/core/src/final-conversation-persistence.ts \
-            tests/unit/j1-final-conversation-persistence.test.ts
-          git commit -m "style(j1.12): apply canonical persistence formatting"
-          git push origin HEAD:validation/j1.9-j1.12-core-conversation-final-20260905
+      - name: J1 development formatting
+        run: >-
+          npx prettier --check
+          packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
+          packages/core/src/permission-approval-aware-conversation.ts
+          packages/core/src/operating-modes.ts
+          packages/core/src/streaming-resilience.ts
+          packages/core/src/final-conversation-persistence.ts
+          packages/identity/src/contracts.ts
+          apps/api/src/conversation-http.ts
+          apps/api/src/main.ts
+          apps/web/app/page.tsx
+          apps/web/app/globals.css
+          apps/web/app/api/identity/route.ts
+          apps/web/app/api/conversation/route.ts
+          apps/web/app/conversation/page.tsx
+          apps/web/app/conversation/conversation-console.tsx
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
+          tests/unit/j1-permission-approval-aware-conversation.test.ts
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
+          tests/unit/j1-conversational-web-ui.test.ts
+          tests/unit/j1-final-integration-acceptance.test.ts
+          tests/unit/j1-final-conversation-persistence.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/acceptance/j1.7-gates.json
+          tests/acceptance/j1.8-gates.json
+          tests/acceptance/j1.12-gates.json
+          scripts/j1-tool-aware-conversation-go.mjs
+          scripts/j1-permission-approval-aware-conversation-go.mjs
+          scripts/j1-final-integration-go.mjs
+          docs/roadmap/j1.7.md
+          docs/roadmap/j1.8.md
+          docs/roadmap/j1.9.md
+          docs/roadmap/j1.10.md
+          docs/roadmap/j1.11.md
+          docs/roadmap/j1.12.md
+          .github/workflows/j1.7-ci.yml
+          .github/workflows/j1.8-ci.yml
+          .github/workflows/j1.12-ci.yml
+          .github/workflows/j1-dev-ci.yml
+      - name: Package and API type build
+        run: npm run build:packages
+      - name: J1 Web typecheck
+        run: npm run typecheck --workspace @jarvis/web
+      - name: J1 focused lint
+        run: >-
+          npx eslint
+          packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
+          packages/core/src/permission-approval-aware-conversation.ts
+          packages/core/src/operating-modes.ts
+          packages/core/src/streaming-resilience.ts
+          packages/core/src/final-conversation-persistence.ts
+          packages/identity/src/contracts.ts
+          apps/api/src/conversation-http.ts
+          apps/api/src/main.ts
+          apps/web/app/page.tsx
+          apps/web/app/api/identity/route.ts
+          apps/web/app/api/conversation/route.ts
+          apps/web/app/conversation/page.tsx
+          apps/web/app/conversation/conversation-console.tsx
+          tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
+          tests/unit/j1-conversational-web-ui.test.ts
+          tests/unit/j1-final-integration-acceptance.test.ts
+          tests/unit/j1-final-conversation-persistence.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          scripts/j1-tool-aware-conversation-go.mjs
+          scripts/j1-permission-approval-aware-conversation-go.mjs
+          scripts/j1-final-integration-go.mjs
+      - name: Architecture boundary check
+        run: node scripts/check-boundaries.mjs
+      - name: Test contract typecheck
+        run: npx tsc -p tsconfig.tests.json
+      - name: J1 focused unit and security checks
+        run: >-
+          npx vitest run
+          tests/unit/j11-acceptance.test.ts
+          tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
+          tests/unit/j1-permission-approval-aware-conversation.test.ts
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
+          tests/unit/j1-conversational-web-ui.test.ts
+          tests/unit/j1-final-integration-acceptance.test.ts
+          tests/unit/j1-final-conversation-persistence.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/security/governed-gateway.test.ts
+          tests/security/identity.test.ts
+          tests/security/j1-model-orchestration-security.test.ts
+          tests/security/j1-turn-pipeline-security.test.ts
+          --reporter=default
