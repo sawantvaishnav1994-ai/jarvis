@@ -53,16 +53,26 @@ CREATE FUNCTION conversations.validate_history_records() RETURNS trigger LANGUAG
 DECLARE
     actual_domain text;
 BEGIN
-    SELECT domain INTO actual_domain
-      FROM storage.record_catalog
-     WHERE owner_id = NEW.owner_id
-       AND id = CASE WHEN TG_TABLE_NAME = 'history_conversations' THEN NEW.conversation_id ELSE NEW.message_id END
-       AND deleted = false;
-    IF TG_TABLE_NAME = 'history_conversations' AND actual_domain IS DISTINCT FROM 'conversation' THEN
-        RAISE EXCEPTION 'invalid history conversation record';
-    END IF;
-    IF TG_TABLE_NAME = 'history_messages' AND actual_domain IS DISTINCT FROM 'message' THEN
-        RAISE EXCEPTION 'invalid history message record';
+    IF TG_TABLE_NAME = 'history_conversations' THEN
+        SELECT domain INTO actual_domain
+          FROM storage.record_catalog
+         WHERE owner_id = NEW.owner_id
+           AND id = NEW.conversation_id
+           AND deleted = false;
+        IF actual_domain IS DISTINCT FROM 'conversation' THEN
+            RAISE EXCEPTION 'invalid history conversation record';
+        END IF;
+    ELSIF TG_TABLE_NAME = 'history_messages' THEN
+        SELECT domain INTO actual_domain
+          FROM storage.record_catalog
+         WHERE owner_id = NEW.owner_id
+           AND id = NEW.message_id
+           AND deleted = false;
+        IF actual_domain IS DISTINCT FROM 'message' THEN
+            RAISE EXCEPTION 'invalid history message record';
+        END IF;
+    ELSE
+        RAISE EXCEPTION 'invalid history trigger table';
     END IF;
     RETURN NEW;
 END;

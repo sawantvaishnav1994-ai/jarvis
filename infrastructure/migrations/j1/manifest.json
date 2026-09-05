@@ -8,7 +8,7 @@
     {
         "version": 16,
         "file": "0016_conversation_persistence_history.sql",
-        "sha256": "651849c78eeb62caeb3d7aedfed62dc1a7e6259f15cb5f93b16c787914a37c91",
+        "sha256": "79f6d6f330c8de7bad55551be69377596c0ed711152f15a04b77ff74afb02dd6",
         "destructive": false
     }
 ]
