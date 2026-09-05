@@ -1,7 +1,11 @@
 import { homedir } from "node:os";
 import { resolve, dirname } from "node:path";
 import { readFile } from "node:fs/promises";
-import { loadConfig, requireDevelopment } from "@jarvis/config";
+import {
+    loadConfig,
+    requireDevelopment,
+    runtimeIdentity,
+} from "@jarvis/config";
 import {
     FileSecretManager,
     RecordCipher,
@@ -38,6 +42,7 @@ async function main() {
         process.env.JARVIS_CONFIG ?? "config/development.json",
     );
     requireDevelopment(config);
+    const identityConfig = runtimeIdentity(config);
     const policy = new DeterministicPolicy(
         JSON.parse(
             await readFile(
@@ -129,8 +134,6 @@ async function main() {
         (ownerId) => keys.cipher(ownerId),
         storageCipher,
     );
-    // Restores never acquire a target from request parameters. Until an isolated
-    // target is provisioned by the operator, API restore attempts fail closed.
     const recovery = new StorageRecovery(
         new LocalEncryptedObjects(resolve(".jarvis/development/backups")),
         objectStore,
@@ -157,7 +160,7 @@ async function main() {
     );
     const identity = new IdentityEngine(
         new PostgresIdentityRepository(pool, storageCipher),
-        new WebAuthnPasskeys(config.identity.rpID, config.identity.origin),
+        new WebAuthnPasskeys(identityConfig.rpID, identityConfig.origin),
         digest(bootstrapLease.value.toString("utf8")),
         Date.now,
         new GovernanceEngine(dataGateway).handle,
