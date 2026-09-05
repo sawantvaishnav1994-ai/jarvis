@@ -1,42 +1,51 @@
 {
-  "milestone": "J1.6",
-  "name": "Memory-Aware Conversation",
-  "baseline": "0fff75bd8ab4835c8a87b79ab8c9d639c3011eec",
-  "gates": [
-    { "id": "A", "name": "Exact frozen J1.5 baseline" },
-    { "id": "B", "name": "No new database migration or second memory store" },
-    { "id": "C", "name": "J0 memory retrieval authority preserved" },
-    {
-      "id": "D",
-      "name": "Exact owner project conversation session turn epoch binding"
-    },
-    {
-      "id": "E",
-      "name": "Retrieved memory always passes through J1.2 context assembly"
-    },
-    {
-      "id": "F",
-      "name": "D5 revoked deleted retention and disclosure denials preserved"
-    },
-    { "id": "G", "name": "Context budget and trust enforcement preserved" },
-    { "id": "H", "name": "Degraded retrieval is explicit and fail-safe" },
-    { "id": "I", "name": "Memory candidate provenance and content validation" },
-    { "id": "J", "name": "Post-response candidate only uses J0 admission port" },
-    {
-      "id": "K",
-      "name": "Cross-authority candidate admission denied before J0"
-    },
-    { "id": "L", "name": "No direct model to durable memory write path" },
-    { "id": "M", "name": "J1.3 model orchestration boundary preserved" },
-    { "id": "N", "name": "J1.5 durable history boundary preserved" },
-    { "id": "O", "name": "Dedicated J1.6 unit and security tests" },
-    { "id": "P", "name": "No J1.7 tool execution" },
-    { "id": "Q", "name": "No J1.8 approval execution" },
-    { "id": "R", "name": "Foundation and J1.0-J1.5 regression preserved" },
-    { "id": "S", "name": "Full real-stack cloud qualification" },
-    {
-      "id": "T",
-      "name": "J1.9-J1.12 not started and no production credentials"
-    }
-  ]
+    "milestone": "J1.6",
+    "name": "Memory-Aware Conversation",
+    "baseline": "0fff75bd8ab4835c8a87b79ab8c9d639c3011eec",
+    "gates": [
+        { "id": "A", "name": "Exact frozen J1.5 baseline" },
+        {
+            "id": "B",
+            "name": "No new database migration or second memory store"
+        },
+        { "id": "C", "name": "J0 memory retrieval authority preserved" },
+        {
+            "id": "D",
+            "name": "Exact owner project conversation session turn epoch binding"
+        },
+        {
+            "id": "E",
+            "name": "Retrieved memory always passes through J1.2 context assembly"
+        },
+        {
+            "id": "F",
+            "name": "D5 revoked deleted retention and disclosure denials preserved"
+        },
+        { "id": "G", "name": "Context budget and trust enforcement preserved" },
+        { "id": "H", "name": "Degraded retrieval is explicit and fail-safe" },
+        {
+            "id": "I",
+            "name": "Memory candidate provenance and content validation"
+        },
+        {
+            "id": "J",
+            "name": "Post-response candidate only uses J0 admission port"
+        },
+        {
+            "id": "K",
+            "name": "Cross-authority candidate admission denied before J0"
+        },
+        { "id": "L", "name": "No direct model to durable memory write path" },
+        { "id": "M", "name": "J1.3 model orchestration boundary preserved" },
+        { "id": "N", "name": "J1.5 durable history boundary preserved" },
+        { "id": "O", "name": "Dedicated J1.6 unit and security tests" },
+        { "id": "P", "name": "No J1.7 tool execution" },
+        { "id": "Q", "name": "No J1.8 approval execution" },
+        { "id": "R", "name": "Foundation and J1.0-J1.5 regression preserved" },
+        { "id": "S", "name": "Full real-stack cloud qualification" },
+        {
+            "id": "T",
+            "name": "J1.9-J1.12 not started and no production credentials"
+        }
+    ]
 }
