@@ -61,6 +61,7 @@ jobs:
       - name: J1.7 focused unit and security checks
         run: >-
           npx vitest run
+          tests/unit/j11-acceptance.test.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
           tests/unit/j1-tool-aware-conversation-boundaries.test.ts
