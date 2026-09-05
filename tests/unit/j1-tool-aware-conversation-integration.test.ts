@@ -5,6 +5,7 @@ import {
     type J13ExecutionResult,
 } from "@jarvis/core";
 import {
+    SyntheticToolAdapter,
     UniversalToolGateway,
     UniversalToolRegistry,
     syntheticTool,
@@ -26,6 +27,8 @@ const authority: ContextAssemblyAuthority = {
 };
 
 class Authorization implements ToolAuthorizationPort {
+    revalidateAllowed = true;
+
     async authorize(
         request: ToolRequest,
         operation: { capability: string },
@@ -49,6 +52,7 @@ class Authorization implements ToolAuthorizationPort {
         inputHash: string,
     ): Promise<boolean> {
         return (
+            this.revalidateAllowed &&
             decision.bindingHash === inputHash &&
             decision.emergencyEpoch === authority.securityEpoch
         );
@@ -100,7 +104,11 @@ function modelResult(structured: unknown): J13ExecutionResult {
     };
 }
 
-function input(structured: unknown) {
+function input(structured: unknown, overrides: Partial<ReturnType<typeof baseInput>> = {}) {
+    return { ...baseInput(structured), ...overrides };
+}
+
+function baseInput(structured: unknown) {
     return {
         authority,
         actorId: "owner:j17",
@@ -116,14 +124,16 @@ function input(structured: unknown) {
 
 function runtime(tools = [syntheticTool("mock.read", "read")]) {
     const audit: ToolAuditEvent[] = [];
+    const authorization = new Authorization();
     const gateway = new UniversalToolGateway(
         new UniversalToolRegistry(tools),
-        new Authorization(),
+        authorization,
         broker,
         { append: async (event) => void audit.push(event) },
     );
     return {
         audit,
+        authorization,
         service: new J17ToolAwareConversationService(
             { verify: async () => ({ valid: true, reason: "OK" }) },
             gateway,
@@ -221,5 +231,75 @@ describe("J1.7 -> J0.7 gateway integration", () => {
         expect(audit.some((event) => event.event === "TOOL_RECONCILED")).toBe(
             true,
         );
+    });
+
+    it("preserves J0.7 emergency revalidation immediately before dispatch", async () => {
+        const adapter = new SyntheticToolAdapter("read");
+        const { service, authorization, audit } = runtime([
+            syntheticTool("mock.read", "read", {}, adapter),
+        ]);
+        authorization.revalidateAllowed = false;
+
+        await expect(
+            service.execute(input(readProposal), new AbortController().signal),
+        ).rejects.toThrow("J17_TOOL_EMERGENCY_BLOCKED");
+        expect(adapter.calls).toBe(0);
+        expect(audit.some((event) => event.event === "TOOL_DISPATCHED")).toBe(
+            false,
+        );
+    });
+
+    it("preserves cost limits before adapter dispatch", async () => {
+        const adapter = new SyntheticToolAdapter("read");
+        const { service } = runtime([
+            syntheticTool("mock.read", "read", { operations: undefined }, adapter),
+        ]);
+
+        await expect(
+            service.execute(
+                input(readProposal, { maxCostMinor: 0 }),
+                new AbortController().signal,
+            ),
+        ).rejects.toThrow("J17_TOOL_COST_BUDGET_EXCEEDED");
+        expect(adapter.calls).toBe(0);
+    });
+
+    it("preserves malformed output rejection and never accepts it as conversation data", async () => {
+        const { service } = runtime([syntheticTool("mock.bad", "malformed")]);
+        const proposal = {
+            ...readProposal,
+            toolId: "mock.bad",
+            idempotencyKey: "turn:j17:tool:bad",
+        };
+
+        await expect(
+            service.execute(input(proposal), new AbortController().signal),
+        ).rejects.toThrow("J17_TOOL_CONTRACT_INVALID");
+    });
+
+    it("preserves idempotency conflict detection for changed model input", async () => {
+        const adapter = new SyntheticToolAdapter("write");
+        const { service } = runtime([
+            syntheticTool("mock.write", "write", {}, adapter),
+        ]);
+        const first = {
+            ...readProposal,
+            toolId: "mock.write",
+            input: { key: "status", value: "one" },
+            idempotencyKey: "turn:j17:tool:same",
+        };
+        const second = {
+            ...first,
+            input: { key: "status", value: "two" },
+        };
+
+        await service.execute(input(first), new AbortController().signal);
+        await expect(
+            service.execute(
+                input(second, { requestId: "tool-request:j17:second" }),
+                new AbortController().signal,
+            ),
+        ).rejects.toThrow("J17_TOOL_IDEMPOTENCY_CONFLICT");
+        expect(adapter.effects).toBe(1);
     });
 });
