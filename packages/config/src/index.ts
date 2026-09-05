@@ -136,11 +136,7 @@ export function runtimeIdentity(config: JarvisConfig) {
     const remoteOrigin = process.env.JARVIS_REMOTE_ORIGIN?.trim();
     const remoteRpID = process.env.JARVIS_REMOTE_RP_ID?.trim();
     if (!remoteOrigin && !remoteRpID) return config.identity;
-    if (
-        config.environment !== "development" ||
-        !remoteOrigin ||
-        !remoteRpID
-    )
+    if (config.environment !== "development" || !remoteOrigin || !remoteRpID)
         throw new BoundaryError("INVALID_REMOTE_IDENTITY");
     let origin: URL;
     try {
