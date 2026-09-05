@@ -28,8 +28,11 @@ jobs:
           tests/acceptance/j1.7-gates.json
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
           scripts/j1-tool-aware-conversation-go.mjs
           docs/roadmap/j1.7.md
           .github/workflows/j1.7-ci.yml
@@ -39,6 +42,8 @@ jobs:
           npx vitest run
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
           --reporter=default
@@ -60,6 +65,8 @@ jobs:
               tests/security/j1-tool-aware-conversation-security.test.ts \
               tests/unit/j1-tool-aware-conversation.test.ts \
               tests/unit/j1-tool-aware-conversation-integration.test.ts \
+              tests/unit/j1-tool-aware-conversation-boundaries.test.ts \
+              tests/unit/j1-tool-aware-turn.test.ts \
               --reporter=default
           done
 
@@ -98,6 +105,8 @@ jobs:
             tests/security/governance.test.ts \
             tests/security/governed-gateway.test.ts \
             tests/security/j1-tool-aware-conversation-security.test.ts \
+            tests/unit/j1-tool-aware-conversation-boundaries.test.ts \
+            tests/unit/j1-tool-aware-turn.test.ts \
             tests/unit/j08-hardening.test.ts \
             tests/unit/j10-hardening.test.ts \
             --reporter=default
