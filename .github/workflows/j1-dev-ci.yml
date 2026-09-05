@@ -34,6 +34,7 @@ jobs:
           packages/core/src/tool-aware-turn.ts
           packages/core/src/permission-approval-aware-conversation.ts
           packages/core/src/operating-modes.ts
+          packages/core/src/streaming-resilience.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
           tests/unit/j1-tool-aware-conversation-boundaries.test.ts
@@ -41,6 +42,7 @@ jobs:
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
           tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
@@ -50,18 +52,20 @@ jobs:
           docs/roadmap/j1.7.md
           docs/roadmap/j1.8.md
           docs/roadmap/j1.9.md
+          docs/roadmap/j1.10.md
           .github/workflows/j1.7-ci.yml
           .github/workflows/j1.8-ci.yml
           .github/workflows/j1-dev-ci.yml
       - name: Package type build
         run: npm run build:packages
-      - name: J1.9 focused lint
+      - name: J1.10 focused lint
         run: >-
           npx eslint
           packages/core/src/tool-aware-conversation.ts
           packages/core/src/tool-aware-turn.ts
           packages/core/src/permission-approval-aware-conversation.ts
           packages/core/src/operating-modes.ts
+          packages/core/src/streaming-resilience.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
           tests/unit/j1-tool-aware-conversation-boundaries.test.ts
@@ -69,6 +73,7 @@ jobs:
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
           tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           scripts/j1-tool-aware-conversation-go.mjs
@@ -77,7 +82,7 @@ jobs:
         run: node scripts/check-boundaries.mjs
       - name: Test contract typecheck
         run: npx tsc -p tsconfig.tests.json
-      - name: J1.9 focused unit and security checks
+      - name: J1.10 focused unit and security checks
         run: >-
           npx vitest run
           tests/unit/j11-acceptance.test.ts
@@ -88,6 +93,7 @@ jobs:
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
           tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
