@@ -91,6 +91,7 @@ async function readBody(req: IncomingMessage): Promise<string> {
 
 function localModelRequest(
     ownerId: string,
+    sessionId: string,
     message: string,
     requestId: string,
 ): J06ModelRequest {
@@ -106,7 +107,7 @@ function localModelRequest(
             version: 1,
             classification: "D2",
             privacy: "local-only",
-            retention: { mode: "session" },
+            retention: { mode: "session", sessionId },
             consent: {
                 storeConversation: false,
                 createMemory: false,
@@ -291,6 +292,7 @@ export function conversationHandler(
                     },
                     modelRequest: localModelRequest(
                         inspected.owner.id,
+                        current.id,
                         rpc.request.message,
                         `j1.11:${turnId}`,
                     ),
