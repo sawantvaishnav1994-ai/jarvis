@@ -1,7 +1,9 @@
 name: Foundation checks
 on:
+  workflow_dispatch:
   push:
-  pull_request:
+    branches:
+      - main
 permissions:
   contents: read
 jobs:
