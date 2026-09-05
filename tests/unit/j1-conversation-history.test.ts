@@ -94,9 +94,10 @@ class MemoryHistoryRepository implements ConversationHistoryRepository {
                     row.ownerId === input.ownerId &&
                     (input.includeArchived || row.state === "ACTIVE"),
             )
-            .sort((a, b) =>
-                b.updatedAt.localeCompare(a.updatedAt) ||
-                b.conversationId.localeCompare(a.conversationId),
+            .sort(
+                (a, b) =>
+                    b.updatedAt.localeCompare(a.updatedAt) ||
+                    b.conversationId.localeCompare(a.conversationId),
             );
         if (input.cursor)
             rows = rows.filter(
@@ -123,7 +124,9 @@ class MemoryHistoryRepository implements ConversationHistoryRepository {
             .sort((a, b) => a.ordinal - b.ordinal)
             .slice(0, input.limit);
     }
-    async persistTurnResult(input: Omit<ConversationTurnResult, "completedAt">) {
+    async persistTurnResult(
+        input: Omit<ConversationTurnResult, "completedAt">,
+    ) {
         const value = {
             ...input,
             completedAt: new Date(++this.now * 1000).toISOString(),
@@ -153,9 +156,9 @@ describe("J1.5 conversation persistence and history", () => {
             projectId: "project-j15",
             securityEpoch: 7,
         });
-        expect((await service.listConversations({ ownerId }))[0]?.conversationId).toBe(
-            conversationId,
-        );
+        expect(
+            (await service.listConversations({ ownerId }))[0]?.conversationId,
+        ).toBe(conversationId);
         const archived = await service.archiveConversation({
             ownerId,
             conversationId,
@@ -171,7 +174,11 @@ describe("J1.5 conversation persistence and history", () => {
     it("stores only content digests in the history index", async () => {
         const repo = new MemoryHistoryRepository();
         const service = new ConversationHistoryService(repo, digestContent);
-        await service.registerConversation({ ownerId, conversationId, securityEpoch: 1 });
+        await service.registerConversation({
+            ownerId,
+            conversationId,
+            securityEpoch: 1,
+        });
         const plaintext = "sensitive-history-marker";
         const row = await service.appendMessage({
             ownerId,
@@ -187,7 +194,11 @@ describe("J1.5 conversation persistence and history", () => {
     it("provides deterministic ordered message pagination", async () => {
         const repo = new MemoryHistoryRepository();
         const service = new ConversationHistoryService(repo, digestContent);
-        await service.registerConversation({ ownerId, conversationId, securityEpoch: 1 });
+        await service.registerConversation({
+            ownerId,
+            conversationId,
+            securityEpoch: 1,
+        });
         await service.appendMessage({
             ownerId,
             conversationId,
@@ -202,7 +213,11 @@ describe("J1.5 conversation persistence and history", () => {
             role: "assistant",
             content: "two",
         });
-        const first = await service.listMessages({ ownerId, conversationId, limit: 1 });
+        const first = await service.listMessages({
+            ownerId,
+            conversationId,
+            limit: 1,
+        });
         const second = await service.listMessages({
             ownerId,
             conversationId,

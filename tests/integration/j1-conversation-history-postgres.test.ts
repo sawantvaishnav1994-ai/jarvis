@@ -129,7 +129,10 @@ afterAll(async () => {
 describe("J1.5 PostgreSQL persistence and restart recovery", () => {
     it("persists ordered history and reconstructs it with a new repository instance", async () => {
         const repository = new PostgresConversationHistoryRepository(pool);
-        const service = new ConversationHistoryService(repository, digestContent);
+        const service = new ConversationHistoryService(
+            repository,
+            digestContent,
+        );
         const conversation = await service.registerConversation({
             ownerId,
             conversationId,
@@ -145,7 +148,9 @@ describe("J1.5 PostgreSQL persistence and restart recovery", () => {
         });
         expect(first.ordinal).toBe(1);
 
-        const sessionRepository = new PostgresConversationSessionRepository(pool);
+        const sessionRepository = new PostgresConversationSessionRepository(
+            pool,
+        );
         const session = await sessionRepository.createSession({
             id: randomUUID(),
             ownerId,
@@ -196,7 +201,10 @@ describe("J1.5 PostgreSQL persistence and restart recovery", () => {
             new PostgresConversationHistoryRepository(pool),
             digestContent,
         );
-        const history = await restarted.listMessages({ ownerId, conversationId });
+        const history = await restarted.listMessages({
+            ownerId,
+            conversationId,
+        });
         expect(history.map((row) => row.ordinal)).toEqual([1, 2]);
         expect(JSON.stringify(history)).not.toContain(
             "assistant-content-not-stored-in-history-index",

@@ -24,7 +24,9 @@ try {
         read("tests/unit/j1-conversation-history.test.ts"),
         read("tests/integration/j1-conversation-history-postgres.test.ts"),
         read("tests/security/j1-conversation-history-security.test.ts"),
-        read("infrastructure/migrations/j1/0016_conversation_persistence_history.sql"),
+        read(
+            "infrastructure/migrations/j1/0016_conversation_persistence_history.sql",
+        ),
         read(".github/workflows/ci.yml"),
     ]);
     const checks = {
@@ -76,19 +78,27 @@ try {
             store.includes("sameTurnResult") &&
             store.includes("J15_TURN_RESULT_CONFLICT"),
         N:
-            integration.includes("new PostgresConversationHistoryRepository(pool)") &&
-            roadmap.includes("process restart"),
+            integration.includes(
+                "new PostgresConversationHistoryRepository(pool)",
+            ) && roadmap.includes("process restart"),
         O:
             unit.includes("J1.5 conversation persistence and history") &&
-            security.includes("J1.5 conversation history security boundaries") &&
-            integration.includes("J1.5 PostgreSQL persistence and restart recovery"),
-        P: roadmap.includes("J1.6 memory-aware conversation is not part of J1.5"),
+            security.includes(
+                "J1.5 conversation history security boundaries",
+            ) &&
+            integration.includes(
+                "J1.5 PostgreSQL persistence and restart recovery",
+            ),
+        P: roadmap.includes(
+            "J1.6 memory-aware conversation is not part of J1.5",
+        ),
         Q:
             roadmap.includes("J1.7 tool-aware conversation") &&
             roadmap.includes("J1.8 approval-aware execution"),
         R:
-            workflow.includes("Explicit J1.4 Response Turn Pipeline A-T acceptance") &&
-            workflow.includes("J1.5 conversation history integrity"),
+            workflow.includes(
+                "Explicit J1.4 Response Turn Pipeline A-T acceptance",
+            ) && workflow.includes("J1.5 conversation history integrity"),
         S:
             process.env.J1_5_CI_SEQUENCE === "complete" &&
             workflow.includes("Real PostgreSQL integration") &&

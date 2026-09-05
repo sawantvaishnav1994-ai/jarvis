@@ -6,9 +6,15 @@ import {
     type ConversationTurnResult,
 } from "@jarvis/core";
 
-type RegisterInput = Parameters<ConversationHistoryRepository["registerConversation"]>[0];
-type AppendInput = Parameters<ConversationHistoryRepository["appendMessage"]>[0];
-type PersistInput = Parameters<ConversationHistoryRepository["persistTurnResult"]>[0];
+type RegisterInput = Parameters<
+    ConversationHistoryRepository["registerConversation"]
+>[0];
+type AppendInput = Parameters<
+    ConversationHistoryRepository["appendMessage"]
+>[0];
+type PersistInput = Parameters<
+    ConversationHistoryRepository["persistTurnResult"]
+>[0];
 const digestContent = (value: string) =>
     createHash("sha256").update(value, "utf8").digest("hex");
 
@@ -22,9 +28,10 @@ class SpyRepository implements ConversationHistoryRepository {
         archivedAt: null,
         version: 1,
     });
-    archiveConversation: ConversationHistoryRepository["archiveConversation"] = async () => {
-        throw new Error("unused");
-    };
+    archiveConversation: ConversationHistoryRepository["archiveConversation"] =
+        async () => {
+            throw new Error("unused");
+        };
     appendMessage = async (input: AppendInput) => {
         this.calls.push(input);
         return {
@@ -33,13 +40,18 @@ class SpyRepository implements ConversationHistoryRepository {
             createdAt: new Date(0).toISOString(),
         };
     };
-    listConversations: ConversationHistoryRepository["listConversations"] = async () => [];
-    listMessages: ConversationHistoryRepository["listMessages"] = async () => [];
-    persistTurnResult = async (input: PersistInput): Promise<ConversationTurnResult> => {
+    listConversations: ConversationHistoryRepository["listConversations"] =
+        async () => [];
+    listMessages: ConversationHistoryRepository["listMessages"] =
+        async () => [];
+    persistTurnResult = async (
+        input: PersistInput,
+    ): Promise<ConversationTurnResult> => {
         this.calls.push(input);
         return { ...input, completedAt: new Date(0).toISOString() };
     };
-    getTurnResult: ConversationHistoryRepository["getTurnResult"] = async () => null;
+    getTurnResult: ConversationHistoryRepository["getTurnResult"] = async () =>
+        null;
 }
 
 const ownerId = "owner-j15-security";
