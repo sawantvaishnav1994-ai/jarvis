@@ -1,10 +1,7 @@
 name: J1.6 Memory-Aware Conversation Qualification
 
 on:
-  push:
-    branches:
-      - validation/j1.6-memory-aware-conversation-20260905
-      - main
+  workflow_dispatch:
   pull_request:
     paths:
       - "packages/core/src/memory-aware-conversation.ts"
