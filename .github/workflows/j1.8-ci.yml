@@ -2,6 +2,9 @@ name: J1.8 Permission Approval-Aware Conversation Qualification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - validation/j1.8-permission-approval-aware-conversation-20260905
 
 permissions:
   contents: read
