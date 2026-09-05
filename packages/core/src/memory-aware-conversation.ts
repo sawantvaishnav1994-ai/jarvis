@@ -106,15 +106,17 @@ function itemToCandidate(item: ConversationMemoryItem): ContextCandidateSource {
         classification: item.classification,
         freshness: item.freshness,
         retention: item.retention,
-        retentionBoundary: item.retentionBoundary,
+        ...(item.retentionBoundary !== undefined
+            ? { retentionBoundary: item.retentionBoundary }
+            : {}),
         disclosureEligibility: item.disclosureEligibility,
         digest: item.digest,
         trust: item.trust,
         priority: item.priority,
         size: item.payload.length,
         payload: item.payload,
-        deleted: item.deleted,
-        revoked: item.revoked,
+        ...(item.deleted !== undefined ? { deleted: item.deleted } : {}),
+        ...(item.revoked !== undefined ? { revoked: item.revoked } : {}),
     };
 }
 
