@@ -165,57 +165,60 @@ function proposalFrom(result: J13ExecutionResult): ConversationToolProposal {
 }
 
 function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
-    const code =
-        error instanceof Error
-            ? error.message.toUpperCase()
-            : String(error).toUpperCase();
-    if (code.includes("APPROVAL_REQUIRED"))
+    const code = (
+        error instanceof Error ? error.message : String(error)
+    ).toUpperCase();
+    const normalizedCode = code.replace(/[-\s]+/g, "_");
+    if (normalizedCode.includes("APPROVAL_REQUIRED"))
         return new J17ToolAwareConversationError("J17_APPROVAL_REQUIRED");
-    if (code.includes("APPROVAL_MISMATCH"))
+    if (normalizedCode.includes("APPROVAL_MISMATCH"))
         return new J17ToolAwareConversationError("J17_APPROVAL_MISMATCH");
-    if (code.includes("UNKNOWN_OUTCOME"))
+    if (normalizedCode.includes("UNKNOWN_OUTCOME"))
         return new J17ToolAwareConversationError("J17_TOOL_OUTCOME_UNKNOWN");
-    if (code.includes("CANCEL"))
+    if (normalizedCode.includes("CANCEL"))
         return new J17ToolAwareConversationError("J17_TOOL_CANCELLED");
-    if (code.includes("TIMEOUT"))
+    if (normalizedCode.includes("TIMEOUT"))
         return new J17ToolAwareConversationError("J17_TOOL_TIMEOUT");
     if (
-        code.includes("EMERGENCY") ||
-        code.includes("FREEZE") ||
-        code.includes("SHUTDOWN")
+        normalizedCode.includes("EMERGENCY") ||
+        normalizedCode.includes("FREEZE") ||
+        normalizedCode.includes("SHUTDOWN")
     )
         return new J17ToolAwareConversationError("J17_TOOL_EMERGENCY_BLOCKED");
-    if (code.includes("PRIVACY"))
+    if (normalizedCode.includes("PRIVACY"))
         return new J17ToolAwareConversationError("J17_TOOL_PRIVACY_DENIED");
-    if (code.includes("COST_BUDGET_EXCEEDED"))
+    if (normalizedCode.includes("COST_BUDGET_EXCEEDED"))
         return new J17ToolAwareConversationError(
             "J17_TOOL_COST_BUDGET_EXCEEDED",
         );
-    if (code.includes("CONCURRENCY_CONFLICT"))
+    if (normalizedCode.includes("CONCURRENCY_CONFLICT"))
         return new J17ToolAwareConversationError(
             "J17_TOOL_CONCURRENCY_CONFLICT",
         );
-    if (code.includes("CREDENTIAL_UNAVAILABLE"))
+    if (normalizedCode.includes("CREDENTIAL_UNAVAILABLE"))
         return new J17ToolAwareConversationError(
             "J17_TOOL_CREDENTIAL_UNAVAILABLE",
         );
     if (
-        code.includes("TOOL_NOT_FOUND") ||
-        code.includes("TOOL_UNAVAILABLE") ||
-        code.includes("TOOL_DISABLED")
+        normalizedCode.includes("TOOL_NOT_FOUND") ||
+        normalizedCode.includes("TOOL_UNAVAILABLE") ||
+        normalizedCode.includes("TOOL_DISABLED")
     )
         return new J17ToolAwareConversationError("J17_TOOL_UNAVAILABLE");
-    if (code.includes("INVALID_INPUT") || code.includes("INVALID_OUTPUT"))
+    if (
+        normalizedCode.includes("INVALID_INPUT") ||
+        normalizedCode.includes("INVALID_OUTPUT")
+    )
         return new J17ToolAwareConversationError("J17_TOOL_CONTRACT_INVALID");
     if (
-        code.includes("AUTHORIZATION") ||
-        code.includes("CAPABILITY") ||
-        code.includes("DENIED")
+        normalizedCode.includes("AUTHORIZATION") ||
+        normalizedCode.includes("CAPABILITY") ||
+        normalizedCode.includes("DENIED")
     )
         return new J17ToolAwareConversationError(
             "J17_TOOL_AUTHORIZATION_DENIED",
         );
-    if (code.includes("IDEMPOTENCY"))
+    if (normalizedCode.includes("IDEMPOTENCY"))
         return new J17ToolAwareConversationError(
             "J17_TOOL_IDEMPOTENCY_CONFLICT",
         );
