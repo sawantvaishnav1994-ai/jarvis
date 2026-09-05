@@ -31,8 +31,10 @@ jobs:
         run: >-
           npx prettier --check
           packages/core/src/tool-aware-conversation.ts
+          packages/core/src/tool-aware-turn.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
           scripts/j1-tool-aware-conversation-go.mjs
@@ -47,6 +49,7 @@ jobs:
           npx vitest run
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/unit/j1-tool-aware-turn.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
           tests/security/j1-model-orchestration-security.test.ts
