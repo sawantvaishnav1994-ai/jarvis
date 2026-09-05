@@ -4,7 +4,8 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 const json = async (path) => JSON.parse(await read(path));
 const letters = "ABCDEFGHIJKLMNOPQRST".split("");
-const candidateRef = "validation/j1.9-j1.12-core-conversation-final-20260905";
+const candidateRef =
+  "validation/j1.9-j1.12-core-conversation-final-20260905";
 const normalize = (value) =>
   value
     .toLowerCase()
@@ -74,7 +75,8 @@ try {
   const checks = {
     A:
       gates.milestone === "J1.12" &&
-      gates.baseline === "cf203bb71df1d4cb19e819546f2684201e04cc16" &&
+      gates.baseline ===
+        "cf203bb71df1d4cb19e819546f2684201e04cc16" &&
       gates.gates.length === 20 &&
       JSON.stringify(gates.gates.map((gate) => gate.id)) ===
         JSON.stringify(letters),
@@ -166,7 +168,9 @@ try {
       normalizedWorkflow.includes("replay") &&
       normalizedWorkflow.includes("race") &&
       normalizedWorkflow.includes("recovery") &&
-      turnSecurity.includes("discards a late result after authority revocation") &&
+      turnSecurity.includes(
+        "discards a late result after authority revocation",
+      ) &&
       streamingSecurity.includes("without replaying protected side effects"),
     S:
       process.env.J1_12_CI_SEQUENCE === "complete" &&
