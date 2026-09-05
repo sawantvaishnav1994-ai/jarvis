@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
     ConversationHistoryService,
@@ -8,6 +9,8 @@ import {
 type RegisterInput = Parameters<ConversationHistoryRepository["registerConversation"]>[0];
 type AppendInput = Parameters<ConversationHistoryRepository["appendMessage"]>[0];
 type PersistInput = Parameters<ConversationHistoryRepository["persistTurnResult"]>[0];
+const digestContent = (value: string) =>
+    createHash("sha256").update(value, "utf8").digest("hex");
 
 class SpyRepository implements ConversationHistoryRepository {
     calls: unknown[] = [];
@@ -47,7 +50,7 @@ const messageId = "33333333-3333-4333-8333-333333333333";
 describe("J1.5 conversation history security boundaries", () => {
     it("rejects malformed protected digests before repository persistence", async () => {
         const repo = new SpyRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         await expect(
             service.persistTurnResult({
                 ownerId,
@@ -61,7 +64,7 @@ describe("J1.5 conversation history security boundaries", () => {
 
     it("rejects cross-owner J1.4 pipeline binding before persistence", async () => {
         const repo = new SpyRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         await expect(
             service.persistPipelineResult({
                 ownerId,
@@ -86,7 +89,7 @@ describe("J1.5 conversation history security boundaries", () => {
 
     it("never forwards message or response plaintext to history metadata", async () => {
         const repo = new SpyRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         const messageMarker = "j15-sensitive-message-marker";
         const responseMarker = "j15-sensitive-response-marker";
         await service.appendMessage({
