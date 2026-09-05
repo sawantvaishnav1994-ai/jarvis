@@ -18,9 +18,7 @@ const authority: ContextAssemblyAuthority = {
     operatingMode: "copilot",
 };
 
-function snapshot(
-    patch: Partial<J19ModeSnapshot> = {},
-): J19ModeSnapshot {
+function snapshot(patch: Partial<J19ModeSnapshot> = {}): J19ModeSnapshot {
     return {
         ownerId: authority.ownerId,
         projectId: authority.projectId,
@@ -55,7 +53,11 @@ describe("J1.9 operating modes", () => {
             () => now,
         );
         await expect(
-            coordinator.evaluate({ authority, action: "TOOL_MUTATION", mutating: true }),
+            coordinator.evaluate({
+                authority,
+                action: "TOOL_MUTATION",
+                mutating: true,
+            }),
         ).resolves.toMatchObject({ allowed: true, effectiveMode: "copilot" });
     });
 
@@ -66,7 +68,10 @@ describe("J1.9 operating modes", () => {
         );
         await expect(
             coordinator.evaluate({ authority, action: "MODEL" }),
-        ).resolves.toMatchObject({ allowed: false, reason: "MODE_BINDING_INVALID" });
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "MODE_BINDING_INVALID",
+        });
     });
 
     it("fails closed on stale mode or operating-mode mismatch", async () => {
@@ -74,7 +79,9 @@ describe("J1.9 operating modes", () => {
             port(snapshot({ expiresAtEpochMs: now })),
             () => now,
         );
-        await expect(expired.evaluate({ authority, action: "MODEL" })).resolves.toMatchObject({
+        await expect(
+            expired.evaluate({ authority, action: "MODEL" }),
+        ).resolves.toMatchObject({
             allowed: false,
             reason: "MODE_EXPIRED",
         });
@@ -83,7 +90,9 @@ describe("J1.9 operating modes", () => {
             port(snapshot({ mode: "assistant" })),
             () => now,
         );
-        await expect(mismatch.evaluate({ authority, action: "MODEL" })).resolves.toMatchObject({
+        await expect(
+            mismatch.evaluate({ authority, action: "MODEL" }),
+        ).resolves.toMatchObject({
             allowed: false,
             reason: "MODE_MISMATCH",
         });
@@ -99,7 +108,11 @@ describe("J1.9 operating modes", () => {
             () => now,
         );
         await expect(
-            coordinator.evaluate({ authority, action: "TOOL_MUTATION", mutating: true }),
+            coordinator.evaluate({
+                authority,
+                action: "TOOL_MUTATION",
+                mutating: true,
+            }),
         ).resolves.toMatchObject({ allowed: false, reason });
     });
 
@@ -109,16 +122,30 @@ describe("J1.9 operating modes", () => {
             () => now,
         );
         await expect(
-            disconnected.evaluate({ authority, action: "NETWORK", external: true }),
-        ).resolves.toMatchObject({ allowed: false, reason: "EMERGENCY_DISCONNECTED" });
+            disconnected.evaluate({
+                authority,
+                action: "NETWORK",
+                external: true,
+            }),
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "EMERGENCY_DISCONNECTED",
+        });
 
         const safe = new J19OperatingModeCoordinator(
             port(snapshot({ emergencyControl: "SAFE_MODE" })),
             () => now,
         );
         await expect(
-            safe.evaluate({ authority, action: "APPROVAL_REQUEST", mutating: true }),
-        ).resolves.toMatchObject({ allowed: false, reason: "EMERGENCY_SAFE_MODE" });
+            safe.evaluate({
+                authority,
+                action: "APPROVAL_REQUEST",
+                mutating: true,
+            }),
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "EMERGENCY_SAFE_MODE",
+        });
     });
 
     it("blocks privileged guest behavior and Safe mutation", async () => {
@@ -128,8 +155,14 @@ describe("J1.9 operating modes", () => {
             () => now,
         );
         await expect(
-            guest.evaluate({ authority: guestAuthority, action: "APPROVAL_REQUEST" }),
-        ).resolves.toMatchObject({ allowed: false, reason: "GUEST_PRIVILEGE_DENIED" });
+            guest.evaluate({
+                authority: guestAuthority,
+                action: "APPROVAL_REQUEST",
+            }),
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "GUEST_PRIVILEGE_DENIED",
+        });
 
         const safeAuthority = { ...authority, operatingMode: "safe" as const };
         const safe = new J19OperatingModeCoordinator(
@@ -137,8 +170,15 @@ describe("J1.9 operating modes", () => {
             () => now,
         );
         await expect(
-            safe.evaluate({ authority: safeAuthority, action: "TOOL_MUTATION", mutating: true }),
-        ).resolves.toMatchObject({ allowed: false, reason: "SAFE_MUTATION_DENIED" });
+            safe.evaluate({
+                authority: safeAuthority,
+                action: "TOOL_MUTATION",
+                mutating: true,
+            }),
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "SAFE_MUTATION_DENIED",
+        });
     });
 
     it("requires a valid bounded J0 autonomy envelope", async () => {
@@ -149,7 +189,10 @@ describe("J1.9 operating modes", () => {
         const mode = snapshot({ mode: "autonomous" });
         const missing = new J19OperatingModeCoordinator(port(mode), () => now);
         await expect(
-            missing.evaluate({ authority: autonomousAuthority, action: "TOOL_READ" }),
+            missing.evaluate({
+                authority: autonomousAuthority,
+                action: "TOOL_READ",
+            }),
         ).resolves.toMatchObject({
             allowed: false,
             reason: "AUTONOMY_ENVELOPE_REQUIRED",
@@ -168,7 +211,10 @@ describe("J1.9 operating modes", () => {
             revoked: false,
             provenance: "J0_AUTHORITY",
         };
-        const bounded = new J19OperatingModeCoordinator(port(mode, envelope), () => now);
+        const bounded = new J19OperatingModeCoordinator(
+            port(mode, envelope),
+            () => now,
+        );
         await expect(
             bounded.evaluate({
                 authority: autonomousAuthority,
@@ -182,13 +228,19 @@ describe("J1.9 operating modes", () => {
                 action: "TOOL_READ",
                 costMinor: 26,
             }),
-        ).resolves.toMatchObject({ allowed: false, reason: "AUTONOMY_COST_DENIED" });
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "AUTONOMY_COST_DENIED",
+        });
         await expect(
             bounded.evaluate({
                 authority: autonomousAuthority,
                 action: "TOOL_READ",
                 external: true,
             }),
-        ).resolves.toMatchObject({ allowed: false, reason: "AUTONOMY_EXTERNAL_DENIED" });
+        ).resolves.toMatchObject({
+            allowed: false,
+            reason: "AUTONOMY_EXTERNAL_DENIED",
+        });
     });
 });
