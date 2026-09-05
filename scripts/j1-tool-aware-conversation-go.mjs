@@ -74,6 +74,8 @@ try {
             runtime.includes("approvalCommitted: false") &&
             boundaries.includes("approval:wrong") &&
             boundaries.includes("approval:trusted") &&
+            turnBridge.includes("mayRetryWithApproval") &&
+            turnBridgeTests.includes("reuses it on approved retry") &&
             roadmap.includes(
                 "Full conversational permission/approval lifecycle belongs to J1.8",
             ),
@@ -101,7 +103,9 @@ try {
             runtime.includes("J17_TOOL_OUTCOME_UNKNOWN") &&
             runtime.includes("J17_TOOL_EMERGENCY_BLOCKED") &&
             unit.includes("cancellation is already requested") &&
-            security.includes("revoked authority"),
+            security.includes("revoked authority") &&
+            turnBridgeTests.includes("blind retry cannot dispatch again") &&
+            roadmap.includes("UNKNOWN_OUTCOME"),
         L:
             runtime.includes(
                 'result.provenance !== "UNTRUSTED_EXTERNAL_DATA"',
