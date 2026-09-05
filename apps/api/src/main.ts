@@ -12,6 +12,7 @@ import { IdentityEngine, WebAuthnPasskeys, digest } from "@jarvis/identity";
 import {
     PostgresIdentityRepository,
     PostgresAuditSink,
+    PostgresConversationSessionRepository,
     DataKeys,
     PrivateRecords,
     PrivateObjects,
@@ -173,7 +174,11 @@ async function main() {
         transportKey,
         developmentToolGateway(policy, new PostgresAuditSink(pool)),
     );
-    const conversationRpc = conversationHandler(identity, transportKey);
+    const conversationRpc = conversationHandler(
+        identity,
+        transportKey,
+        new PostgresConversationSessionRepository(pool),
+    );
     const server = healthServer(
         "api",
         async () => {
