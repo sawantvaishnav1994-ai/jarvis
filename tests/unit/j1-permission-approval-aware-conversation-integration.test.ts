@@ -14,10 +14,7 @@ import {
     type CredentialBroker,
     type ToolAuditEvent,
 } from "@jarvis/tools";
-import {
-    DeterministicPolicy,
-    type ApprovalBindingV2,
-} from "@jarvis/security";
+import { DeterministicPolicy, type ApprovalBindingV2 } from "@jarvis/security";
 import {
     policyContext,
     policyControls,
@@ -194,16 +191,18 @@ describe("J1.8 -> J0.7 approval integration", () => {
         const approvals = {
             requestApproval: vi.fn(async () => state),
             read: vi.fn(async () => state),
-            decide: vi.fn(async (decision: { decision: "APPROVE" | "DENY" }) => {
-                state = {
-                    ...state,
-                    status:
-                        decision.decision === "APPROVE"
-                            ? ("APPROVED" as const)
-                            : ("DENIED" as const),
-                };
-                return state;
-            }),
+            decide: vi.fn(
+                async (decision: { decision: "APPROVE" | "DENY" }) => {
+                    state = {
+                        ...state,
+                        status:
+                            decision.decision === "APPROVE"
+                                ? ("APPROVED" as const)
+                                : ("DENIED" as const),
+                    };
+                    return state;
+                },
+            ),
         };
         const j18 = new J18PermissionApprovalCoordinator(
             approvals,
@@ -237,9 +236,9 @@ describe("J1.8 -> J0.7 approval integration", () => {
         expect(executed.tool?.result.status).toBe("VERIFIED");
         expect(consume).toHaveBeenCalledTimes(1);
         expect(consumed).toBe(true);
-        expect(
-            audit.some((event) => event.event === "TOOL_DISPATCHED"),
-        ).toBe(true);
+        expect(audit.some((event) => event.event === "TOOL_DISPATCHED")).toBe(
+            true,
+        );
         expect(audit.some((event) => event.event === "TOOL_VERIFIED")).toBe(
             true,
         );
