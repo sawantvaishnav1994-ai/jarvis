@@ -158,6 +158,7 @@ export function conversationHandler(
             res.end('{"error":"METHOD_NOT_ALLOWED"}');
             return true;
         }
+        let stage = "request";
         try {
             const body = await readBody(req);
             const header = req.headers["x-jarvis-service-proof"];
@@ -175,6 +176,7 @@ export function conversationHandler(
             const rpc = RpcSchema.parse(JSON.parse(body));
             const digest = bindingDigest(rpc.request);
             if (rpc.phase === "begin") {
+                stage = "challenge";
                 const challenge = await engine.beginAction(
                     rpc.token,
                     "identity.inspect",
@@ -190,6 +192,7 @@ export function conversationHandler(
                 return true;
             }
 
+            stage = "identity-proof";
             const inspected = IdentitySnapshotSchema.parse(
                 await engine.perform(
                     { token: rpc.token, ...rpc.proof },
@@ -233,6 +236,7 @@ export function conversationHandler(
                         conversationAuthority.operatingMode,
                 randomUUID,
             );
+            stage = "conversation-session";
             const conversationSession = rpc.request.conversationSessionId
                 ? await sessionEngine.verifySession(
                       conversationAuthority,
@@ -287,6 +291,7 @@ export function conversationHandler(
             const modelOperationDigest = createHash("sha256")
                 .update(`model:${inputDigest}`)
                 .digest("hex");
+            stage = "turn-pipeline";
             const result = await pipeline.execute(
                 {
                     authority,
@@ -351,6 +356,7 @@ export function conversationHandler(
                 AbortSignal.timeout(6_000),
             );
             authorityLive = false;
+            stage = "response";
             res.writeHead(200);
             res.end(
                 JSON.stringify({
@@ -385,6 +391,16 @@ export function conversationHandler(
                     : error instanceof z.ZodError
                       ? "CONVERSATION_INPUT_INVALID"
                       : "CONVERSATION_UNAVAILABLE";
+            console.error(
+                JSON.stringify({
+                    service: "api",
+                    event: "conversation.failed",
+                    stage,
+                    code,
+                    errorType:
+                        error instanceof Error ? error.name : "UnknownError",
+                }),
+            );
             res.writeHead(code === "CONVERSATION_UNAVAILABLE" ? 503 : 403);
             res.end(JSON.stringify({ error: code }));
         }
