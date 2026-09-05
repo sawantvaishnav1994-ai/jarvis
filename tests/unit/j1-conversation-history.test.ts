@@ -1,13 +1,16 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
     ConversationHistoryService,
-    historyDigest,
     type ConversationHistoryConversation,
     type ConversationHistoryCursor,
     type ConversationHistoryMessage,
     type ConversationHistoryRepository,
     type ConversationTurnResult,
 } from "@jarvis/core";
+
+const digestContent = (value: string) =>
+    createHash("sha256").update(value, "utf8").digest("hex");
 
 class MemoryHistoryRepository implements ConversationHistoryRepository {
     conversations = new Map<string, ConversationHistoryConversation>();
@@ -143,7 +146,7 @@ const digest = "a".repeat(64);
 describe("J1.5 conversation persistence and history", () => {
     it("registers, lists and archives owner-scoped conversations", async () => {
         const repo = new MemoryHistoryRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         const conversation = await service.registerConversation({
             ownerId,
             conversationId,
@@ -167,7 +170,7 @@ describe("J1.5 conversation persistence and history", () => {
 
     it("stores only content digests in the history index", async () => {
         const repo = new MemoryHistoryRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         await service.registerConversation({ ownerId, conversationId, securityEpoch: 1 });
         const plaintext = "sensitive-history-marker";
         const row = await service.appendMessage({
@@ -177,13 +180,13 @@ describe("J1.5 conversation persistence and history", () => {
             role: "user",
             content: plaintext,
         });
-        expect(row.contentDigest).toBe(historyDigest(plaintext));
+        expect(row.contentDigest).toBe(digestContent(plaintext));
         expect(JSON.stringify(row)).not.toContain(plaintext);
     });
 
     it("provides deterministic ordered message pagination", async () => {
         const repo = new MemoryHistoryRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         await service.registerConversation({ ownerId, conversationId, securityEpoch: 1 });
         await service.appendMessage({
             ownerId,
@@ -212,7 +215,7 @@ describe("J1.5 conversation persistence and history", () => {
 
     it("binds a terminal J1.4 result and hashes its response", async () => {
         const repo = new MemoryHistoryRepository();
-        const service = new ConversationHistoryService(repo);
+        const service = new ConversationHistoryService(repo, digestContent);
         const response = "sensitive-response-marker";
         const result = await service.persistPipelineResult({
             ownerId,
@@ -231,7 +234,7 @@ describe("J1.5 conversation persistence and history", () => {
                 response,
             } as unknown as import("@jarvis/core").J14TurnPipelineResult,
         });
-        expect(result.responseDigest).toBe(historyDigest(response));
+        expect(result.responseDigest).toBe(digestContent(response));
         expect(JSON.stringify(result)).not.toContain(response);
     });
 });
