@@ -32,6 +32,7 @@ jobs:
           npx prettier --check
           packages/core/src/tool-aware-conversation.ts
           tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           docs/roadmap/j1.7.md
       - name: Package type build
@@ -40,6 +41,7 @@ jobs:
         run: >-
           npx vitest run
           tests/unit/j1-tool-aware-conversation.test.ts
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
           tests/security/j1-model-orchestration-security.test.ts
