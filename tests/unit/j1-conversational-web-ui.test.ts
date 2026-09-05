@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { ActionInputSchemas } from "@jarvis/identity";
+import { loadConfig, runtimeIdentity } from "@jarvis/config";
 
 const digest = "a".repeat(64);
 
@@ -82,5 +83,39 @@ describe("J1.11 conversational Web UI security contract", () => {
         expect(handler).toContain('processingTarget: "LOCAL"');
         expect(handler).toContain("externalAI: false");
         expect(roadmap).toContain("J1.12 must replace/compose it");
+    });
+
+    it("allows only an exact HTTPS remote origin and matching RP ID", async () => {
+        const config = await loadConfig("config/development.json");
+        const previousOrigin = process.env.JARVIS_REMOTE_ORIGIN;
+        const previousRpID = process.env.JARVIS_REMOTE_RP_ID;
+        try {
+            process.env.JARVIS_REMOTE_ORIGIN = "https://jarvis.example.com";
+            process.env.JARVIS_REMOTE_RP_ID = "jarvis.example.com";
+            expect(runtimeIdentity(config)).toMatchObject({
+                origin: "https://jarvis.example.com",
+                rpID: "jarvis.example.com",
+            });
+            process.env.JARVIS_REMOTE_ORIGIN = "http://jarvis.example.com";
+            expect(() => runtimeIdentity(config)).toThrow(
+                "INVALID_REMOTE_IDENTITY",
+            );
+            process.env.JARVIS_REMOTE_ORIGIN = "https://jarvis.example.com";
+            process.env.JARVIS_REMOTE_RP_ID = "other.example.com";
+            expect(() => runtimeIdentity(config)).toThrow(
+                "INVALID_REMOTE_IDENTITY",
+            );
+            delete process.env.JARVIS_REMOTE_RP_ID;
+            expect(() => runtimeIdentity(config)).toThrow(
+                "INVALID_REMOTE_IDENTITY",
+            );
+        } finally {
+            if (previousOrigin === undefined)
+                delete process.env.JARVIS_REMOTE_ORIGIN;
+            else process.env.JARVIS_REMOTE_ORIGIN = previousOrigin;
+            if (previousRpID === undefined)
+                delete process.env.JARVIS_REMOTE_RP_ID;
+            else process.env.JARVIS_REMOTE_RP_ID = previousRpID;
+        }
     });
 });
