@@ -4,6 +4,12 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 const json = async (path) => JSON.parse(await read(path));
 const letters = "ABCDEFGHIJKLMNOPQRST".split("");
+const candidateRef = "validation/j1.9-j1.12-core-conversation-final-20260905";
+const normalize = (value) =>
+    value
+        .toLowerCase()
+        .replace(/[-–—]/g, " ")
+        .replace(/\s+/g, " ");
 
 async function writeResult(result) {
     await mkdir(new URL(".jarvis/acceptance/", root), { recursive: true });
@@ -30,6 +36,10 @@ try {
         history,
         memory,
         workflow,
+        turnSecurity,
+        streamingSecurity,
+        auditIntegration,
+        eventIntegration,
     ] = await Promise.all([
         json("tests/acceptance/j1.12-gates.json"),
         read("docs/roadmap/j1.12.md"),
@@ -43,7 +53,23 @@ try {
         read("packages/core/src/conversation-history.ts"),
         read("packages/core/src/memory-aware-conversation.ts"),
         read(".github/workflows/j1.12-ci.yml"),
+        read("tests/security/j1-turn-pipeline-security.test.ts"),
+        read("tests/unit/j1-streaming-resilience.test.ts"),
+        read("tests/integration/j09-audit-postgres.test.ts"),
+        read("tests/integration/j08-events.test.ts"),
     ]);
+
+    const normalizedRoadmap = normalize(roadmap);
+    const normalizedWorkflow = normalize(workflow);
+    const qualificationRef = process.env.GITHUB_REF_NAME ?? "";
+    const onCandidate = qualificationRef === candidateRef;
+    const onMain = qualificationRef === "main";
+    const qualificationRefValid = onCandidate || onMain;
+    const exactMainRequalificationConfigured =
+        workflow.includes(`- ${candidateRef}`) && workflow.includes("- main");
+    const noProductionCredentialInjection =
+        !/\$\{\{\s*secrets\./i.test(workflow) &&
+        !/environment:\s*production/i.test(workflow);
 
     const checks = {
         A:
@@ -104,9 +130,16 @@ try {
             roadmap.includes("NEVER_STORE") &&
             workflow.includes("J1.5 Conversation Persistence History"),
         N:
-            roadmap.includes("Audit/events") &&
-            workflow.includes("audit") &&
-            workflow.includes("event"),
+            normalizedRoadmap.includes(
+                "audit/events correlate the chain without protected plaintext leakage",
+            ) &&
+            turnSecurity.includes(
+                "does not expose prompt/context plaintext in audit records",
+            ) &&
+            auditIntegration.includes("verifyAuditChain") &&
+            auditIntegration.includes('not.toContain("owner private sentence")') &&
+            eventIntegration.includes("correlationId") &&
+            eventIntegration.includes("payload_redacted_at"),
         O:
             webProxy.includes("signService") &&
             webClient.includes("Security epoch") &&
@@ -118,20 +151,25 @@ try {
             roadmap.includes("SAFE MODE") &&
             roadmap.includes("FREEZE") &&
             roadmap.includes("SHUTDOWN") &&
-            workflow.includes("emergency"),
+            normalizedWorkflow.includes("emergency"),
         Q:
             roadmap.includes("PostgreSQL") &&
             roadmap.includes("Redis") &&
             roadmap.includes("model/provider") &&
             roadmap.includes("tool") &&
-            workflow.includes("outage") &&
-            workflow.includes("recovery"),
+            normalizedWorkflow.includes("outage") &&
+            normalizedWorkflow.includes("recovery"),
         R:
-            roadmap.includes("duplicate") &&
-            roadmap.includes("race") &&
-            roadmap.includes("late result") &&
-            workflow.includes("replay") &&
-            workflow.includes("race"),
+            normalizedRoadmap.includes("duplicate") &&
+            normalizedRoadmap.includes("race") &&
+            normalizedRoadmap.includes("late result") &&
+            normalizedWorkflow.includes("replay") &&
+            normalizedWorkflow.includes("race") &&
+            normalizedWorkflow.includes("recovery") &&
+            turnSecurity.includes("discards a late result after authority revocation") &&
+            streamingSecurity.includes(
+                "without replaying protected side effects",
+            ),
         S:
             process.env.J1_12_CI_SEQUENCE === "complete" &&
             workflow.includes("J0.4") &&
@@ -139,9 +177,13 @@ try {
             workflow.includes("J1.0") &&
             workflow.includes("J1.11"),
         T:
-            roadmap.includes("No production credentials") &&
-            roadmap.includes("exact-main") &&
-            roadmap.includes("J1 Core + Conversation v1 GO"),
+            qualificationRefValid &&
+            normalizedRoadmap.includes("no production credentials") &&
+            normalizedRoadmap.includes("no scope expansion") &&
+            normalizedRoadmap.includes("exact main green required before") &&
+            normalizedRoadmap.includes("j1 core + conversation v1 go") &&
+            exactMainRequalificationConfigured &&
+            noProductionCredentialInjection,
     };
 
     const failed = Object.entries(checks)
@@ -151,11 +193,15 @@ try {
         milestone: "J1.12",
         result: failed.length ? "FAIL" : "A-T_PASS",
         realStackSequence: true,
+        qualificationRef,
+        phase: onMain ? "EXACT_MAIN" : onCandidate ? "CANDIDATE" : "UNKNOWN",
         checks,
         failed,
         recommendation: failed.length
             ? "J1 CORE + CONVERSATION V1 GO NOT RECOMMENDED"
-            : "J1 CORE + CONVERSATION V1 GO RECOMMENDED",
+            : onMain
+              ? "J1 CORE + CONVERSATION V1 GO RECOMMENDED"
+              : "J1.12 CANDIDATE QUALIFIED — EXACT-MAIN QUALIFICATION REQUIRED",
     };
     await writeResult(result);
     console.log(JSON.stringify(result));
