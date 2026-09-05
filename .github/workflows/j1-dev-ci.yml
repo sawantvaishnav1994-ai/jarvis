@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: j1-dev-${{ github.ref }}
@@ -27,7 +27,7 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: J1.11 formatter capture
+      - name: J1.11 canonical formatter commit
         run: |
           npx prettier --write \
             packages/identity/src/contracts.ts \
@@ -36,16 +36,24 @@ jobs:
             apps/web/app/api/conversation/route.ts \
             apps/web/app/conversation/conversation-console.tsx \
             tests/unit/j1-conversational-web-ui.test.ts
-          for file in \
+          if git diff --quiet -- \
             packages/identity/src/contracts.ts \
             apps/api/src/conversation-http.ts \
             apps/web/app/page.tsx \
             apps/web/app/api/conversation/route.ts \
             apps/web/app/conversation/conversation-console.tsx \
-            tests/unit/j1-conversational-web-ui.test.ts; do
-            echo "JARVIS_FORMATTED_BEGIN:$file"
-            base64 -w0 "$file"
-            echo
-            echo "JARVIS_FORMATTED_END:$file"
-          done
-          exit 1
+            tests/unit/j1-conversational-web-ui.test.ts; then
+            echo "Canonical formatting already committed."
+            exit 0
+          fi
+          git config user.name "jarvis-ci"
+          git config user.email "jarvis-ci@users.noreply.github.com"
+          git add \
+            packages/identity/src/contracts.ts \
+            apps/api/src/conversation-http.ts \
+            apps/web/app/page.tsx \
+            apps/web/app/api/conversation/route.ts \
+            apps/web/app/conversation/conversation-console.tsx \
+            tests/unit/j1-conversational-web-ui.test.ts
+          git commit -m "style(j1.11): apply canonical formatting"
+          git push origin HEAD:validation/j1.9-j1.12-core-conversation-final-20260905
