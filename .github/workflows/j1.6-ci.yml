@@ -1,0 +1,107 @@
+name: J1.6 Memory-Aware Conversation Qualification
+
+on:
+  push:
+    branches:
+      - validation/j1.6-memory-aware-conversation-20260905
+  pull_request:
+    paths:
+      - "packages/core/src/memory-aware-conversation.ts"
+      - "tests/unit/j1-memory-aware-conversation.test.ts"
+      - "tests/security/j1-memory-aware-conversation-security.test.ts"
+      - "tests/acceptance/j1.6-gates.json"
+      - "scripts/j1-memory-aware-conversation-go.mjs"
+      - "docs/roadmap/j1.6.md"
+      - ".github/workflows/j1.6-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify-j1-6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Fresh checkout setup
+        run: npm run setup
+
+      - name: J1.6 memory-aware conversation formatting
+        run: npx prettier --check tests/acceptance/j1.6-gates.json tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts packages/core/src/memory-aware-conversation.ts scripts/j1-memory-aware-conversation-go.mjs
+
+      - name: J1.6 memory-aware conversation integrity
+        run: npx vitest run tests/unit/j1-memory-aware-conversation.test.ts tests/security/j1-memory-aware-conversation-security.test.ts --reporter=default
+
+      - name: Static and contract checks
+        run: npm run check
+
+      - name: J1.6 critical security repeatability
+        run: |
+          for i in 1 2 3; do
+            npx vitest run tests/security/j1-memory-aware-conversation-security.test.ts tests/security/j1-conversation-history-security.test.ts tests/security/j1-turn-pipeline-security.test.ts tests/security/j1-model-orchestration-security.test.ts tests/unit/j1-memory-aware-conversation.test.ts tests/unit/j1-context-assembly.test.ts --reporter=default
+          done
+
+      - name: Real PostgreSQL integration
+        run: npm run test:integration
+
+      - name: Start API, worker and web
+        run: |
+          npm start > /tmp/jarvis-j16-services.log 2>&1 &
+          node scripts/wait-ready.mjs
+
+      - name: Queue and health smoke
+        run: npm run smoke
+
+      - name: Browser installation
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser acceptance
+        run: npm run test:e2e
+
+      - name: Owner identity and device trust GO flow
+        env:
+          JARVIS_IDENTITY_E2E: "1"
+        run: npm run test:e2e:identity
+
+      - name: Dependency outage and recovery
+        run: npm run test:failures
+
+      - name: Stop and verify processes
+        run: |
+          npm stop
+          node scripts/check-stopped.mjs
+
+      - name: Explicit J1.5 Conversation Persistence History A-T acceptance
+        if: success()
+        env:
+          J1_5_CI_SEQUENCE: "complete"
+        run: npm run test:j1.5:go
+
+      - name: Explicit J1.6 Memory-Aware Conversation A-T acceptance
+        if: success()
+        env:
+          J1_6_CI_SEQUENCE: "complete"
+        run: npm run test:j1.6:go
+
+      - name: Qualification failure summary
+        if: failure()
+        run: |
+          echo "J1.6 qualification stopped before complete acceptance attestation."
+          echo "Inspect the first failing required step; do not weaken or bypass a gate."
+
+      - name: Safe service diagnostics
+        if: failure()
+        run: cat /tmp/jarvis-j16-services.log 2>/dev/null || true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          npm stop || true
+          npm run infra:down || true
