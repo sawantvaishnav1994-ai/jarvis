@@ -17,15 +17,16 @@ export default function Icon() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#18282b",
-                    color: "#f5f5f0",
-                    fontSize: 176,
-                    fontWeight: 800,
-                    letterSpacing: "-0.06em",
-                    fontFamily: "sans-serif",
+                    background: "#050505",
+                    color: "#d9a326",
+                    fontSize: 300,
+                    fontWeight: 700,
+                    fontFamily: "serif",
+                    border: "12px solid #d9a326",
+                    borderRadius: 112,
                 }}
             >
-                J
+                ॐ
             </div>
         ),
         size,
