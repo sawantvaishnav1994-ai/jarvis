@@ -21,7 +21,7 @@ const authority: ContextAssemblyAuthority = {
 function snapshot(patch: Partial<J19ModeSnapshot> = {}): J19ModeSnapshot {
     return {
         ownerId: authority.ownerId,
-        projectId: authority.projectId,
+        projectId: "jarvis",
         conversationId: authority.conversationId,
         sessionId: authority.sessionId,
         turnId: authority.turnId,
@@ -203,7 +203,7 @@ describe("J1.9 operating modes", () => {
 
         const envelope: J19AutonomyEnvelope = {
             ownerId: authority.ownerId,
-            projectId: authority.projectId,
+            projectId: "jarvis",
             conversationId: authority.conversationId,
             sessionId: authority.sessionId,
             securityEpoch: authority.securityEpoch,
