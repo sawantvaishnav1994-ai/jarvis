@@ -9,20 +9,29 @@ try {
     if (process.env.J1_8_CI_SEQUENCE !== "complete")
         throw new Error("J1_8_REAL_STACK_SEQUENCE_NOT_ATTESTED");
 
-    const [gates, runtime, roadmap, unit, security, workflow, j17Runtime] =
-        await Promise.all([
-            json("tests/acceptance/j1.8-gates.json"),
-            read("packages/core/src/permission-approval-aware-conversation.ts"),
-            read("docs/roadmap/j1.8.md"),
-            read(
-                "tests/unit/j1-permission-approval-aware-conversation.test.ts",
-            ),
-            read(
-                "tests/security/j1-permission-approval-aware-conversation-security.test.ts",
-            ),
-            read(".github/workflows/j1.8-ci.yml"),
-            read("packages/core/src/tool-aware-conversation.ts"),
-        ]);
+    const [
+        gates,
+        runtime,
+        roadmap,
+        unit,
+        integration,
+        security,
+        workflow,
+        j17Runtime,
+    ] = await Promise.all([
+        json("tests/acceptance/j1.8-gates.json"),
+        read("packages/core/src/permission-approval-aware-conversation.ts"),
+        read("docs/roadmap/j1.8.md"),
+        read("tests/unit/j1-permission-approval-aware-conversation.test.ts"),
+        read(
+            "tests/unit/j1-permission-approval-aware-conversation-integration.test.ts",
+        ),
+        read(
+            "tests/security/j1-permission-approval-aware-conversation-security.test.ts",
+        ),
+        read(".github/workflows/j1.8-ci.yml"),
+        read("packages/core/src/tool-aware-conversation.ts"),
+    ]);
 
     const checks = {
         A:
@@ -96,6 +105,8 @@ try {
         J:
             roadmap.includes("J1.7 idempotency") &&
             j17Runtime.includes("this.gateway.invoke(request, signal)") &&
+            integration.includes("UniversalToolGateway") &&
+            integration.includes("J03ToolAuthorizationBridge") &&
             !runtime.includes("UniversalToolGateway"),
         K:
             runtime.includes("J18_CANCELLED") &&
@@ -126,6 +137,7 @@ try {
             ),
         O:
             unit.includes("J1.8 permission/approval-aware conversation") &&
+            integration.includes("J1.8 -> J0.7 approval integration") &&
             security.includes("J1.8 approval lifecycle security"),
         P:
             !runtime.includes("adapter.execute") &&
@@ -137,6 +149,9 @@ try {
         Q:
             roadmap.includes("conversation/audit") &&
             roadmap.includes("J0 authority adapter") &&
+            integration.includes("consume).toHaveBeenCalledTimes(1)") &&
+            integration.includes('event.event === "TOOL_DISPATCHED"') &&
+            integration.includes('event.event === "TOOL_VERIFIED"') &&
             workflow.includes("Owner identity and device trust GO flow"),
         R:
             workflow.includes("Explicit J0.4 A-S acceptance") &&
