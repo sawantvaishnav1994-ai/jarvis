@@ -30,7 +30,10 @@ const proposal = {
     idempotencyKey: "turn:secure:tool:1",
 };
 
-function model(turnId = authority.turnId, structured: unknown = proposal): J13ExecutionResult {
+function model(
+    turnId = authority.turnId,
+    structured: unknown = proposal,
+): J13ExecutionResult {
     return {
         operationId: "operation:secure",
         turnId,
@@ -42,7 +45,12 @@ function model(turnId = authority.turnId, structured: unknown = proposal): J13Ex
             modelId: "model:secure",
             text: "",
             structured,
-            usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2, cost: 0 },
+            usage: {
+                inputTokens: 1,
+                outputTokens: 1,
+                totalTokens: 2,
+                cost: 0,
+            },
             finishReason: "stop",
             verified: true,
         },
@@ -103,21 +111,33 @@ function input(modelResult = model()) {
 }
 
 it("denies stale or cross-turn model proposals before tool execution", async () => {
-    const gateway: J17ToolGatewayPort = { invoke: vi.fn(async () => success()) };
+    const gateway: J17ToolGatewayPort = {
+        invoke: vi.fn(async () => success()),
+    };
     const runtime = new J17ToolAwareConversationService(
         { verify: async () => ({ valid: true, reason: "OK" }) },
         gateway,
     );
     await expect(
-        runtime.execute(input(model("turn:other")), new AbortController().signal),
+        runtime.execute(
+            input(model("turn:other")),
+            new AbortController().signal,
+        ),
     ).rejects.toThrow("J17_TURN_BINDING_INVALID");
     expect(gateway.invoke).not.toHaveBeenCalled();
 });
 
 it("denies revoked authority before tool execution", async () => {
-    const gateway: J17ToolGatewayPort = { invoke: vi.fn(async () => success()) };
+    const gateway: J17ToolGatewayPort = {
+        invoke: vi.fn(async () => success()),
+    };
     const runtime = new J17ToolAwareConversationService(
-        { verify: async () => ({ valid: false, reason: "SECURITY_EPOCH_CHANGED" }) },
+        {
+            verify: async () => ({
+                valid: false,
+                reason: "SECURITY_EPOCH_CHANGED",
+            }),
+        },
         gateway,
     );
     await expect(
@@ -127,7 +147,9 @@ it("denies revoked authority before tool execution", async () => {
 });
 
 it("does not accept model-supplied authority or approval fields", async () => {
-    const gateway: J17ToolGatewayPort = { invoke: vi.fn(async () => success()) };
+    const gateway: J17ToolGatewayPort = {
+        invoke: vi.fn(async () => success()),
+    };
     const runtime = new J17ToolAwareConversationService(
         { verify: async () => ({ valid: true, reason: "OK" }) },
         gateway,
@@ -141,14 +163,20 @@ it("does not accept model-supplied authority or approval fields", async () => {
         externalAllowed: true,
     };
     await expect(
-        runtime.execute(input(model(authority.turnId, poisoned)), new AbortController().signal),
+        runtime.execute(
+            input(model(authority.turnId, poisoned)),
+            new AbortController().signal,
+        ),
     ).rejects.toThrow("J17_TOOL_PROPOSAL_INVALID");
     expect(gateway.invoke).not.toHaveBeenCalled();
 });
 
 it("rejects mismatched gateway results as untrusted boundary violations", async () => {
     const gateway: J17ToolGatewayPort = {
-        invoke: vi.fn(async () => ({ ...success(), requestId: "other-request" })),
+        invoke: vi.fn(async () => ({
+            ...success(),
+            requestId: "other-request",
+        })),
     };
     const runtime = new J17ToolAwareConversationService(
         { verify: async () => ({ valid: true, reason: "OK" }) },
