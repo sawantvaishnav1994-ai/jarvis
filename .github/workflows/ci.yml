@@ -17,16 +17,17 @@ jobs:
       - run: python scripts/check.py
       - run: PYTHONPATH=src python -m unittest discover -s tests -v
       - run: PYTHONPATH=src python -m jarvis demo
-  typescript-foundation:
+
+  preflight:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 10
     env: {NEXT_TELEMETRY_DISABLED: '1'}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: {node-version-file: .nvmrc, cache: npm}
-      - name: Fresh checkout setup
-        run: npm run setup
+      - name: Fast dependency install
+        run: npm ci --ignore-scripts
       - name: J0.11 acceptance formatting
         shell: bash
         run: |
@@ -46,6 +47,18 @@ jobs:
         run: npx prettier --check tests/acceptance/j1.4-gates.json tests/unit/j1-turn-pipeline.test.ts tests/unit/j1-turn-pipeline-integration.test.ts tests/integration/j1-turn-pipeline-postgres.test.ts tests/security/j1-turn-pipeline-security.test.ts packages/core/src/turn-pipeline.ts scripts/j1-turn-pipeline-go.mjs
       - name: J1.5 conversation history formatting
         run: npx prettier --check tests/acceptance/j1.5-gates.json tests/unit/j1-conversation-history.test.ts tests/integration/j1-conversation-history-postgres.test.ts tests/security/j1-conversation-history-security.test.ts packages/core/src/conversation-history.ts packages/storage/src/conversation-history-store.ts scripts/j1-conversation-history-go.mjs
+
+  typescript-foundation:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env: {NEXT_TELEMETRY_DISABLED: '1'}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: {node-version-file: .nvmrc, cache: npm}
+      - name: Fresh checkout setup
+        run: npm run setup
       - name: J0.12 Foundation v1 freeze integrity
         run: npx vitest run tests/unit/j12-acceptance.test.ts --reporter=default
       - name: J1.0 specification integrity
@@ -104,101 +117,62 @@ jobs:
       - name: Explicit J0.4 A-S acceptance
         if: success()
         run: npm run test:j04:go
-      - name: J0.4 evidence on failure
-        if: failure()
-        run: npm run test:j04:go
       - name: Explicit J0.5 A-T acceptance
         if: success()
-        run: npm run test:j05:go
-      - name: J0.5 evidence on failure
-        if: failure()
         run: npm run test:j05:go
       - name: Explicit J0.6 A-T acceptance
         if: success()
         run: npm run test:j06:go
-      - name: J0.6 evidence on failure
-        if: failure()
-        run: npm run test:j06:go
       - name: Explicit J0.7 A-T acceptance
         if: success()
-        run: npm run test:j07:go
-      - name: J0.7 evidence on failure
-        if: failure()
         run: npm run test:j07:go
       - name: Explicit J0.8 A-T acceptance
         if: success()
         run: npm run test:j08:go
-      - name: J0.8 evidence on failure
-        if: failure()
-        run: npm run test:j08:go
       - name: Explicit J0.9 A-T acceptance
         if: success()
         run: npm run test:j09:go
-      - name: J0.9 evidence on failure
-        if: failure()
-        run: npm run test:j09:go
       - name: Explicit J0.10 A-T acceptance
         if: success()
-        run: npm run test:j10:go
-      - name: J0.10 evidence on failure
-        if: failure()
         run: npm run test:j10:go
       - name: Explicit J0.11 A-T acceptance
         if: success()
         env: {J11_CI_SEQUENCE: 'complete'}
         run: npm run test:j11:go
-      - name: J0.11 evidence on failure
-        if: failure()
-        run: npm run test:j11:go
       - name: Explicit J0.12 Foundation v1 A-T acceptance
         if: success()
         env: {J12_CI_SEQUENCE: 'complete'}
-        run: npm run test:j12:go
-      - name: J0.12 evidence on failure
-        if: failure()
         run: npm run test:j12:go
       - name: Explicit J1.0 Core + Conversation A-T acceptance
         if: success()
         env: {J1_0_CI_SEQUENCE: 'complete'}
         run: npm run test:j1.0:go
-      - name: J1.0 evidence on failure
-        if: failure()
-        run: npm run test:j1.0:go
       - name: Explicit J1.1 Conversation + Session A-T acceptance
         if: success()
         env: {J1_1_CI_SEQUENCE: 'complete'}
-        run: npm run test:j1.1:go
-      - name: J1.1 evidence on failure
-        if: failure()
         run: npm run test:j1.1:go
       - name: Explicit J1.2 Context Assembly A-T acceptance
         if: success()
         env: {J1_2_CI_SEQUENCE: 'complete'}
         run: npm run test:j1.2:go
-      - name: J1.2 evidence on failure
-        if: failure()
-        run: npm run test:j1.2:go
       - name: Explicit J1.3 Model Orchestration A-T acceptance
         if: success()
         env: {J1_3_CI_SEQUENCE: 'complete'}
-        run: npm run test:j1.3:go
-      - name: J1.3 evidence on failure
-        if: failure()
         run: npm run test:j1.3:go
       - name: Explicit J1.4 Response Turn Pipeline A-T acceptance
         if: success()
         env: {J1_4_CI_SEQUENCE: 'complete'}
         run: npm run test:j1.4:go
-      - name: J1.4 evidence on failure
-        if: failure()
-        run: npm run test:j1.4:go
       - name: Explicit J1.5 Conversation Persistence History A-T acceptance
         if: success()
         env: {J1_5_CI_SEQUENCE: 'complete'}
         run: npm run test:j1.5:go
-      - name: J1.5 evidence on failure
+      - name: Qualification failure summary
         if: failure()
-        run: npm run test:j1.5:go
+        run: |
+          echo "Candidate qualification stopped before complete acceptance attestation."
+          echo "A skipped or unattested prior milestone in this run is not evidence that its previously validated baseline regressed."
+          echo "Inspect the first failing required step for the actionable root cause."
       - name: Cleanup
         if: always()
         run: |

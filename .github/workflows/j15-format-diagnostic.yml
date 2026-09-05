@@ -4,7 +4,7 @@ on:
     branches:
       - validation/j1.5-conversation-persistence-history-20260905
 permissions:
-  contents: read
+  contents: write
 jobs:
   format-diagnostic:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --ignore-scripts
-      - name: Emit exact Prettier output
+      - name: Apply exact J1.5 formatting
         shell: bash
         run: |
           files=(
@@ -27,8 +27,15 @@ jobs:
             packages/core/src/conversation-history.ts
             scripts/j1-conversation-history-go.mjs
           )
-          for file in "${files[@]}"; do
-            echo "===== J15_FORMAT_BEGIN:${file} ====="
-            npx prettier "${file}"
-            echo "===== J15_FORMAT_END:${file} ====="
-          done
+          npx prettier --write "${files[@]}"
+          npx prettier --check "${files[@]}"
+          git diff --check
+      - name: Commit formatter result and remove diagnostic
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/j15-format-diagnostic.yml
+          git add tests/acceptance/j1.5-gates.json tests/unit/j1-conversation-history.test.ts tests/integration/j1-conversation-history-postgres.test.ts tests/security/j1-conversation-history-security.test.ts packages/core/src/conversation-history.ts scripts/j1-conversation-history-go.mjs
+          git commit -m "style(j1.5): apply candidate formatting"
+          git push origin HEAD:validation/j1.5-conversation-persistence-history-20260905
