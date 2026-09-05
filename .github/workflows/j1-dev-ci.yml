@@ -39,6 +39,7 @@ jobs:
           tests/unit/j1-tool-aware-turn.test.ts
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
           scripts/j1-tool-aware-conversation-go.mjs
           docs/roadmap/j1.7.md
@@ -55,10 +56,10 @@ jobs:
           packages/core/src/permission-approval-aware-conversation.ts
           tests/unit/j1-tool-aware-conversation.test.ts
           tests/unit/j1-tool-aware-conversation-integration.test.ts
-          tests/unit/j1-tool-aware-conversation-boundaries.test.ts
           tests/unit/j1-tool-aware-turn.test.ts
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
           scripts/j1-tool-aware-conversation-go.mjs
       - name: Architecture boundary check
         run: node scripts/check-boundaries.mjs
@@ -74,6 +75,7 @@ jobs:
           tests/unit/j1-tool-aware-turn.test.ts
           tests/unit/j1-permission-approval-aware-conversation.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
           tests/security/j1-model-orchestration-security.test.ts
           tests/security/j1-turn-pipeline-security.test.ts
