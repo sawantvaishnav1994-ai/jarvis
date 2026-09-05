@@ -89,6 +89,8 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
         return new J17ToolAwareConversationError("J17_APPROVAL_REQUIRED");
     if (code.includes("APPROVAL_MISMATCH"))
         return new J17ToolAwareConversationError("J17_APPROVAL_MISMATCH");
+    if (code.includes("UNKNOWN_OUTCOME"))
+        return new J17ToolAwareConversationError("J17_TOOL_OUTCOME_UNKNOWN");
     if (code.includes("CANCEL"))
         return new J17ToolAwareConversationError("J17_TOOL_CANCELLED");
     if (code.includes("TIMEOUT"))
@@ -101,6 +103,26 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
         return new J17ToolAwareConversationError("J17_TOOL_EMERGENCY_BLOCKED");
     if (code.includes("PRIVACY"))
         return new J17ToolAwareConversationError("J17_TOOL_PRIVACY_DENIED");
+    if (code.includes("COST_BUDGET_EXCEEDED"))
+        return new J17ToolAwareConversationError(
+            "J17_TOOL_COST_BUDGET_EXCEEDED",
+        );
+    if (code.includes("CONCURRENCY_CONFLICT"))
+        return new J17ToolAwareConversationError(
+            "J17_TOOL_CONCURRENCY_CONFLICT",
+        );
+    if (code.includes("CREDENTIAL_UNAVAILABLE"))
+        return new J17ToolAwareConversationError(
+            "J17_TOOL_CREDENTIAL_UNAVAILABLE",
+        );
+    if (
+        code.includes("TOOL_NOT_FOUND") ||
+        code.includes("TOOL_UNAVAILABLE") ||
+        code.includes("TOOL_DISABLED")
+    )
+        return new J17ToolAwareConversationError("J17_TOOL_UNAVAILABLE");
+    if (code.includes("INVALID_INPUT") || code.includes("INVALID_OUTPUT"))
+        return new J17ToolAwareConversationError("J17_TOOL_CONTRACT_INVALID");
     if (
         code.includes("AUTHORIZATION") ||
         code.includes("CAPABILITY") ||
@@ -114,6 +136,15 @@ function mapGatewayFailure(error: unknown): J17ToolAwareConversationError {
             "J17_TOOL_IDEMPOTENCY_CONFLICT",
         );
     return new J17ToolAwareConversationError("J17_TOOL_EXECUTION_FAILED");
+}
+
+function executionCommitted(
+    proposal: ConversationToolProposal,
+    result: ToolResult,
+): boolean {
+    if (proposal.requestedMode !== "EXECUTE") return false;
+    if (["SUCCEEDED", "VERIFIED"].includes(result.status)) return true;
+    return result.status === "RECONCILED" && result.verified;
 }
 
 export class J17ToolAwareConversationService {
@@ -207,9 +238,7 @@ export class J17ToolAwareConversationService {
             proposal,
             request,
             result,
-            toolExecutionCommitted:
-                proposal.requestedMode === "EXECUTE" &&
-                ["SUCCEEDED", "VERIFIED"].includes(result.status),
+            toolExecutionCommitted: executionCommitted(proposal, result),
             approvalCommitted: false,
             acceptedToolResultAsUntrustedData: true,
         };
