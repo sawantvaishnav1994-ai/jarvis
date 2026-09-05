@@ -21,7 +21,6 @@ export default function Icon() {
                     color: "#d9a326",
                     fontSize: 300,
                     fontWeight: 700,
-                    fontFamily: "serif",
                     border: "12px solid #d9a326",
                     borderRadius: 112,
                 }}
