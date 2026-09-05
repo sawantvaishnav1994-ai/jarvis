@@ -154,7 +154,10 @@ describe("J1.7 tool-aware conversation", () => {
         const { runtime, gateway } = service();
         const unsafe = { ...proposal, idempotencyKey: undefined };
         await expect(
-            runtime.execute(executionInput(unsafe), new AbortController().signal),
+            runtime.execute(
+                executionInput(unsafe),
+                new AbortController().signal,
+            ),
         ).rejects.toBeInstanceOf(J17ToolAwareConversationError);
         expect(gateway.invoke).not.toHaveBeenCalled();
     });
@@ -185,25 +188,28 @@ describe("J1.7 tool-aware conversation", () => {
         ["INVALID_OUTPUT", "J17_TOOL_CONTRACT_INVALID"],
         ["AUTHORIZATION_INVALID", "J17_TOOL_AUTHORIZATION_DENIED"],
         ["IDEMPOTENCY_CONFLICT", "J17_TOOL_IDEMPOTENCY_CONFLICT"],
-    ])("maps J0 gateway failure %s without weakening it", async (gatewayCode, expected) => {
-        const gateway: J17ToolGatewayPort = {
-            invoke: vi.fn(async () => {
-                throw new Error(gatewayCode);
-            }),
-        };
-        const { runtime } = service(gateway);
-        await expect(
-            runtime.execute(executionInput(), new AbortController().signal),
-        ).rejects.toThrow(expected);
-    });
+    ])(
+        "maps J0 gateway failure %s without weakening it",
+        async (gatewayCode, expected) => {
+            const gateway: J17ToolGatewayPort = {
+                invoke: vi.fn(async () => {
+                    throw new Error(gatewayCode);
+                }),
+            };
+            const { runtime } = service(gateway);
+            await expect(
+                runtime.execute(executionInput(), new AbortController().signal),
+            ).rejects.toThrow(expected);
+        },
+    );
 
     it("fails before the gateway when cancellation is already requested", async () => {
         const { runtime, gateway } = service();
         const controller = new AbortController();
         controller.abort();
-        await expect(runtime.execute(executionInput(), controller.signal)).rejects.toThrow(
-            "J17_TOOL_CANCELLED",
-        );
+        await expect(
+            runtime.execute(executionInput(), controller.signal),
+        ).rejects.toThrow("J17_TOOL_CANCELLED");
         expect(gateway.invoke).not.toHaveBeenCalled();
     });
 });
