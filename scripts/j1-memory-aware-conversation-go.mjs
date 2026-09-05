@@ -9,7 +9,7 @@ try {
     if (process.env.J1_6_CI_SEQUENCE !== "complete")
         throw new Error("J1_6_REAL_STACK_SEQUENCE_NOT_ATTESTED");
 
-    const [gates, runtime, roadmap, unit, security, workflow] =
+    const [gates, runtime, roadmap, unit, security, inheritedWorkflow, j16Workflow] =
         await Promise.all([
             json("tests/acceptance/j1.6-gates.json"),
             read("packages/core/src/memory-aware-conversation.ts"),
@@ -17,7 +17,9 @@ try {
             read("tests/unit/j1-memory-aware-conversation.test.ts"),
             read("tests/security/j1-memory-aware-conversation-security.test.ts"),
             read(".github/workflows/ci.yml"),
+            read(".github/workflows/j1.6-ci.yml"),
         ]);
+    const workflow = `${inheritedWorkflow}\n${j16Workflow}`;
 
     const checks = {
         A:
