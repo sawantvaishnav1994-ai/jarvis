@@ -137,7 +137,7 @@ export async function POST(request: Request) {
                 httpOnly: true,
                 secure: true,
                 sameSite: "strict",
-                path: "/api/identity",
+                path: "/api",
                 maxAge: 900,
             });
         return result;

@@ -84,9 +84,21 @@ export default async function Page() {
                 </div>
                 <span className="tag">J0.2</span>
             </section>
+            <section className="next">
+                <div>
+                    <p className="eyebrow">CORE + CONVERSATION</p>
+                    <h2>Authenticated JARVIS conversation</h2>
+                    <p>
+                        Device-bound turns with local model processing, provenance,
+                        privacy and ordered event visibility.
+                    </p>
+                    <a href="/conversation">Open conversation</a>
+                </div>
+                <span className="tag">J1.11</span>
+            </section>
             <footer>
                 <span>Interface skeleton · v0.3.0</span>
-                <span>Personal data and external actions are disabled.</span>
+                <span>Protected actions remain governed by Foundation policy.</span>
             </footer>
         </main>
     );

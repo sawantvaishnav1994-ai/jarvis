@@ -24,6 +24,7 @@ import {
     GovernedMigrations,
 } from "@jarvis/storage";
 import { identityHandler } from "./identity-http.js";
+import { conversationHandler } from "./conversation-http.js";
 import { developmentToolGateway } from "./tool-runtime.js";
 import { AuthorizedMockToolGateway } from "@jarvis/tools";
 import { Redis } from "@jarvis/events";
@@ -167,6 +168,12 @@ async function main() {
     keyLease.destroy();
     bootstrapLease.destroy();
     transportLease.destroy();
+    const identityRpc = identityHandler(
+        identity,
+        transportKey,
+        developmentToolGateway(policy, new PostgresAuditSink(pool)),
+    );
+    const conversationRpc = conversationHandler(identity, transportKey);
     const server = healthServer(
         "api",
         async () => {
@@ -188,11 +195,8 @@ async function main() {
             return { database, migrations, queue, worker };
         },
         config.rateLimits.requestsPerMinute,
-        identityHandler(
-            identity,
-            transportKey,
-            developmentToolGateway(policy, new PostgresAuditSink(pool)),
-        ),
+        async (req, res) =>
+            (await conversationRpc(req, res)) || identityRpc(req, res),
     );
     await new Promise<void>((ok, bad) => {
         server.once("error", bad);
