@@ -1,0 +1,27 @@
+{
+    "milestone": "J1.12",
+    "name": "Final Core + Conversation Integration Qualification",
+    "baseline": "cf203bb71df1d4cb19e819546f2684201e04cc16",
+    "gates": [
+        { "id": "A", "name": "Exact frozen J1.8 baseline ancestry and one combined candidate" },
+        { "id": "B", "name": "J0 remains sole identity policy risk approval permit epoch and tool execution authority" },
+        { "id": "C", "name": "Authenticated Root Owner trusted device and Foundation session browser boundary" },
+        { "id": "D", "name": "J1.1 conversation session is exact bound to owner device Foundation session and security epoch" },
+        { "id": "E", "name": "J1.9 operating modes may reduce but never increase authority" },
+        { "id": "F", "name": "J1.2 context classification provenance project retention and D5 boundaries preserved" },
+        { "id": "G", "name": "J1.6 governed memory retrieval and admission boundaries preserved with no silent promotion" },
+        { "id": "H", "name": "J1.3 provider neutral privacy preserving model routing preserved" },
+        { "id": "I", "name": "J1.4 ordered turn and response state machine preserved" },
+        { "id": "J", "name": "J1.10 reconnect cancellation and retry never duplicate protected side effects" },
+        { "id": "K", "name": "J1.7 UniversalToolGateway only execution path preserved" },
+        { "id": "L", "name": "J1.8 exact approval A3 no self approval replay race and consumption semantics preserved" },
+        { "id": "M", "name": "J1.5 history idempotency retention deletion and NEVER_STORE semantics preserved" },
+        { "id": "N", "name": "Audit and events correlate the chain without protected plaintext leakage" },
+        { "id": "O", "name": "J1.11 authenticated Web UI uses server derived authority and exposes privacy source approval tool and emergency state" },
+        { "id": "P", "name": "Revocation device removal security epoch SAFE FREEZE and SHUTDOWN invalidate stale continuations" },
+        { "id": "Q", "name": "PostgreSQL Redis model tool and browser outage recovery fail closed" },
+        { "id": "R", "name": "Restart replay race duplicate request approval race and late result adversarial coverage" },
+        { "id": "S", "name": "Complete inherited J0 and J1.0 through J1.11 regression on exact candidate and exact main" },
+        { "id": "T", "name": "No production credentials or scope expansion and exact main green before J1 Core Conversation v1 GO" }
+    ]
+}
