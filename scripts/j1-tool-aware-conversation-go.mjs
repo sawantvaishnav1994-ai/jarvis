@@ -9,16 +9,29 @@ try {
     if (process.env.J1_7_CI_SEQUENCE !== "complete")
         throw new Error("J1_7_REAL_STACK_SEQUENCE_NOT_ATTESTED");
 
-    const [gates, runtime, roadmap, unit, integration, security, workflow] =
-        await Promise.all([
-            json("tests/acceptance/j1.7-gates.json"),
-            read("packages/core/src/tool-aware-conversation.ts"),
-            read("docs/roadmap/j1.7.md"),
-            read("tests/unit/j1-tool-aware-conversation.test.ts"),
-            read("tests/unit/j1-tool-aware-conversation-integration.test.ts"),
-            read("tests/security/j1-tool-aware-conversation-security.test.ts"),
-            read(".github/workflows/j1.7-ci.yml"),
-        ]);
+    const [
+        gates,
+        runtime,
+        turnBridge,
+        roadmap,
+        unit,
+        integration,
+        boundaries,
+        turnBridgeTests,
+        security,
+        workflow,
+    ] = await Promise.all([
+        json("tests/acceptance/j1.7-gates.json"),
+        read("packages/core/src/tool-aware-conversation.ts"),
+        read("packages/core/src/tool-aware-turn.ts"),
+        read("docs/roadmap/j1.7.md"),
+        read("tests/unit/j1-tool-aware-conversation.test.ts"),
+        read("tests/unit/j1-tool-aware-conversation-integration.test.ts"),
+        read("tests/unit/j1-tool-aware-conversation-boundaries.test.ts"),
+        read("tests/unit/j1-tool-aware-turn.test.ts"),
+        read("tests/security/j1-tool-aware-conversation-security.test.ts"),
+        read(".github/workflows/j1.7-ci.yml"),
+    ]);
 
     const checks = {
         A:
@@ -29,7 +42,7 @@ try {
                 JSON.stringify(letters),
         B:
             roadmap.includes("does not own a tool registry") &&
-            roadmap.includes("no second tool gateway") &&
+            roadmap.includes("no new database migration") &&
             !runtime.includes("new UniversalToolGateway") &&
             !runtime.includes("INSERT INTO") &&
             !runtime.includes("UPDATE ") &&
@@ -48,15 +61,19 @@ try {
         E:
             runtime.includes("J17ToolGatewayPort") &&
             runtime.includes("this.gateway.invoke(request, signal)") &&
-            integration.includes("UniversalToolGateway"),
+            integration.includes("UniversalToolGateway") &&
+            !turnBridge.includes("UniversalToolGateway"),
         F:
             roadmap.includes("capability/policy/risk/approval") &&
             integration.includes("ToolAuthorizationPort") &&
-            integration.includes("AuthorizationDecision"),
+            integration.includes("AuthorizationDecision") &&
+            integration.includes("emergency revalidation"),
         G:
             runtime.includes("J17_APPROVAL_REQUIRED") &&
+            runtime.includes("J17_APPROVAL_MISMATCH") &&
             runtime.includes("approvalCommitted: false") &&
-            unit.includes("approval-required") &&
+            boundaries.includes("approval:wrong") &&
+            boundaries.includes("approval:trusted") &&
             roadmap.includes(
                 "Full conversational permission/approval lifecycle belongs to J1.8",
             ),
@@ -75,37 +92,49 @@ try {
             runtime.includes("deadlineEpochMs") &&
             runtime.includes("maxCostMinor") &&
             runtime.includes("J17_EXECUTION_IDEMPOTENCY_REQUIRED") &&
-            unit.includes("requires idempotency"),
+            runtime.includes("J17_TOOL_IDEMPOTENCY_CONFLICT") &&
+            integration.includes("changed model input") &&
+            integration.includes("cost limits"),
         K:
             runtime.includes("J17_TOOL_CANCELLED") &&
             runtime.includes("J17_TOOL_TIMEOUT") &&
             runtime.includes("J17_TOOL_OUTCOME_UNKNOWN") &&
             runtime.includes("J17_TOOL_EMERGENCY_BLOCKED") &&
+            unit.includes("cancellation is already requested") &&
             security.includes("revoked authority"),
         L:
             runtime.includes(
                 'result.provenance !== "UNTRUSTED_EXTERNAL_DATA"',
             ) &&
             runtime.includes("J17_TOOL_RESULT_BINDING_INVALID") &&
-            integration.includes("UNTRUSTED_EXTERNAL_DATA") &&
-            integration.includes("RECONCILED"),
+            integration.includes("RECONCILED") &&
+            boundaries.includes("prompt-injection-shaped tool output") &&
+            boundaries.includes("UNTRUSTED_EXTERNAL_DATA"),
         M:
             roadmap.includes(
                 "J1.3 remains authoritative for model orchestration",
-            ) && runtime.includes("J13ExecutionResult"),
+            ) &&
+            runtime.includes("J13ExecutionResult") &&
+            turnBridge.includes("J17CapturingModelPort"),
         N:
-            roadmap.includes("J1.4 turn state machine") &&
-            roadmap.includes("toolExecutionCommitted:false") &&
-            roadmap.includes("frozen J1.4 runtime remains unchanged"),
+            roadmap.includes("J1.4 remains authoritative for the turn state machine") &&
+            roadmap.includes("frozen J1.4 runtime remains unchanged") &&
+            turnBridge.includes("J14TurnPipeline") &&
+            turnBridge.includes("turn.toolExecutionCommitted !== false") &&
+            turnBridgeTests.includes("keeps frozen J1.4 content-only semantics"),
         O:
             unit.includes("J1.7 tool-aware conversation") &&
             integration.includes("J1.7 -> J0.7 gateway integration") &&
+            boundaries.includes("J1.7 governed boundary details") &&
+            turnBridgeTests.includes("J1.7 tool-aware turn bridge") &&
             security.includes("denies stale or cross-turn"),
         P:
             roadmap.includes("must not call an adapter directly") &&
             !runtime.includes("adapter.execute") &&
             !runtime.includes("CredentialBroker") &&
-            !runtime.includes("provider.generate"),
+            !runtime.includes("provider.generate") &&
+            !turnBridge.includes("adapter.execute") &&
+            !turnBridge.includes("CredentialBroker"),
         Q: roadmap.includes(
             "J1.8 full permission/approval-aware conversational lifecycle is not part of J1.7",
         ),
