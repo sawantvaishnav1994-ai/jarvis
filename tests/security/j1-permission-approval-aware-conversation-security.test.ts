@@ -180,7 +180,11 @@ describe("J1.8 approval lifecycle security", () => {
         const controller = new AbortController();
         controller.abort();
         await expect(
-            runtime.resumeApproved(input, "approval:security", controller.signal),
+            runtime.resumeApproved(
+                input,
+                "approval:security",
+                controller.signal,
+            ),
         ).rejects.toThrow("J18_CANCELLED");
         expect(execute).not.toHaveBeenCalled();
     });
