@@ -49,8 +49,10 @@ try {
             !runtime.includes("DELETE FROM"),
         C:
             runtime.includes("ConversationToolProposalSchema") &&
-            runtime.includes("z.strictObject") &&
-            runtime.includes('kind: z.literal("tool-proposal")'),
+            runtime.includes("parseConversationToolProposal") &&
+            runtime.includes("PROPOSAL_KEYS") &&
+            runtime.includes("Object.keys(value).some") &&
+            runtime.includes('value.kind !== "tool-proposal"'),
         D:
             runtime.includes("conversationId") &&
             runtime.includes("sessionId") &&
@@ -84,7 +86,8 @@ try {
             security.includes("session:attacker") &&
             security.includes("fake-approval") &&
             security.includes("externalAllowed: true") &&
-            runtime.includes("z.strictObject"),
+            runtime.includes("PROPOSAL_KEYS") &&
+            runtime.includes("INVALID_TOOL_PROPOSAL"),
         I:
             integration.includes("EXTERNAL_SERVICE") &&
             integration.includes('privacyClass: "D5"') &&
@@ -141,6 +144,7 @@ try {
             !runtime.includes("adapter.execute") &&
             !runtime.includes("CredentialBroker") &&
             !runtime.includes("provider.generate") &&
+            !runtime.includes('from "zod"') &&
             !turnBridge.includes("adapter.execute") &&
             !turnBridge.includes("CredentialBroker"),
         Q: roadmap.includes(
