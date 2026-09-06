@@ -143,7 +143,9 @@ function classifySessionStorageError(error: unknown): BoundaryError | null {
         case "42501":
             return new BoundaryError("CONVERSATION_SESSION_STORAGE_DENIED");
         case "42P01":
-            return new BoundaryError("CONVERSATION_SESSION_STORAGE_UNAVAILABLE");
+            return new BoundaryError(
+                "CONVERSATION_SESSION_STORAGE_UNAVAILABLE",
+            );
         case "22P02":
             return new BoundaryError("CONVERSATION_SESSION_STORAGE_INVALID");
         default:
