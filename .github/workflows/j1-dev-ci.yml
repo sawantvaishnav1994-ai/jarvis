@@ -27,11 +27,6 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
-      - name: J1.13 prettier diagnostic
-        run: |
-          npx prettier --write apps/web/app/conversation/conversation-console.tsx tests/unit/j1-remote-runtime-config.test.ts
-          git diff -- apps/web/app/conversation/conversation-console.tsx tests/unit/j1-remote-runtime-config.test.ts
-          exit 1
       - name: J1 development formatting
         run: >-
           npx prettier --check
