@@ -7,10 +7,10 @@ export default function ConversationPage() {
                 <a className="wordmark" href="/">
                     JARVIS<span>CORE + CONVERSATION</span>
                 </a>
-                <span className="environment">AUTHENTICATED LOCAL CHAT</span>
+                <span className="environment">GOVERNED SECURE CHAT</span>
             </header>
             <section className="intro conversation-intro">
-                <p className="eyebrow">J1.11 / CONVERSATIONAL WEB UI</p>
+                <p className="eyebrow">J1.13 / SECURE IPHONE + PWA ACCESS</p>
                 <h1>
                     One governed conversation.
                     <br />
