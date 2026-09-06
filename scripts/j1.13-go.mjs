@@ -124,10 +124,14 @@ try {
             normalizedWorkflow.includes("redis bullmq"),
         L:
             normalizedWorkflow.includes("model orchestration") &&
-            normalizedWorkflow.includes("model tool dependency outage and recovery"),
+            normalizedWorkflow.includes(
+                "model tool dependency outage and recovery",
+            ),
         M:
             normalizedWorkflow.includes("j1.7 tool aware conversation") &&
-            normalizedWorkflow.includes("j1.8 permission approval aware conversation") &&
+            normalizedWorkflow.includes(
+                "j1.8 permission approval aware conversation",
+            ) &&
             normalizedWorkflow.includes("approval replay race"),
         N:
             normalizedRoadmap.includes("never_store") &&
@@ -145,8 +149,7 @@ try {
         Q:
             normalizedWorkflow.includes(
                 "postgresql redis model tool dependency outage and recovery",
-            ) &&
-            normalizedRoadmap.includes("fail closed"),
+            ) && normalizedRoadmap.includes("fail closed"),
         R:
             normalizedRoadmap.includes("real iphone") &&
             normalizedRoadmap.includes("http 200") &&
