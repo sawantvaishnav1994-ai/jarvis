@@ -5,6 +5,7 @@ import {
     type IdentityState,
     type SecurityEvent,
     type OwnerProfile,
+    type SessionRecord,
 } from "@jarvis/identity";
 import { RecordCipher } from "@jarvis/security";
 import { identityDataTransaction } from "./transaction.js";
@@ -46,11 +47,30 @@ export class PostgresIdentityRepository implements IdentityRepository {
                     payload: string;
                 }>(`SELECT id,payload FROM identity.${name}`);
                 const records: Record<string, unknown> = Object.create(null);
-                for (const row of result.rows)
-                    records[row.id] = this.cipher.decrypt(
+                for (const row of result.rows) {
+                    const value = this.cipher.decrypt(
                         row.payload,
                         "identity:development:" + name + ":" + row.id,
                     );
+                    if (name === "sessions") {
+                        const session = value as SessionRecord;
+                        records[session.tokenHash] = session;
+                        if (row.id !== session.id) {
+                            const payload = this.cipher.encrypt(
+                                session,
+                                "identity:development:sessions:" + session.id,
+                            );
+                            await client.query(
+                                "INSERT INTO identity.sessions(id,payload) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload",
+                                [session.id, payload],
+                            );
+                            await client.query(
+                                "DELETE FROM identity.sessions WHERE id=$1",
+                                [row.id],
+                            );
+                        }
+                    } else records[row.id] = value;
+                }
                 Object.assign(state, { [name]: records });
             }
             const before = structuredClone(state),
@@ -105,23 +125,37 @@ export class PostgresIdentityRepository implements IdentityRepository {
                 const current: Record<string, unknown> = state[name],
                     old: Record<string, unknown> = before[name];
                 for (const [id, value] of Object.entries(current))
-                    if (JSON.stringify(value) !== JSON.stringify(old[id]))
+                    if (JSON.stringify(value) !== JSON.stringify(old[id])) {
+                        const storageId =
+                            name === "sessions"
+                                ? (value as SessionRecord).id
+                                : id;
                         await client.query(
                             `INSERT INTO identity.${name}(id,payload) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload`,
                             [
-                                id,
+                                storageId,
                                 this.cipher.encrypt(
                                     value,
-                                    "identity:development:" + name + ":" + id,
+                                    "identity:development:" +
+                                        name +
+                                        ":" +
+                                        storageId,
                                 ),
                             ],
                         );
+                    }
                 for (const id of Object.keys(old))
-                    if (!Object.hasOwn(current, id))
+                    if (!Object.hasOwn(current, id)) {
+                        const oldValue = old[id];
+                        const storageId =
+                            name === "sessions" && oldValue
+                                ? (oldValue as SessionRecord).id
+                                : id;
                         await client.query(
                             `DELETE FROM identity.${name} WHERE id=$1`,
-                            [id],
+                            [storageId],
                         );
+                    }
             }
             for (const event of events)
                 await client.query(
