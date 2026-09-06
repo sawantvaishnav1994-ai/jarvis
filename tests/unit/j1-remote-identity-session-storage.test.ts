@@ -39,7 +39,10 @@ function fakePool(seedSessions: Row[] = []) {
             if (sql.startsWith("SELECT payload FROM security.governance_state"))
                 return { rows: [], rowCount: 0 };
             if (sql.startsWith("INSERT INTO identity.sessions")) {
-                inserts.push({ id: String(params[0]), payload: String(params[1]) });
+                inserts.push({
+                    id: String(params[0]),
+                    payload: String(params[1]),
+                });
                 return { rows: [], rowCount: 1 };
             }
             if (sql.startsWith("DELETE FROM identity.sessions")) {
@@ -90,7 +93,9 @@ describe("J1.13 remote identity session storage", () => {
         );
 
         expect(resolved?.id).toBe(session.id);
-        expect(fake.inserts.some((entry) => entry.id === session.id)).toBe(true);
+        expect(
+            fake.inserts.some((entry) => entry.id === session.id),
+        ).toBe(true);
         expect(fake.deletes).toContain(session.tokenHash);
     });
 });
