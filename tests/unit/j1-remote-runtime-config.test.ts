@@ -84,15 +84,22 @@ describe("J1.13 secure remote identity configuration", () => {
         ["https://jarvis.example.com", "other.example.com"],
         ["https://localhost", "localhost"],
         ["https://user@jarvis.example.com", "jarvis.example.com"],
-    ])("fails closed for invalid remote origin %s / RP ID %s", (origin, rpID) => {
-        process.env.JARVIS_REMOTE_ORIGIN = origin;
-        process.env.JARVIS_REMOTE_RP_ID = rpID;
-        expect(() => runtimeIdentity(config)).toThrow("INVALID_REMOTE_IDENTITY");
-    });
+    ])(
+        "fails closed for invalid remote origin %s / RP ID %s",
+        (origin, rpID) => {
+            process.env.JARVIS_REMOTE_ORIGIN = origin;
+            process.env.JARVIS_REMOTE_RP_ID = rpID;
+            expect(() => runtimeIdentity(config)).toThrow(
+                "INVALID_REMOTE_IDENTITY",
+            );
+        },
+    );
 
     it("fails closed when only one remote identity variable is present", () => {
         process.env.JARVIS_REMOTE_ORIGIN = "https://jarvis.example.com";
         delete process.env.JARVIS_REMOTE_RP_ID;
-        expect(() => runtimeIdentity(config)).toThrow("INVALID_REMOTE_IDENTITY");
+        expect(() => runtimeIdentity(config)).toThrow(
+            "INVALID_REMOTE_IDENTITY",
+        );
     });
 });
