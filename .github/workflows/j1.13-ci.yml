@@ -26,6 +26,12 @@ jobs:
       - name: Fresh checkout setup
         run: npm run setup
 
+      - name: J1.13 formatter diagnostic
+        run: |
+          npx prettier --write scripts/j1.13-go.mjs
+          git diff -- scripts/j1.13-go.mjs
+          exit 1
+
       - name: J1.13 release formatting and integrity
         run: >-
           npx prettier --check
