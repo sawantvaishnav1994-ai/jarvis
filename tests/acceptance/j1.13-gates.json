@@ -1,0 +1,87 @@
+{
+    "milestone": "J1.13",
+    "name": "Secure iPhone / PWA Access Qualification",
+    "baseline": "f75ed2d2d712fe32e64eb161a7ecab73dcb34db1",
+    "gates": [
+        {
+            "id": "A",
+            "name": "Exact frozen J1 Core Conversation v1 baseline ancestry and one combined J1.13 candidate"
+        },
+        {
+            "id": "B",
+            "name": "Hosted browser contains no vault provider database Redis trusted-device session permit or server-authority secrets"
+        },
+        {
+            "id": "C",
+            "name": "Remote passkey identity accepts only an exact HTTPS origin whose hostname equals the RP ID"
+        },
+        {
+            "id": "D",
+            "name": "Root Owner passkey trusted-device proof and HttpOnly Foundation session authority remain server bound"
+        },
+        {
+            "id": "E",
+            "name": "Identity sessions persist under stable session IDs while token hashes remain lookup-only and legacy rows migrate safely"
+        },
+        {
+            "id": "F",
+            "name": "Conversation sessions remain exact bound to owner device identity session security epoch and request binding"
+        },
+        {
+            "id": "G",
+            "name": "PWA manifest icons standalone metadata responsive layout and iPhone safe-area behavior are present without authority expansion"
+        },
+        {
+            "id": "H",
+            "name": "Origin CSRF content-type body-size and unauthorized direct API requests fail closed"
+        },
+        {
+            "id": "I",
+            "name": "Challenge device-proof and exact-turn binding replay or mutation is rejected"
+        },
+        {
+            "id": "J",
+            "name": "Session expiry revocation device removal security epoch SAFE FREEZE SHUTDOWN and lockdown invalidate stale continuations"
+        },
+        {
+            "id": "K",
+            "name": "Remote PostgreSQL pgvector and Redis BullMQ dependencies preserve frozen runtime behavior"
+        },
+        {
+            "id": "L",
+            "name": "Provider-neutral model routing success failure privacy and recovery behavior remains preserved"
+        },
+        {
+            "id": "M",
+            "name": "Protected tools remain J1.7 to J0.7 only with exact approval permit no self-approval replay race mutation or reuse"
+        },
+        {
+            "id": "N",
+            "name": "NEVER_STORE D5 and protected plaintext boundaries remain durable across conversation memory audit and remote transport"
+        },
+        {
+            "id": "O",
+            "name": "Audit and event correlation cover remote identity conversation approval tool and denial paths without protected plaintext leakage"
+        },
+        {
+            "id": "P",
+            "name": "Restart recovery cannot resurrect stale sessions consumed approvals stale permits deleted memory or committed protected effects"
+        },
+        {
+            "id": "Q",
+            "name": "PostgreSQL Redis model tool and remote runtime outage recovery remains fail closed"
+        },
+        {
+            "id": "R",
+            "name": "Real iPhone browser reaches HTTPS runtime authenticates with passkey and completes one governed J1 turn"
+        },
+        {
+            "id": "S",
+            "name": "Complete inherited J0 and J1 Core Conversation regression passes on exact J1.13 candidate and exact main"
+        },
+        {
+            "id": "T",
+            "name": "No production credentials no scope expansion non-force merge and exact-main green before J1.13 COMPLETE FROZEN GO"
+        }
+    ]
+}
