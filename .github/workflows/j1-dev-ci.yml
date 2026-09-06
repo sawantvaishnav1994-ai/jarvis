@@ -58,6 +58,7 @@ jobs:
           tests/unit/j1-final-integration-acceptance.test.ts
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
+          tests/unit/j1-remote-identity-session-storage.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
@@ -104,6 +105,7 @@ jobs:
           tests/unit/j1-final-integration-acceptance.test.ts
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
+          tests/unit/j1-remote-identity-session-storage.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           scripts/j1-tool-aware-conversation-go.mjs
@@ -129,6 +131,7 @@ jobs:
           tests/unit/j1-final-integration-acceptance.test.ts
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
+          tests/unit/j1-remote-identity-session-storage.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
