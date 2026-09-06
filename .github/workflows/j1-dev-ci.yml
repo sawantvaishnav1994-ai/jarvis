@@ -38,6 +38,8 @@ jobs:
           packages/core/src/final-conversation-persistence.ts
           packages/core/src/final-conversation-storage.ts
           packages/identity/src/contracts.ts
+          packages/storage/src/identity.ts
+          packages/config/src/index.ts
           apps/api/src/conversation-http.ts
           apps/api/src/main.ts
           apps/web/app/page.tsx
@@ -59,6 +61,7 @@ jobs:
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
           tests/unit/j1-remote-identity-session-storage.test.ts
+          tests/unit/j1-remote-runtime-config.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/acceptance/j1.7-gates.json
@@ -92,6 +95,8 @@ jobs:
           packages/core/src/final-conversation-persistence.ts
           packages/core/src/final-conversation-storage.ts
           packages/identity/src/contracts.ts
+          packages/storage/src/identity.ts
+          packages/config/src/index.ts
           apps/api/src/conversation-http.ts
           apps/api/src/main.ts
           apps/web/app/page.tsx
@@ -106,6 +111,7 @@ jobs:
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
           tests/unit/j1-remote-identity-session-storage.test.ts
+          tests/unit/j1-remote-runtime-config.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           scripts/j1-tool-aware-conversation-go.mjs
@@ -132,6 +138,7 @@ jobs:
           tests/unit/j1-final-conversation-persistence.test.ts
           tests/unit/j1-final-conversation-storage.test.ts
           tests/unit/j1-remote-identity-session-storage.test.ts
+          tests/unit/j1-remote-runtime-config.test.ts
           tests/security/j1-tool-aware-conversation-security.test.ts
           tests/security/j1-permission-approval-aware-conversation-security.test.ts
           tests/security/governed-gateway.test.ts
