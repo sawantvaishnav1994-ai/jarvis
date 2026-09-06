@@ -145,7 +145,8 @@ try {
         Q:
             normalizedWorkflow.includes(
                 "postgresql redis model tool dependency outage and recovery",
-            ) && normalizedRoadmap.includes("fail closed"),
+            ) &&
+            normalizedRoadmap.includes("fail closed"),
         R:
             normalizedRoadmap.includes("real iphone") &&
             normalizedRoadmap.includes("http 200") &&
