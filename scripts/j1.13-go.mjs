@@ -103,9 +103,9 @@ try {
             layout.includes("viewportFit") &&
             workflow.includes("build:web"),
         H:
-            identityRoute.includes("Origin") &&
+            identityRoute.includes('headers.get("origin")') &&
             identityRoute.includes("content-type") &&
-            conversationRoute.includes("Origin") &&
+            conversationRoute.includes('headers.get("origin")') &&
             normalizedWorkflow.includes("unauthorized") &&
             normalizedWorkflow.includes("origin"),
         I:
@@ -143,8 +143,9 @@ try {
             normalizedRoadmap.includes("stale sessions") &&
             normalizedRoadmap.includes("stale permits"),
         Q:
-            normalizedWorkflow.includes("postgresql redis model tool dependency outage and recovery") &&
-            normalizedRoadmap.includes("fail closed"),
+            normalizedWorkflow.includes(
+                "postgresql redis model tool dependency outage and recovery",
+            ) && normalizedRoadmap.includes("fail closed"),
         R:
             normalizedRoadmap.includes("real iphone") &&
             normalizedRoadmap.includes("http 200") &&
