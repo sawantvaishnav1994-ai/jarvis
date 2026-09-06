@@ -1,0 +1,311 @@
+name: J1.13 Secure iPhone PWA Qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - validation/j1.13-iphone-pwa-access-20260905
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  qualify-j1-13:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Fresh checkout setup
+        run: npm run setup
+
+      - name: J1.13 release formatting and integrity
+        run: >-
+          npx prettier --check
+          tests/acceptance/j1.13-gates.json
+          tests/unit/j1-remote-identity-session-storage.test.ts
+          tests/unit/j1-remote-runtime-config.test.ts
+          docs/roadmap/j1.13.md
+          scripts/j1.13-go.mjs
+          scripts/j1.13-remote-start.mjs
+          packages/config/src/index.ts
+          packages/storage/src/identity.ts
+          apps/web/app/manifest.ts
+          apps/web/app/layout.tsx
+          apps/web/app/identity/page.tsx
+          apps/web/app/conversation/page.tsx
+          apps/web/app/conversation/conversation-console.tsx
+          apps/web/app/api/identity/route.ts
+          apps/web/app/api/conversation/route.ts
+          .github/workflows/j1.13-ci.yml
+
+      - name: J1.13 secure remote origin RP-ID and session-storage regressions
+        run: >-
+          npx vitest run
+          tests/unit/j1-remote-runtime-config.test.ts
+          tests/unit/j1-remote-identity-session-storage.test.ts
+          --reporter=default
+
+      - name: Static type lint and architecture checks
+        run: npm run check
+
+      - name: Origin unauthorized replay mutation and protected plaintext security regression
+        run: >-
+          npx vitest run
+          tests/security/identity.test.ts
+          tests/security/governed-gateway.test.ts
+          tests/security/j1-model-orchestration-security.test.ts
+          tests/security/j1-turn-pipeline-security.test.ts
+          tests/security/j1-conversation-history-security.test.ts
+          tests/security/j1-memory-aware-conversation-security.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/unit/j1-conversational-web-ui.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
+          tests/unit/j1-operating-modes.test.ts
+          --reporter=default
+
+      - name: Critical remote and inherited security repeatability
+        run: |
+          for i in 1 2 3; do
+            npx vitest run \
+              tests/unit/j1-remote-runtime-config.test.ts \
+              tests/unit/j1-remote-identity-session-storage.test.ts \
+              tests/security/governance.test.ts \
+              tests/security/governed-gateway.test.ts \
+              tests/security/identity.test.ts \
+              tests/security/j1-model-orchestration-security.test.ts \
+              tests/security/j1-turn-pipeline-security.test.ts \
+              tests/security/j1-tool-aware-conversation-security.test.ts \
+              tests/security/j1-permission-approval-aware-conversation-security.test.ts \
+              tests/unit/j1-streaming-resilience.test.ts \
+              tests/unit/j1-operating-modes.test.ts \
+              --reporter=default
+          done
+
+      - name: Real PostgreSQL pgvector integration
+        run: npm run test:integration
+
+      - name: Start API worker and Web
+        run: |
+          npm start > /tmp/jarvis-j113-services.log 2>&1 &
+          node scripts/wait-ready.mjs
+
+      - name: Queue and health smoke
+        run: npm run smoke
+
+      - name: J0.8 Redis BullMQ event transport
+        run: node scripts/j08-queue-smoke.mjs
+
+      - name: Browser installation
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser acceptance and responsive PWA surface
+        run: npm run test:e2e
+
+      - name: Root Owner trusted device Foundation session browser flow
+        env:
+          JARVIS_IDENTITY_E2E: "1"
+        run: npm run test:e2e:identity
+
+      - name: Session expiry device removal security epoch and emergency invalidation regression
+        run: >-
+          npx vitest run
+          tests/security/identity.test.ts
+          tests/unit/j1-operating-modes.test.ts
+          tests/unit/j1-streaming-resilience.test.ts
+          tests/security/governance.test.ts
+          --reporter=default
+
+      - name: J1.1 Conversation Session PostgreSQL integration
+        run: npx vitest run --config vitest.integration.config.ts tests/integration/j1-conversation-session-postgres.test.ts --reporter=default
+
+      - name: J1.2 Context Assembly D5 privacy regression
+        run: npx vitest run tests/unit/j1-context-assembly.test.ts --reporter=default
+
+      - name: J1.3 Model Orchestration provider-neutral success failure regression
+        run: npx vitest run tests/security/j1-model-orchestration-security.test.ts --reporter=default
+
+      - name: J1.4 Response Turn Pipeline replay mutation regression
+        run: npx vitest run tests/security/j1-turn-pipeline-security.test.ts tests/unit/j1-turn-pipeline-integration.test.ts --reporter=default
+
+      - name: J1.5 Conversation Persistence History PostgreSQL NEVER_STORE integration
+        run: npx vitest run --config vitest.integration.config.ts tests/integration/j1-conversation-history-postgres.test.ts --reporter=default
+
+      - name: J1.6 Memory-Aware Conversation privacy regression
+        run: npx vitest run tests/security/j1-memory-aware-conversation-security.test.ts tests/unit/j1-memory-aware-conversation.test.ts --reporter=default
+
+      - name: J1.7 Tool-Aware Conversation J0.7 gateway regression
+        run: >-
+          npx vitest run
+          tests/unit/j1-tool-aware-conversation-integration.test.ts
+          tests/security/j1-tool-aware-conversation-security.test.ts
+          tests/security/governed-gateway.test.ts
+          --reporter=default
+
+      - name: J1.8 Permission Approval-Aware Conversation approval replay race regression
+        run: >-
+          npx vitest run
+          tests/unit/j1-permission-approval-aware-conversation-integration.test.ts
+          tests/security/j1-permission-approval-aware-conversation-security.test.ts
+          tests/security/governance.test.ts
+          --reporter=default
+
+      - name: J1.9 Operating Modes emergency regression
+        run: npx vitest run tests/unit/j1-operating-modes.test.ts --reporter=default
+
+      - name: J1.10 Streaming Cancellation Resilience replay regression
+        run: npx vitest run tests/unit/j1-streaming-resilience.test.ts --reporter=default
+
+      - name: J1.11 Conversational Web UI authority regression
+        run: npx vitest run tests/unit/j1-conversational-web-ui.test.ts --reporter=default
+
+      - name: J1.12 Final Core Conversation inherited integration contract
+        run: npx vitest run tests/unit/j1-final-integration-acceptance.test.ts --reporter=default
+
+      - name: Audit event correlation without protected plaintext leakage
+        run: >-
+          npx vitest run --config vitest.integration.config.ts
+          tests/integration/j09-audit-postgres.test.ts
+          tests/integration/j08-events.test.ts
+          --reporter=default
+
+      - name: Backup recovery and restart drills
+        run: npm run test:j10:recovery-drill
+
+      - name: PostgreSQL Redis model tool dependency outage and recovery
+        run: npm run test:failures
+
+      - name: Stop and verify clean shutdown
+        run: |
+          npm stop
+          node scripts/check-stopped.mjs
+
+      - name: Explicit J0.4 A-S acceptance
+        if: success()
+        run: npm run test:j04:go
+
+      - name: Explicit J0.5 A-T acceptance
+        if: success()
+        run: npm run test:j05:go
+
+      - name: Explicit J0.6 A-T acceptance
+        if: success()
+        run: npm run test:j06:go
+
+      - name: Explicit J0.7 A-T acceptance
+        if: success()
+        run: npm run test:j07:go
+
+      - name: Explicit J0.8 A-T acceptance
+        if: success()
+        run: npm run test:j08:go
+
+      - name: Explicit J0.9 A-T acceptance
+        if: success()
+        run: npm run test:j09:go
+
+      - name: Explicit J0.10 A-T acceptance
+        if: success()
+        run: npm run test:j10:go
+
+      - name: Explicit J0.11 A-T acceptance
+        if: success()
+        env:
+          J11_CI_SEQUENCE: "complete"
+        run: npm run test:j11:go
+
+      - name: Explicit J0.12 Foundation A-T acceptance
+        if: success()
+        env:
+          J12_CI_SEQUENCE: "complete"
+        run: npm run test:j12:go
+
+      - name: Explicit J1.0 A-T acceptance
+        if: success()
+        env:
+          J1_0_CI_SEQUENCE: "complete"
+        run: npm run test:j1.0:go
+
+      - name: Explicit J1.1 A-T acceptance
+        if: success()
+        env:
+          J1_1_CI_SEQUENCE: "complete"
+        run: npm run test:j1.1:go
+
+      - name: Explicit J1.2 A-T acceptance
+        if: success()
+        env:
+          J1_2_CI_SEQUENCE: "complete"
+        run: npm run test:j1.2:go
+
+      - name: Explicit J1.3 A-T acceptance
+        if: success()
+        env:
+          J1_3_CI_SEQUENCE: "complete"
+        run: npm run test:j1.3:go
+
+      - name: Explicit J1.4 A-T acceptance
+        if: success()
+        env:
+          J1_4_CI_SEQUENCE: "complete"
+        run: npm run test:j1.4:go
+
+      - name: Explicit J1.5 A-T acceptance
+        if: success()
+        env:
+          J1_5_CI_SEQUENCE: "complete"
+        run: npm run test:j1.5:go
+
+      - name: Explicit J1.6 A-T acceptance
+        if: success()
+        env:
+          J1_6_CI_SEQUENCE: "complete"
+        run: npm run test:j1.6:go
+
+      - name: Explicit J1.7 A-T acceptance
+        if: success()
+        env:
+          J1_7_CI_SEQUENCE: "complete"
+        run: npm run test:j1.7:go
+
+      - name: Explicit J1.8 A-T acceptance
+        if: success()
+        env:
+          J1_8_CI_SEQUENCE: "complete"
+        run: npm run test:j1.8:go
+
+      - name: Explicit J1.12 Final Core Conversation A-T acceptance
+        if: success()
+        env:
+          J1_12_CI_SEQUENCE: "complete"
+        run: npm run test:j1.12:go
+
+      - name: Explicit J1.13 Secure iPhone PWA A-T acceptance
+        if: success()
+        env:
+          J1_13_CI_SEQUENCE: "complete"
+        run: node scripts/j1.13-go.mjs
+
+      - name: Qualification failure summary
+        if: failure()
+        run: |
+          echo "J1.13 qualification stopped before complete acceptance attestation."
+          echo "Inspect the first failing required step; do not weaken skip reorder or bypass a gate."
+
+      - name: Safe service diagnostics
+        if: failure()
+        run: cat /tmp/jarvis-j113-services.log 2>/dev/null || true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          npm stop || true
+          npm run infra:down || true
