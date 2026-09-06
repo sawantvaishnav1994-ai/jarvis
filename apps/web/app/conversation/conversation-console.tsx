@@ -142,9 +142,7 @@ export function ConversationConsole() {
             >
                 <span>Mode: {turn?.mode ?? "assistant"}</span>
                 <span>Privacy: {turn?.privacy.classification ?? "D2"}</span>
-                <span>
-                    Runtime processing: {turn?.privacy.processing ?? "LOCAL"}
-                </span>
+                <span>Processing: {turn?.privacy.processing ?? "LOCAL"}</span>
                 <span>
                     External AI: {turn?.privacy.externalAI ? "enabled" : "off"}
                 </span>
