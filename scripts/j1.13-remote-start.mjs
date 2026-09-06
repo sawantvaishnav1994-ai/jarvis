@@ -260,7 +260,9 @@ async function waitReady(url) {
                 cache: "no-store",
             });
             if (response.ok) return;
-        } catch {}
+        } catch {
+            // Readiness polling deliberately retries transient connection failures.
+        }
         await delay(500);
     }
     throw new Error("REMOTE_READINESS_FAILED");
