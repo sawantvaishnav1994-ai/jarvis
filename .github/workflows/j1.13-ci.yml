@@ -35,6 +35,7 @@ jobs:
           docs/roadmap/j1.13.md
           scripts/j1.13-go.mjs
           scripts/j1.13-remote-start.mjs
+          scripts/j1-final-integration-go.mjs
           packages/config/src/index.ts
           packages/storage/src/identity.ts
           apps/web/app/manifest.ts
@@ -282,10 +283,11 @@ jobs:
           J1_8_CI_SEQUENCE: "complete"
         run: npm run test:j1.8:go
 
-      - name: Explicit J1.12 Final Core Conversation A-T acceptance
+      - name: Explicit J1.12 Final Core Conversation inherited A-T acceptance
         if: success()
         env:
           J1_12_CI_SEQUENCE: "complete"
+          J1_12_INHERITED_QUALIFICATION: "j1.13"
         run: npm run test:j1.12:go
 
       - name: Explicit J1.13 Secure iPhone PWA A-T acceptance
