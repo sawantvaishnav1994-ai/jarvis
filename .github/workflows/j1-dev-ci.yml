@@ -27,6 +27,11 @@ jobs:
           cache: npm
       - name: Fast dependency install
         run: npm ci --ignore-scripts
+      - name: J1.1 Prettier diagnostic
+        run: |
+          npx prettier packages/storage/src/conversation-session-store.ts > /tmp/conversation-session-store.formatted.ts
+          diff -u packages/storage/src/conversation-session-store.ts /tmp/conversation-session-store.formatted.ts || true
+          exit 1
       - name: J1 development formatting
         run: >-
           npx prettier --check
