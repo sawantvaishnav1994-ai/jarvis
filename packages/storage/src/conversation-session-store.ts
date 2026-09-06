@@ -110,10 +110,36 @@ function postgresErrorCode(error: unknown): string | null {
     return null;
 }
 
+function postgresConstraint(error: unknown): string | null {
+    if (
+        typeof error === "object" &&
+        error !== null &&
+        "constraint" in error &&
+        typeof error.constraint === "string"
+    ) {
+        return error.constraint;
+    }
+    return null;
+}
+
 function classifySessionStorageError(error: unknown): BoundaryError | null {
     switch (postgresErrorCode(error)) {
-        case "23503":
+        case "23503": {
+            const constraint = postgresConstraint(error);
+            if (constraint?.endsWith("owner_id_fkey"))
+                return new BoundaryError(
+                    "CONVERSATION_OWNER_REFERENCE_INVALID",
+                );
+            if (constraint?.endsWith("device_id_fkey"))
+                return new BoundaryError(
+                    "CONVERSATION_DEVICE_REFERENCE_INVALID",
+                );
+            if (constraint?.endsWith("identity_session_id_fkey"))
+                return new BoundaryError(
+                    "CONVERSATION_IDENTITY_SESSION_REFERENCE_INVALID",
+                );
             return new BoundaryError("CONVERSATION_SESSION_REFERENCE_INVALID");
+        }
         case "42501":
             return new BoundaryError("CONVERSATION_SESSION_STORAGE_DENIED");
         case "42P01":
