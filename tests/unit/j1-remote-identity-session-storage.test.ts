@@ -61,41 +61,47 @@ function fakePool(seedSessions: Row[] = []) {
 }
 
 describe("J1.13 remote identity session storage", () => {
-    it("persists a new identity session under its stable session id while keeping the runtime map keyed by token hash", async () => {
-        const cipher = new RecordCipher(randomBytes(32));
-        const fake = fakePool();
-        const repository = new PostgresIdentityRepository(fake.pool, cipher);
-        const session = sessionFixture();
+    it(
+        "persists a new identity session under its stable session id while keeping the runtime map keyed by token hash",
+        async () => {
+            const cipher = new RecordCipher(randomBytes(32));
+            const fake = fakePool();
+            const repository = new PostgresIdentityRepository(fake.pool, cipher);
+            const session = sessionFixture();
 
-        await repository.transaction(async (state) => {
-            state.sessions[session.tokenHash] = session;
-        });
+            await repository.transaction(async (state) => {
+                state.sessions[session.tokenHash] = session;
+            });
 
-        expect(fake.inserts).toHaveLength(1);
-        expect(fake.inserts[0]?.id).toBe(session.id);
-        expect(fake.inserts[0]?.id).not.toBe(session.tokenHash);
-    });
+            expect(fake.inserts).toHaveLength(1);
+            expect(fake.inserts[0]?.id).toBe(session.id);
+            expect(fake.inserts[0]?.id).not.toBe(session.tokenHash);
+        },
+    );
 
-    it("rewrites a legacy token-hash primary key to the stable session id without changing the in-memory lookup key", async () => {
-        const cipher = new RecordCipher(randomBytes(32));
-        const session = sessionFixture("b".repeat(64));
-        const legacyPayload = cipher.encrypt(
-            session,
-            `identity:development:sessions:${session.tokenHash}`,
-        );
-        const fake = fakePool([
-            { id: session.tokenHash, payload: legacyPayload },
-        ]);
-        const repository = new PostgresIdentityRepository(fake.pool, cipher);
+    it(
+        "rewrites a legacy token-hash primary key to the stable session id without changing the in-memory lookup key",
+        async () => {
+            const cipher = new RecordCipher(randomBytes(32));
+            const session = sessionFixture("b".repeat(64));
+            const legacyPayload = cipher.encrypt(
+                session,
+                `identity:development:sessions:${session.tokenHash}`,
+            );
+            const fake = fakePool([
+                { id: session.tokenHash, payload: legacyPayload },
+            ]);
+            const repository = new PostgresIdentityRepository(fake.pool, cipher);
 
-        const resolved = await repository.transaction(async (state) =>
-            state.sessions[session.tokenHash],
-        );
+            const resolved = await repository.transaction(async (state) =>
+                state.sessions[session.tokenHash],
+            );
 
-        expect(resolved?.id).toBe(session.id);
-        expect(
-            fake.inserts.some((entry) => entry.id === session.id),
-        ).toBe(true);
-        expect(fake.deletes).toContain(session.tokenHash);
-    });
+            expect(resolved?.id).toBe(session.id);
+            expect(
+                fake.inserts.some((entry) => entry.id === session.id),
+            ).toBe(true);
+            expect(fake.deletes).toContain(session.tokenHash);
+        },
+    );
 });
