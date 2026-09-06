@@ -5,6 +5,7 @@ const read = (path) => readFile(new URL(path, root), "utf8");
 const json = async (path) => JSON.parse(await read(path));
 const letters = "ABCDEFGHIJKLMNOPQRST".split("");
 const candidateRef = "validation/j1.9-j1.12-core-conversation-final-20260905";
+const successorRef = "validation/j1.13-iphone-pwa-access-20260905";
 const normalize = (value) =>
     value.toLowerCase().replace(/[-–—]/g, " ").replace(/\s+/g, " ");
 
@@ -61,7 +62,10 @@ try {
     const qualificationRef = process.env.GITHUB_REF_NAME ?? "";
     const onCandidate = qualificationRef === candidateRef;
     const onMain = qualificationRef === "main";
-    const qualificationRefValid = onCandidate || onMain;
+    const onInheritedSuccessor =
+        qualificationRef === successorRef &&
+        process.env.J1_12_INHERITED_QUALIFICATION === "j1.13";
+    const qualificationRefValid = onCandidate || onMain || onInheritedSuccessor;
     const exactMainRequalificationConfigured =
         workflow.includes(`- ${candidateRef}`) && workflow.includes("- main");
     const noProductionCredentialInjection =
@@ -195,14 +199,22 @@ try {
         result: failed.length ? "FAIL" : "A-T_PASS",
         realStackSequence: true,
         qualificationRef,
-        phase: onMain ? "EXACT_MAIN" : onCandidate ? "CANDIDATE" : "UNKNOWN",
+        phase: onMain
+            ? "EXACT_MAIN"
+            : onCandidate
+              ? "CANDIDATE"
+              : onInheritedSuccessor
+                ? "INHERITED_SUCCESSOR"
+                : "UNKNOWN",
         checks,
         failed,
         recommendation: failed.length
             ? "J1 CORE + CONVERSATION V1 GO NOT RECOMMENDED"
             : onMain
               ? "J1 CORE + CONVERSATION V1 GO RECOMMENDED"
-              : "J1.12 CANDIDATE QUALIFIED — EXACT-MAIN QUALIFICATION REQUIRED",
+              : onInheritedSuccessor
+                ? "J1.12 INHERITED A-T PASS — NO RELEASE ACTION"
+                : "J1.12 CANDIDATE QUALIFIED — EXACT-MAIN QUALIFICATION REQUIRED",
     };
     await writeResult(result);
     console.log(JSON.stringify(result));
