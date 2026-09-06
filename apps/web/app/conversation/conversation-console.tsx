@@ -142,7 +142,9 @@ export function ConversationConsole() {
             >
                 <span>Mode: {turn?.mode ?? "assistant"}</span>
                 <span>Privacy: {turn?.privacy.classification ?? "D2"}</span>
-                <span>Runtime processing: {turn?.privacy.processing ?? "LOCAL"}</span>
+                <span>
+                    Runtime processing: {turn?.privacy.processing ?? "LOCAL"}
+                </span>
                 <span>
                     External AI: {turn?.privacy.externalAI ? "enabled" : "off"}
                 </span>
@@ -229,9 +231,9 @@ export function ConversationConsole() {
             <p className="conversation-boundary">
                 J1.12 Core + Conversation is frozen. J1.13 adds secure remote
                 iPhone/PWA access without moving session, policy, approval,
-                permit, tool, memory or audit authority into the browser.
-                J1.13 remains release-gated until its full remote qualification
-                and exact-main validation complete.
+                permit, tool, memory or audit authority into the browser. J1.13
+                remains release-gated until its full remote qualification and
+                exact-main validation complete.
             </p>
         </section>
     );
