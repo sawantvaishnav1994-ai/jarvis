@@ -89,7 +89,7 @@ try {
             normalizedRoadmap.includes("device proof"),
         E:
             identityStorage.includes("storageId") &&
-            identityStorage.includes("record.tokenHash") &&
+            identityStorage.includes("session.tokenHash") &&
             sessionStorageTest.includes("stable session id") &&
             sessionStorageTest.includes("legacy token-hash primary key"),
         F:
@@ -98,10 +98,10 @@ try {
             normalizedRoadmap.includes("conversation session") &&
             normalizedRoadmap.includes("security epoch"),
         G:
-            manifest.includes("standalone") &&
-            manifest.includes("maskable") &&
-            layout.includes("viewportFit") &&
-            workflow.includes("build:web"),
+            manifest.includes('display: "standalone"') &&
+            manifest.includes('purpose: "maskable"') &&
+            layout.includes('viewportFit: "cover"') &&
+            normalizedWorkflow.includes("responsive pwa surface"),
         H:
             identityRoute.includes('headers.get("origin")') &&
             identityRoute.includes("content-type") &&
@@ -118,7 +118,7 @@ try {
             normalizedWorkflow.includes("security epoch") &&
             normalizedWorkflow.includes("emergency"),
         K:
-            remoteStart.includes("pgvector") &&
+            remoteStart.includes("CREATE EXTENSION IF NOT EXISTS vector") &&
             remoteStart.includes("6380") &&
             normalizedWorkflow.includes("postgresql") &&
             normalizedWorkflow.includes("redis bullmq"),
@@ -144,8 +144,9 @@ try {
             normalizedWorkflow.includes("protected plaintext"),
         P:
             normalizedWorkflow.includes("backup recovery and restart drills") &&
-            normalizedRoadmap.includes("stale sessions") &&
-            normalizedRoadmap.includes("stale permits"),
+            normalizedRoadmap.includes("session expiry") &&
+            normalizedRoadmap.includes("restart") &&
+            normalizedRoadmap.includes("recovery"),
         Q:
             normalizedWorkflow.includes(
                 "postgresql redis model tool dependency outage and recovery",
