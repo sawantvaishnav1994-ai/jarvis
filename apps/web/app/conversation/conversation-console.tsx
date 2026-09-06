@@ -54,7 +54,7 @@ export function ConversationConsole() {
     >(null);
     const [turn, setTurn] = useState<TurnResult | null>(null);
     const [status, setStatus] = useState(
-        "Ready. Authenticate in Identity first, then send a local development turn.",
+        "Ready. Authenticate in Identity first, then send a governed JARVIS turn.",
     );
     const [busy, setBusy] = useState(false);
 
@@ -98,6 +98,10 @@ export function ConversationConsole() {
                     "SESSION_EXPIRED",
                     "DEVICE_NOT_TRUSTED",
                     "CONVERSATION_SESSION_BINDING_INVALID",
+                    "CONVERSATION_SESSION_REFERENCE_INVALID",
+                    "CONVERSATION_IDENTITY_SESSION_REFERENCE_INVALID",
+                    "CONVERSATION_DEVICE_REFERENCE_INVALID",
+                    "CONVERSATION_OWNER_REFERENCE_INVALID",
                     "CONVERSATION_AUTHORITY_INVALID",
                 ].includes(code)
             ) {
@@ -138,7 +142,9 @@ export function ConversationConsole() {
             >
                 <span>Mode: {turn?.mode ?? "assistant"}</span>
                 <span>Privacy: {turn?.privacy.classification ?? "D2"}</span>
-                <span>Processing: {turn?.privacy.processing ?? "LOCAL"}</span>
+                <span>
+                    Runtime processing: {turn?.privacy.processing ?? "LOCAL"}
+                </span>
                 <span>
                     External AI: {turn?.privacy.externalAI ? "enabled" : "off"}
                 </span>
@@ -223,10 +229,11 @@ export function ConversationConsole() {
                 <a href="/identity">Identity & device trust</a>
             </div>
             <p className="conversation-boundary">
-                J1.12 now binds browser continuity to a server-verified J1
-                conversation session. Persistence, governed memory, tool,
-                approval and audit composition remain release-gated until the
-                complete J1.12 qualification passes.
+                J1.12 Core + Conversation is frozen. J1.13 adds secure remote
+                iPhone/PWA access without moving session, policy, approval,
+                permit, tool, memory or audit authority into the browser.
+                J1.13 remains release-gated until its full remote qualification
+                and exact-main validation complete.
             </p>
         </section>
     );
