@@ -164,7 +164,12 @@ export async function POST(request: Request) {
                 },
                 body,
                 cache: "no-store",
-                signal: AbortSignal.timeout(10_000),
+                signal: AbortSignal.any([
+                    request.signal,
+                    AbortSignal.timeout(
+                        (config.models.localOllama?.timeoutMs ?? 5_000) + 5_000,
+                    ),
+                ]),
             },
         );
         const data = await response.json();

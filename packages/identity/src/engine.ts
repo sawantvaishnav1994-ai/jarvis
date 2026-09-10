@@ -564,6 +564,30 @@ export class IdentityEngine {
             return this.newSession(tx, c.deviceId, contextHash);
         });
     }
+    /** Revalidate a previously proof-bound operation; does not grant a new action. */
+    assertLiveSession(
+        token: string,
+        contextHash: string,
+        expected: {
+            ownerId: string;
+            deviceId: string;
+            sessionId: string;
+            epoch: number;
+        },
+    ): Promise<void> {
+        return this.run("session.revalidate", async (tx) => {
+            const current = this.session(tx, token, contextHash);
+            if (
+                current.ownerId !== expected.ownerId ||
+                current.deviceId !== expected.deviceId ||
+                current.id !== expected.sessionId ||
+                current.epoch !== expected.epoch ||
+                current.assurance !== "A2" ||
+                current.risk !== "normal"
+            )
+                return deny("SESSION_INVALID");
+        });
+    }
     beginAction(
         token: string,
         operation: unknown,

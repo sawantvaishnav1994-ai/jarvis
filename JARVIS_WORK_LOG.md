@@ -3933,3 +3933,114 @@ Production HSM/KMS custody, real physical-device A4 ceremonies, geographically i
 ## Final evidence recording rule
 
 The final candidate SHA and final GitHub Actions run are recorded in the owner delivery after all documentation and temporary-helper cleanup are complete. This avoids recursively changing the SHA merely to write its own final SHA into the work log. `J0 FOUNDATION v1 GO RECOMMENDED` may be reported only if that final exact-SHA pipeline passes every required stage. The recommendation does not merge, tag, start J1 or itself execute the owner-controlled GO decision.
+
+# Product readiness continuation — 2026-09-09
+
+## New owner prompt verbatim
+
+Complete full project and 100% ready product
+
+## Previous delivered response verbatim
+
+I implemented a **desktop prototype**, but **V1 is not complete or released**.
+
+Added:
+
+- Small transparent, always-on-top window.
+- Animated 3D Core, dragging and saved position.
+- Compact controls, hide/reopen and click-through.
+- State-event interface and local microphone-amplitude preview.
+- Accessibility controls and performance instrumentation.
+
+**Passed:** 643 existing TypeScript tests, 68 Python tests, 3 new tests and the web build.
+
+**Still pending:** live voice/runtime integration, native desktop verification and hardware benchmarks.
+
+The workspace disconnected before commit/push, so these changes are **not yet safely published to GitHub**. Main remains unchanged.
+
+## Recovery and baseline
+
+The previous desktop source survived the disconnected environment. GitHub main
+was independently checked and remains `2586049619072da592ed1d4b7eb225fa0a955e69`.
+The prior work-log append/commit attempt never ran because the environment was
+offline. This entry now preserves the actual recovered work. The complete earlier
+product/UI directive remains in the conversation; it has not been reconstructed
+as a supposed verbatim transcript here.
+
+The candidate was moved from `validation/floating-presence-v1-20260909` to
+`validation/j1.product-readiness-20260909` to use the existing J1 development CI
+branch trigger. The branch name does not declare a new completed milestone.
+
+## Requirement audit
+
+Read the actual V1 Word document and the user-attached V2 engineering document.
+V2 section 21 maps multiple V1 IDs to incorrect subsystems: FR-001 is interaction,
+FR-051 is knowledge ingestion, FR-061 is tasks, FR-094 is speech, FR-104 is devices,
+and FR-141 is policy. V1 wording remains authoritative. Original files unchanged.
+
+Added `docs/product/requirements.json` with exact V1 requirement/acceptance text,
+168 V1 IDs, 24 V2 additions, source SHA-256 hashes, corrected subsystem ownership,
+implementation candidates and explicit evidence status. Added the full mapping
+comparison in `docs/product/traceability-correction.md` and a fail-closed release
+readiness verifier in `scripts/check-product-readiness.mjs`. All entries are
+MAPPED pending individual release evidence review; this does not mean the
+existing code is 0% implemented or invalidate prior development test results.
+
+## Implementation
+
+Recovered `apps/desktop/presence/` contains the transparent Electron shell,
+Three.js geometry, sandboxed preload, semantic event controller, local mic
+amplitude preview, dragging, position persistence, display clamping, tray,
+keyboard controls, click-through, reduced-motion/high-contrast/labels, hidden
+render pause and performance instrumentation. No native acceptance is claimed.
+
+Added `packages/models/src/ollama-adapter.ts`, an opt-in local inference adapter
+composed through the existing model registry/router and authenticated HTTP turn.
+It uses fixed loopback direct HTTP, preflights local GGUF metadata before sending
+content, rejects cloud-backed model metadata, D5, redirects, unexpected model,
+tool calls, unsupported modalities, malformed/oversized output and excess usage.
+It has bounded timeout, cancellation and payload minimization. No model weights,
+cloud credentials, live provider calls or paid resources were used in tests.
+
+Updated optional runtime model configuration, API composition and the web BFF
+timeout/cancellation. Added identity live-session revalidation to protect longer
+inference from session/device/epoch changes. The local path revalidates authority
+during orchestration and before returning content; revocation blocks the result.
+No direct model-to-tool execution path was added. Core contracts unchanged.
+
+Affected source: apps/api/src/conversation-http.ts, apps/api/src/main.ts,
+apps/web/app/api/conversation/route.ts, packages/config/src/index.ts,
+packages/identity/src/engine.ts, packages/models/src/index.ts and the new adapter.
+New tests: local-ollama, local-conversation-http and live-session. Dependency lock
+adds Electron/Three.js; it also reconciles already-declared API core/model deps.
+
+## Evidence
+
+- `npm run check`: lint, boundaries, strict TypeScript and 657 tests PASS, 70 files.
+- 10 new local adapter transport/security tests PASS.
+- 2 new live identity revalidation tests PASS.
+- 2 new authenticated HTTP integration tests PASS, including in-flight revocation.
+- `npm run build:web`: PASS.
+- `PYTHONPATH=src python3 scripts/check.py`: PASS.
+- Python unittest suite: 68 PASS.
+- `npm test --workspace @jarvis/desktop`: 3 PASS.
+- Requirement inventory structural check: PASS, all 192 IDs accounted for.
+- `--release` readiness check: EXPECTED FAIL / NOT READY. No reviewed per-requirement
+  release evidence has been entered. This gate was not bypassed or weakened.
+- Actual Ollama inference, desktop compositing and hardware metrics NOT TESTED.
+- Native Electron launch requires a normal desktop user/display; root launch
+  refused sandboxed execution. Sandbox was not disabled. Browser download also
+  failed from network timeouts. No visual or native benchmark pass is claimed.
+
+## Remaining release blockers
+
+V1/V2 full completion is not achieved: real model installation/quality evidence,
+authenticated desktop voice and ASR/TTS, full memory/knowledge UI and ingestion,
+durable agents and real governed connectors, proactive workflows, mobile/native
+packaging, devices/twin and hardware-dependent research, production security,
+independent backup/restore and exact-candidate full-stack release qualification
+remain. Refer to the corrected register; do not treat this candidate as 100% ready.
+
+No main merge, production deployment or GO is issued. Exact published commit and
+cloud check references will be recorded in final delivery without making this
+commit self-referential.

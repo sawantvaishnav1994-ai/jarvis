@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self' data:; media-src 'none'"
+        />
+        <title>JARVIS Presence</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <button
+            id="core"
+            aria-label="JARVIS idle. Open controls"
+            title="Drag to move · Click for controls · Double-click for Home"
+        >
+            <canvas aria-hidden="true"></canvas
+            ><span id="mic" hidden aria-hidden="true">MIC</span>
+        </button>
+        <section id="panel" hidden aria-label="JARVIS controls">
+            <div class="heading">
+                J A R V I S
+                <button id="collapse" aria-label="Collapse controls">−</button>
+            </div>
+            <p id="state" role="status" aria-live="polite">Idle</p>
+            <p class="sub">Voice runtime not connected</p>
+            <div class="actions">
+                <button id="listen">Mic preview</button
+                ><button id="home">Open Home</button
+                ><button id="hide">Hide</button>
+            </div>
+            <div class="options">
+                <label
+                    ><input type="checkbox" id="motion" /> Reduce motion</label
+                ><label
+                    ><input type="checkbox" id="contrast" /> High
+                    contrast</label
+                ><label><input type="checkbox" id="labels" /> State label</label
+                ><label
+                    >Size
+                    <select id="size">
+                        <option>100</option>
+                        <option>120</option>
+                        <option selected>140</option>
+                    </select></label
+                ><button id="metrics">Performance</button
+                ><button id="passthrough">Click through</button>
+            </div>
+        </section>
+        <p id="label" hidden></p>
+        <p id="notice" role="alert" hidden></p>
+        <script type="module" src="renderer.js"></script>
+    </body>
+</html>

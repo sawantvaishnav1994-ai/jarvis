@@ -1,0 +1,2580 @@
+{
+  "version": 1,
+  "sourceBaseline": "V1 requirement wording is authoritative; V2 engineering architecture remains applicable",
+  "sourceHashes": {
+    "JARVIS_Master_PRD_Project_Blueprint_V1.docx": "3fb56678ace81bb9a644d5fddfba4d92369ed6bb844849b785026d071525ec6d",
+    "JARVIS_Complete_System_Engineering_Specification_V2 2.docx": "0568bb0f62d84ba15119bfacac2f7edb38a6905d9dedf8cff1ae775d1ef3d509"
+  },
+  "baselineCommit": "2586049619072da592ed1d4b7eb225fa0a955e69",
+  "releaseStatus": "NOT_READY",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "priority": "P0",
+      "requirement": "Support text conversations with streaming responses, attachments, structured actions, citations/trace summaries, and task status.",
+      "acceptance": "Conversation survives page reload and retains stable IDs.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-002",
+      "priority": "P0",
+      "requirement": "Show when JARVIS is listening, thinking, retrieving memory, using knowledge, calling a tool, waiting for approval, executing, or encountering an error.",
+      "acceptance": "Each runtime state is emitted by backend and represented consistently in UI.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-003",
+      "priority": "P0",
+      "requirement": "Separate user-visible answer from internal execution records and sensitive chain-of-thought.",
+      "acceptance": "UI shows concise rationale/status without exposing protected internal reasoning.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-004",
+      "priority": "P1",
+      "requirement": "Support voice turn-taking with interruption/barge-in and explicit microphone state.",
+      "acceptance": "User can interrupt spoken output and continue the same task.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-005",
+      "priority": "P1",
+      "requirement": "Support multi-device handoff of active conversations and tasks.",
+      "acceptance": "Task opened on one authorized device can continue on another without duplicate execution.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-006",
+      "priority": "P1",
+      "requirement": "Provide a global command surface for actions, approvals, search, memory, knowledge, activities, and settings.",
+      "acceptance": "Primary actions are reachable without navigating through unrelated modules.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-007",
+      "priority": "P1",
+      "requirement": "Expose the source of important context: current conversation, memory, knowledge, device/event, or tool result.",
+      "acceptance": "User can inspect provenance for consequential answers/actions.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-008",
+      "priority": "P2",
+      "requirement": "Support wearable notifications and concise voice interactions with constrained context.",
+      "acceptance": "Wearable uses the same identity/task state while respecting surface-specific privacy.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-009",
+      "priority": "P3",
+      "requirement": "Support future AR/spatial rendering of devices, objects, task state, and AI cues.",
+      "acceptance": "AR client consumes documented world-state/event APIs without bypassing policy engine.",
+      "subsystem": "Interaction",
+      "milestone": "J1/J3/J5",
+      "implementationCandidates": [
+        "apps/web"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation and presence are incomplete product surfaces"
+    },
+    {
+      "id": "FR-010",
+      "priority": "P0",
+      "requirement": "Create one Root Owner identity during secure bootstrap.",
+      "acceptance": "Root owner is cryptographically bound to the installation/account and recoverable through a documented recovery process.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-011",
+      "priority": "P0",
+      "requirement": "Require strong authentication for sensitive access and step-up authentication for high-impact actions.",
+      "acceptance": "High-risk policy tests fail without recent step-up authentication.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-012",
+      "priority": "P0",
+      "requirement": "Register devices with unique keys, trust state, last-seen metadata, and revocation.",
+      "acceptance": "Revoked device cannot refresh sessions or invoke protected tools.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-013",
+      "priority": "P0",
+      "requirement": "Support short-lived sessions with rotation, revocation, and device binding.",
+      "acceptance": "Stolen/expired token tests cannot access protected APIs.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-014",
+      "priority": "P0",
+      "requirement": "Separate human identity, agent identity, service identity, and device identity.",
+      "acceptance": "Audit records always identify the principal type and unique ID.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-015",
+      "priority": "P1",
+      "requirement": "Support trusted secondary users with explicit permission sets.",
+      "acceptance": "Secondary users cannot see owner-private memory by default.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-016",
+      "priority": "P1",
+      "requirement": "Support presence signals such as voice/face/device context only as additional trust factors, not sole authorization for critical actions.",
+      "acceptance": "Policy rejects critical action when cryptographic/step-up factor is missing.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-017",
+      "priority": "P1",
+      "requirement": "Provide emergency recovery codes/keys with secure rotation and revocation.",
+      "acceptance": "Recovery procedure is tested and logged.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-018",
+      "priority": "P2",
+      "requirement": "Support context-aware trust scoring based on device, network, recent auth, location class, and anomaly signals.",
+      "acceptance": "Score can tighten but never silently loosen explicit policy boundaries.",
+      "subsystem": "Identity and Trust",
+      "milestone": "J0/J5",
+      "implementationCandidates": [
+        "packages/identity"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development identity tests exist; production and device evidence need review"
+    },
+    {
+      "id": "FR-019",
+      "priority": "P0",
+      "requirement": "Assign stable IDs to conversations, messages, tasks, attachments, and references.",
+      "acceptance": "Every model/tool run can be traced to initiating user/event context.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-020",
+      "priority": "P0",
+      "requirement": "Build a context package from explicit user input plus policy-approved memory/knowledge/task/world-state retrieval.",
+      "acceptance": "Context assembly is logged as references without storing hidden reasoning.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-021",
+      "priority": "P0",
+      "requirement": "Prevent cross-user and cross-project context leakage.",
+      "acceptance": "Isolation tests confirm scoped retrieval.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-022",
+      "priority": "P1",
+      "requirement": "Summarize long conversations into structured checkpoints while preserving source links.",
+      "acceptance": "Context remains within model limits and user can inspect prior checkpoints.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-023",
+      "priority": "P1",
+      "requirement": "Support task threads that outlive a single chat response.",
+      "acceptance": "Task state persists independently of UI session.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-024",
+      "priority": "P1",
+      "requirement": "Allow the user to pin, exclude, correct, or forget contextual items.",
+      "acceptance": "Corrections affect future retrieval and are versioned.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-025",
+      "priority": "P1",
+      "requirement": "Represent uncertainty and missing context explicitly.",
+      "acceptance": "System requests approval/clarification only when required rather than inventing data.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-026",
+      "priority": "P2",
+      "requirement": "Support shared project contexts with policy-controlled collaborators.",
+      "acceptance": "Shared context is distinct from personal private memory.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-027",
+      "priority": "P2",
+      "requirement": "Support multimodal references to screen regions, images, files, devices, and digital-twin entities.",
+      "acceptance": "Reference IDs are stable and resolve to authorized objects.",
+      "subsystem": "Conversation and Context",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/core"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Conversation contracts exist; end-to-end product evidence needs review"
+    },
+    {
+      "id": "FR-028",
+      "priority": "P0",
+      "requirement": "Maintain a model registry describing provider, model, modality, context limit, capabilities, location, cost class, latency class, and policy restrictions.",
+      "acceptance": "Router uses registry metadata rather than hard-coded provider assumptions.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-029",
+      "priority": "P0",
+      "requirement": "Expose a provider-neutral request/response contract for chat/reasoning, embeddings, vision, speech, and structured output.",
+      "acceptance": "At least two interchangeable adapters pass the same contract tests.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-030",
+      "priority": "P0",
+      "requirement": "Support model failover and controlled degradation when a provider is unavailable.",
+      "acceptance": "Failure test switches to approved fallback without duplicating unsafe actions.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-031",
+      "priority": "P0",
+      "requirement": "Apply data-classification rules before sending context to remote models.",
+      "acceptance": "Restricted data is blocked/redacted or routed local according to policy.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-032",
+      "priority": "P1",
+      "requirement": "Route by task type, quality requirement, latency, cost, privacy, modality, and tool/structured-output capability.",
+      "acceptance": "Routing decisions are observable and explainable at a high level.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-033",
+      "priority": "P1",
+      "requirement": "Support local inference for selected models and offline fallback.",
+      "acceptance": "Core local assistant functions remain available during cloud outage.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-034",
+      "priority": "P1",
+      "requirement": "Use specialized models for vision, speech, reranking, embeddings, code, or fast classification when beneficial.",
+      "acceptance": "Benchmarks justify each specialization.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-035",
+      "priority": "P1",
+      "requirement": "Enforce per-task token, time, tool-call, and cost budgets.",
+      "acceptance": "Run stops or asks for approval on budget exhaustion.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-036",
+      "priority": "P2",
+      "requirement": "Support evaluator/critic passes for high-consequence outputs without allowing critics to bypass policy.",
+      "acceptance": "Evaluation improves measured quality and is separately logged.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-037",
+      "priority": "P2",
+      "requirement": "Support policy-controlled ensembles or multi-model debate for selected tasks.",
+      "acceptance": "Use only when quality gain exceeds defined latency/cost threshold.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-038",
+      "priority": "P2",
+      "requirement": "Maintain model quality and safety benchmarks by task class.",
+      "acceptance": "Model upgrades require regression results before promotion.",
+      "subsystem": "Models and Intelligence",
+      "milestone": "J1/J3",
+      "implementationCandidates": [
+        "packages/models"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Local model adapter candidate; actual inference and quality benchmarks pending"
+    },
+    {
+      "id": "FR-039",
+      "priority": "P0",
+      "requirement": "Store memories as typed objects rather than raw unstructured chat copies.",
+      "acceptance": "Memory object includes type, subject, content, source, timestamps, confidence, sensitivity, retention, version.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-040",
+      "priority": "P0",
+      "requirement": "Support working, episodic, semantic/personal, preference, procedural, relationship, project, and event memory categories.",
+      "acceptance": "Retrieval can filter by type and scope.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-041",
+      "priority": "P0",
+      "requirement": "Keep original source links/provenance for generated memory.",
+      "acceptance": "User can trace a memory to the source event/message/file when available.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-042",
+      "priority": "P0",
+      "requirement": "Support explicit remember, correct, supersede, forget, export, and retention expiration operations.",
+      "acceptance": "Lifecycle actions are versioned and audited.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-043",
+      "priority": "P0",
+      "requirement": "Prevent low-confidence inference from becoming high-confidence personal fact silently.",
+      "acceptance": "Inferred memory is marked and promoted only by evidence/confirmation rules.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-044",
+      "priority": "P1",
+      "requirement": "Use embeddings and graph relationships for semantic/relational retrieval.",
+      "acceptance": "Hybrid retrieval outperforms vector-only baseline on evaluation set.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-045",
+      "priority": "P1",
+      "requirement": "Store memory edges among people, projects, decisions, places, devices, goals, and events.",
+      "acceptance": "Graph queries can return related context with provenance.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-046",
+      "priority": "P1",
+      "requirement": "Apply sensitivity labels and memory-level access policies.",
+      "acceptance": "Private/sensitive memories do not appear in unauthorized sessions.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-047",
+      "priority": "P1",
+      "requirement": "Rank retrieval by relevance, recency, confidence, importance, scope, and task fit.",
+      "acceptance": "Evaluation confirms improved precision and reduced irrelevant recall.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-048",
+      "priority": "P1",
+      "requirement": "Detect contradictions and preserve version history rather than destructively overwriting facts.",
+      "acceptance": "Conflict is represented explicitly and latest verified version is preferred.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-049",
+      "priority": "P2",
+      "requirement": "Support memory consolidation jobs that summarize repeated low-level events into higher-level stable memories.",
+      "acceptance": "Consolidation retains references to source events and is reversible.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-050",
+      "priority": "P2",
+      "requirement": "Provide a user-visible Memory Graph, Memory Tree, and Memory Detail view.",
+      "acceptance": "User can navigate, inspect, correct, and control retention from UI.",
+      "subsystem": "Memory",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/memory"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Memory contracts exist; full lifecycle UI and retrieval evaluation pending"
+    },
+    {
+      "id": "FR-051",
+      "priority": "P0",
+      "requirement": "Ingest files and text with stable document IDs, source metadata, checksums, versions, and access scopes.",
+      "acceptance": "Re-ingestion detects unchanged versus updated content.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-052",
+      "priority": "P0",
+      "requirement": "Chunk/index content for hybrid lexical + vector retrieval with metadata filters.",
+      "acceptance": "Retrieval benchmark meets target precision/recall.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-053",
+      "priority": "P0",
+      "requirement": "Return source references/citations for knowledge-derived claims.",
+      "acceptance": "Answer can map claims to source chunk/document.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-054",
+      "priority": "P0",
+      "requirement": "Enforce document-level permissions before retrieval.",
+      "acceptance": "Unauthorized chunk never enters context.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-055",
+      "priority": "P1",
+      "requirement": "Support webpages, repositories, notes, manuals, structured records, and selected connected services.",
+      "acceptance": "Each connector uses the same normalized document contract.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-056",
+      "priority": "P1",
+      "requirement": "Track freshness, expiry, and re-index status.",
+      "acceptance": "Stale source can be flagged or refreshed based on policy.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-057",
+      "priority": "P1",
+      "requirement": "Support reranking and query rewriting.",
+      "acceptance": "Offline evaluation demonstrates measurable retrieval quality gain.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-058",
+      "priority": "P1",
+      "requirement": "Support entity extraction and knowledge graph links where useful.",
+      "acceptance": "Entities retain document provenance.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-059",
+      "priority": "P2",
+      "requirement": "Support domain-specific indexes and retrieval policies.",
+      "acceptance": "Engineering, personal docs, code, and other domains can be independently tuned.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-060",
+      "priority": "P2",
+      "requirement": "Provide knowledge browsing, source management, and ingestion status UI.",
+      "acceptance": "User can see what is indexed and remove/rebuild sources.",
+      "subsystem": "Knowledge",
+      "milestone": "J1",
+      "implementationCandidates": [
+        "packages/knowledge"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Ingestion and retrieval product integration pending"
+    },
+    {
+      "id": "FR-061",
+      "priority": "P0",
+      "requirement": "Represent tasks with objective, owner, scope, status, priority, inputs, outputs, policy, budget, and deadlines if provided.",
+      "acceptance": "Task remains traceable from creation through completion/cancel.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-062",
+      "priority": "P0",
+      "requirement": "Create explicit plans for multi-step execution with checkpoints.",
+      "acceptance": "User/system can inspect current step and next step.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-063",
+      "priority": "P0",
+      "requirement": "Execute steps idempotently where possible and avoid duplicate irreversible actions on retry.",
+      "acceptance": "Retry tests do not duplicate protected operations.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-064",
+      "priority": "P0",
+      "requirement": "Persist task/agent state independently from model context.",
+      "acceptance": "Process restart can resume from checkpoint.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-065",
+      "priority": "P0",
+      "requirement": "Stop on permission denial, invalid identity, policy conflict, or emergency stop.",
+      "acceptance": "Fault-injection tests confirm hard stop.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-066",
+      "priority": "P1",
+      "requirement": "Support specialized agents with fixed role, tools, memory scope, policies, and budgets.",
+      "acceptance": "Agent manifest can be reviewed before activation.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-067",
+      "priority": "P1",
+      "requirement": "Support delegation from orchestrator to agents without authority amplification.",
+      "acceptance": "Child agent permissions are subset of delegator/task scope.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-068",
+      "priority": "P1",
+      "requirement": "Use verifier/evaluator steps for tasks where correctness can be checked.",
+      "acceptance": "Verification result gates task completion.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-069",
+      "priority": "P1",
+      "requirement": "Support pause, resume, cancel, retry, rollback, and manual takeover.",
+      "acceptance": "All controls work during active execution.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-070",
+      "priority": "P1",
+      "requirement": "Track intermediate artifacts and evidence.",
+      "acceptance": "Final task result links to outputs and verification evidence.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-071",
+      "priority": "P2",
+      "requirement": "Support parallelizable sub-tasks with concurrency limits.",
+      "acceptance": "Scheduler respects resource/cost/tool contention limits.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-072",
+      "priority": "P2",
+      "requirement": "Support learned task templates only after human review and versioning.",
+      "acceptance": "Template change cannot silently expand permissions.",
+      "subsystem": "Agents and Tasks",
+      "milestone": "J2/J7",
+      "implementationCandidates": [
+        "packages/agents"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Durable autonomous task execution product gate pending"
+    },
+    {
+      "id": "FR-073",
+      "priority": "P0",
+      "requirement": "Register every tool with name, version, input/output schema, risk class, required permissions, timeout, idempotency, and audit policy.",
+      "acceptance": "Tool cannot execute if manifest or policy metadata is missing.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-074",
+      "priority": "P0",
+      "requirement": "Validate structured inputs before invocation.",
+      "acceptance": "Malformed/model-injected parameters are rejected.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-075",
+      "priority": "P0",
+      "requirement": "Run tools under least-privilege credentials and isolated service identities.",
+      "acceptance": "Credential scope tests show tool cannot access unrelated resources.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-076",
+      "priority": "P0",
+      "requirement": "Classify actions as read, reversible write, irreversible/high-impact, financial/legal, security-critical, or physical.",
+      "acceptance": "Policy maps each class to approval requirements.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-077",
+      "priority": "P0",
+      "requirement": "Capture invocation, parameters (with secret redaction), principal, approvals, timestamps, result, and error.",
+      "acceptance": "Audit reconstructs every consequential call.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-078",
+      "priority": "P0",
+      "requirement": "Protect against prompt injection from tool outputs and retrieved external content.",
+      "acceptance": "Untrusted content cannot issue privileged tool calls.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-079",
+      "priority": "P1",
+      "requirement": "Support transactional/rollback behavior where integration allows it.",
+      "acceptance": "Failed multi-step operation reverts or surfaces explicit partial state.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-080",
+      "priority": "P1",
+      "requirement": "Support tool health, rate limits, quotas, and circuit breakers.",
+      "acceptance": "Repeated failure opens circuit and prevents cascading retries.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-081",
+      "priority": "P1",
+      "requirement": "Support human preview for high-impact generated payloads.",
+      "acceptance": "User sees exact target/action before approval.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-082",
+      "priority": "P1",
+      "requirement": "Support connection lifecycle: connect, inspect scopes, rotate credentials, revoke, disconnect.",
+      "acceptance": "Revocation immediately blocks new calls.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-083",
+      "priority": "P2",
+      "requirement": "Support sandboxed code/computer-use environments.",
+      "acceptance": "Execution is isolated from production secrets and host by default.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-084",
+      "priority": "P2",
+      "requirement": "Support tool composition into versioned workflows.",
+      "acceptance": "Workflow cannot bypass per-tool policy.",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "implementationCandidates": [
+        "packages/tools"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Governed development gateway exists; real connector qualification pending"
+    },
+    {
+      "id": "FR-085",
+      "priority": "P0",
+      "requirement": "Define a normalized event envelope with ID, source, type, timestamp, subject, payload, sensitivity, and correlation ID.",
+      "acceptance": "All event producers/consumers pass schema validation.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-086",
+      "priority": "P0",
+      "requirement": "Separate event detection from action authorization.",
+      "acceptance": "Receiving an event alone never grants execution authority.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-087",
+      "priority": "P0",
+      "requirement": "Support schedules, webhooks, service events, task events, and device/sensor events.",
+      "acceptance": "Each source can be enabled/disabled and scoped.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-088",
+      "priority": "P1",
+      "requirement": "Support condition watchers with cooldown, deduplication, threshold/hysteresis, and notification policies.",
+      "acceptance": "Repeated noisy events do not create alert storms.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-089",
+      "priority": "P1",
+      "requirement": "Persist durable event/task state for important automations.",
+      "acceptance": "Restart does not lose scheduled or acknowledged state.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-090",
+      "priority": "P1",
+      "requirement": "Support quiet hours, channel preferences, urgency, escalation, and acknowledgement.",
+      "acceptance": "Notification behavior follows user-configured policy.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-091",
+      "priority": "P1",
+      "requirement": "Support proactive suggestions without execution.",
+      "acceptance": "System can surface opportunities separately from authorized automations.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-092",
+      "priority": "P2",
+      "requirement": "Correlate multiple events into higher-level situations.",
+      "acceptance": "Rules/models can generate a situation event with traceable evidence.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-093",
+      "priority": "P2",
+      "requirement": "Support simulation/dry-run of automation rules before activation.",
+      "acceptance": "User can inspect sample triggers and proposed actions.",
+      "subsystem": "Events and Proactivity",
+      "milestone": "J4",
+      "implementationCandidates": [
+        "packages/events"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Event foundation exists; proactive product workflows pending"
+    },
+    {
+      "id": "FR-094",
+      "priority": "P0",
+      "requirement": "Support speech-to-text and text-to-speech through provider-neutral adapters.",
+      "acceptance": "At least one local/offline fallback path exists for basic commands.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-095",
+      "priority": "P0",
+      "requirement": "Expose explicit microphone/camera state and permissions.",
+      "acceptance": "No hidden capture; UI/OS-level indicator is present.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-096",
+      "priority": "P1",
+      "requirement": "Support wake-word or push-to-talk modes with configurable privacy behavior.",
+      "acceptance": "Wake-word processing can run locally where supported.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-097",
+      "priority": "P1",
+      "requirement": "Support speaker recognition as a contextual factor, not sole high-risk authentication.",
+      "acceptance": "Spoofed voice cannot approve protected actions alone.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-098",
+      "priority": "P1",
+      "requirement": "Support image/screen understanding with object/text/scene references.",
+      "acceptance": "User can refer to visible items and model receives authorized image context.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-099",
+      "priority": "P1",
+      "requirement": "Support visual OCR and structured extraction with provenance.",
+      "acceptance": "Extracted fields preserve image/file reference.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-100",
+      "priority": "P2",
+      "requirement": "Support multi-camera/device sensor fusion for defined environments.",
+      "acceptance": "World-state confidence increases/decreases based on source agreement.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-101",
+      "priority": "P2",
+      "requirement": "Support optional face recognition only under explicit consent and legal/privacy rules.",
+      "acceptance": "Feature can be completely disabled and deletes templates on request.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-102",
+      "priority": "P2",
+      "requirement": "Support interruption, barge-in, and low-latency response for voice mode.",
+      "acceptance": "Voice interaction meets latency target under nominal conditions.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-103",
+      "priority": "P3",
+      "requirement": "Support depth/LiDAR/pose inputs for future spatial/robotic use.",
+      "acceptance": "Sensor adapters publish normalized observations to world-state service.",
+      "subsystem": "Voice and Vision",
+      "milestone": "J3",
+      "implementationCandidates": [
+        "apps/desktop"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Mic preview exists; real ASR/TTS, vision and consent integration pending"
+    },
+    {
+      "id": "FR-104",
+      "priority": "P0",
+      "requirement": "Represent each device with unique identity, owner, capabilities, trust state, firmware/software metadata, and command/event schemas.",
+      "acceptance": "Unknown device cannot receive privileged commands.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-105",
+      "priority": "P0",
+      "requirement": "Use authenticated, encrypted communication for device control where supported.",
+      "acceptance": "MITM/replay tests fail.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-106",
+      "priority": "P0",
+      "requirement": "Define safe default state and command timeout behavior for actuators.",
+      "acceptance": "Lost connection does not leave device in unsafe active state.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-107",
+      "priority": "P1",
+      "requirement": "Support local device gateways for protocols such as Matter/MQTT/REST or vendor APIs.",
+      "acceptance": "Cloud outage does not necessarily prevent local-safe control.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-108",
+      "priority": "P1",
+      "requirement": "Expose device state, last update, health, and pending command state.",
+      "acceptance": "UI distinguishes observed state from desired state.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-109",
+      "priority": "P1",
+      "requirement": "Classify device commands by risk and require appropriate approval.",
+      "acceptance": "Locks, access control, vehicles, heating, and actuators have stricter policy than lights.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-110",
+      "priority": "P1",
+      "requirement": "Support room/zone grouping and routines.",
+      "acceptance": "Groups cannot expand device permissions beyond member scopes.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-111",
+      "priority": "P2",
+      "requirement": "Support sensor streams with retention/downsampling rules.",
+      "acceptance": "High-frequency telemetry does not overwhelm core database.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-112",
+      "priority": "P2",
+      "requirement": "Support anomaly detection for device health and state.",
+      "acceptance": "Alerts include evidence and do not auto-escalate privileges.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-113",
+      "priority": "P3",
+      "requirement": "Support narrow robotic devices only through dedicated safety controller and interlocks.",
+      "acceptance": "LLM is not in direct motor-control loop.",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Device control and hardware validation pending"
+    },
+    {
+      "id": "FR-114",
+      "priority": "P1",
+      "requirement": "Represent entities with type, identity, attributes, relationships, location/containment, state, source, and confidence.",
+      "acceptance": "World-state query can explain where each fact came from.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-115",
+      "priority": "P1",
+      "requirement": "Separate observed state, inferred state, desired state, and commanded state.",
+      "acceptance": "UI/API can distinguish all four.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-116",
+      "priority": "P1",
+      "requirement": "Merge observations from devices, user statements, tools, and sensors using source/confidence rules.",
+      "acceptance": "Conflicts are preserved and resolved according to policy.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-117",
+      "priority": "P1",
+      "requirement": "Support spatial hierarchy: site -> building -> floor -> room -> zone -> device/object.",
+      "acceptance": "Entities inherit only explicitly defined policies.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-118",
+      "priority": "P2",
+      "requirement": "Support temporal state/history for important entities.",
+      "acceptance": "User can inspect state changes over time.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-119",
+      "priority": "P2",
+      "requirement": "Support geospatial/spatial references where useful.",
+      "acceptance": "Coordinates are optional and sensitivity controlled.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-120",
+      "priority": "P2",
+      "requirement": "Expose a query API to agents/tools without granting them raw unrestricted telemetry.",
+      "acceptance": "Policy-filtered views are enforced.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-121",
+      "priority": "P3",
+      "requirement": "Support 2D/3D visualization and future AR anchoring.",
+      "acceptance": "Visualization consumes same canonical entity/state model.",
+      "subsystem": "Digital Twin",
+      "milestone": "J6",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Canonical world-state and spatial clients pending"
+    },
+    {
+      "id": "FR-122",
+      "priority": "P2",
+      "requirement": "Support simulation tools as typed tools with versioned inputs/outputs and reproducibility metadata.",
+      "acceptance": "Run can be reproduced from saved configuration and artifact hashes.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-123",
+      "priority": "P2",
+      "requirement": "Track experiments, hypotheses, parameters, results, comparisons, and conclusions.",
+      "acceptance": "Experiment history links to source artifacts and models/tools used.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-124",
+      "priority": "P2",
+      "requirement": "Support optimization loops with explicit search space, objective, constraints, and budget.",
+      "acceptance": "Loop stops at budget/constraint limits.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-125",
+      "priority": "P3",
+      "requirement": "Support CAD/CAE/physics tool adapters where licensed/available.",
+      "acceptance": "Generated design recommendation is clearly distinct from validated engineering result.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-126",
+      "priority": "P3",
+      "requirement": "For robotics, separate high-level task planning from deterministic motion/control stack.",
+      "acceptance": "Generative model cannot directly command raw motor currents/torques.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-127",
+      "priority": "P3",
+      "requirement": "Require simulation, workspace constraints, collision checks, e-stop, and human override for physical motion.",
+      "acceptance": "Safety controller can stop motion independent of AI runtime.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-128",
+      "priority": "P3",
+      "requirement": "Record robot mission, commands, sensor state, safety events, and operator interventions.",
+      "acceptance": "Incident can be reconstructed from logs.",
+      "subsystem": "Simulation and Robotics",
+      "milestone": "J6/J8",
+      "implementationCandidates": [
+        "packages/devices"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Simulation, licensed integrations and hardware safety cases pending"
+    },
+    {
+      "id": "FR-129",
+      "priority": "P0",
+      "requirement": "Encrypt data in transit and sensitive data at rest.",
+      "acceptance": "Security review verifies TLS and storage encryption coverage.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-130",
+      "priority": "P0",
+      "requirement": "Use envelope encryption / KMS or equivalent for high-value keys and secrets.",
+      "acceptance": "Application database does not contain plaintext master secrets.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-131",
+      "priority": "P0",
+      "requirement": "Maintain a secrets vault or secure secret-provider abstraction.",
+      "acceptance": "Tool credentials are referenced by secret ID, not embedded in prompts/logs.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-132",
+      "priority": "P0",
+      "requirement": "Use least-privilege service accounts and network segmentation.",
+      "acceptance": "Compromised worker cannot automatically access all production resources.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-133",
+      "priority": "P0",
+      "requirement": "Protect against prompt injection, indirect prompt injection, tool-result poisoning, and retrieval poisoning.",
+      "acceptance": "Security test corpus blocks privilege-changing instructions from untrusted content.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-134",
+      "priority": "P0",
+      "requirement": "Apply dependency, container, source, and secret scanning in CI.",
+      "acceptance": "Critical findings block release according to policy.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-135",
+      "priority": "P0",
+      "requirement": "Implement rate limiting, abuse controls, replay protection, and request integrity for privileged APIs.",
+      "acceptance": "Attack simulations are detected or rejected.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-136",
+      "priority": "P0",
+      "requirement": "Maintain secure backups and tested restore procedures.",
+      "acceptance": "Restore drill passes without relying on compromised production keys.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-137",
+      "priority": "P1",
+      "requirement": "Support security event monitoring and anomaly alerts.",
+      "acceptance": "Auth/tool/device anomalies produce auditable alerts.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-138",
+      "priority": "P1",
+      "requirement": "Maintain a documented threat model and update it for each major capability.",
+      "acceptance": "Release gate includes threat-model delta review.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-139",
+      "priority": "P1",
+      "requirement": "Support key rotation and credential revocation without full system rebuild.",
+      "acceptance": "Rotation drill succeeds.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-140",
+      "priority": "P2",
+      "requirement": "Support hardware-backed keys/secure enclave/TPM where available.",
+      "acceptance": "Root/device secrets can use platform hardware protection.",
+      "subsystem": "Security",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development security evidence exists; production qualification pending"
+    },
+    {
+      "id": "FR-141",
+      "priority": "P0",
+      "requirement": "Use explicit policy evaluation before every consequential tool/device action.",
+      "acceptance": "No direct model-to-tool bypass path exists.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-142",
+      "priority": "P0",
+      "requirement": "Policy inputs include principal, device/session trust, action/tool, target resource, data sensitivity, risk class, task scope, and recent approval.",
+      "acceptance": "Test matrix covers combinations.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-143",
+      "priority": "P0",
+      "requirement": "Support allow, deny, require approval, require step-up authentication, and allow-with-constraints decisions.",
+      "acceptance": "Tool layer enforces returned decision.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-144",
+      "priority": "P0",
+      "requirement": "Approval requests show exact action, target, scope, material parameters, and expected effect.",
+      "acceptance": "User can make informed approval decision.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-145",
+      "priority": "P0",
+      "requirement": "Approval tokens are scoped, time-limited, single-use or bounded-use, and non-transferable.",
+      "acceptance": "Replay/cross-task approval tests fail.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-146",
+      "priority": "P1",
+      "requirement": "Support persistent user policies such as always allow low-risk read access to a specific project.",
+      "acceptance": "Policy UI shows scope and revocation.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-147",
+      "priority": "P1",
+      "requirement": "Support budgets/limits: spend, rows changed, files affected, recipients, environments, device ranges, time windows.",
+      "acceptance": "Actions outside constraint are denied or re-approved.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-148",
+      "priority": "P1",
+      "requirement": "Support policy simulation before activation.",
+      "acceptance": "User can see example allowed/denied actions.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-149",
+      "priority": "P1",
+      "requirement": "Log policy decision reason and policy version.",
+      "acceptance": "Audit can reproduce decision inputs/version.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-150",
+      "priority": "P2",
+      "requirement": "Support risk-adaptive step-up based on anomaly/context.",
+      "acceptance": "Adaptive rule can tighten but not weaken hard minimums.",
+      "subsystem": "Permissions and Approvals",
+      "milestone": "J0/J2",
+      "implementationCandidates": [
+        "packages/security"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development approval tests exist; product flows and release evidence pending"
+    },
+    {
+      "id": "FR-151",
+      "priority": "P0",
+      "requirement": "Classify data by sensitivity and allowed processing locations/providers.",
+      "acceptance": "Policy blocks disallowed egress.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-152",
+      "priority": "P0",
+      "requirement": "Provide explicit retention policies for conversations, memory, knowledge, sensor data, tool logs, and audit.",
+      "acceptance": "Retention jobs are tested and produce deletion evidence where applicable.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-153",
+      "priority": "P0",
+      "requirement": "Support export of user data in documented portable formats.",
+      "acceptance": "Export includes schema/version and can be validated.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-154",
+      "priority": "P0",
+      "requirement": "Support deletion/forgetting workflows consistent with security/audit/legal constraints.",
+      "acceptance": "Deleted personal content is removed from active retrieval and downstream indexes.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-155",
+      "priority": "P0",
+      "requirement": "Maintain consent records for microphones, cameras, face/voice templates, connected accounts, and shared contexts.",
+      "acceptance": "Feature stops when consent is revoked.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-156",
+      "priority": "P1",
+      "requirement": "Separate raw sensor/media retention from derived metadata.",
+      "acceptance": "User can retain state summaries while deleting raw media when configured.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-157",
+      "priority": "P1",
+      "requirement": "Provide provider disclosure for remote model/tool processing.",
+      "acceptance": "UI can show which external providers may receive data.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-158",
+      "priority": "P1",
+      "requirement": "Minimize data sent to models/tools by retrieving only necessary context.",
+      "acceptance": "Context audit demonstrates scope minimization.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-159",
+      "priority": "P2",
+      "requirement": "Support privacy zones and device/location-specific capture policies.",
+      "acceptance": "Configured zones disable or constrain sensors/actions.",
+      "subsystem": "Privacy and Data Control",
+      "milestone": "J0/J1/J3",
+      "implementationCandidates": [
+        "packages/storage"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Data controls exist; complete consent and capture integration pending"
+    },
+    {
+      "id": "FR-160",
+      "priority": "P0",
+      "requirement": "Record immutable/append-only audit events for auth, policy, approvals, tool calls, device commands, memory changes, administrative changes, and emergency actions.",
+      "acceptance": "Tamper test detects modification or missing sequence.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-161",
+      "priority": "P0",
+      "requirement": "Store correlation IDs linking user/event -> model run -> plan -> policy -> tool/device -> result.",
+      "acceptance": "Incident trace can reconstruct sequence.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-162",
+      "priority": "P0",
+      "requirement": "Provide an emergency stop that can halt agents, automations, tool execution, and device commands independent of model reasoning.",
+      "acceptance": "E-stop drill immediately blocks new actions.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-163",
+      "priority": "P0",
+      "requirement": "Provide safe-mode startup after severe incident.",
+      "acceptance": "System can start with external tools/automations disabled for recovery.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-164",
+      "priority": "P0",
+      "requirement": "Support revocation of all sessions/integrations/devices from root owner control.",
+      "acceptance": "Global revocation drill succeeds.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-165",
+      "priority": "P1",
+      "requirement": "Provide human-readable activity history with filters by agent/tool/device/project/risk.",
+      "acceptance": "Owner can inspect consequential actions without raw log access.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-166",
+      "priority": "P1",
+      "requirement": "Provide audit export for incident review.",
+      "acceptance": "Export is integrity verifiable.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-167",
+      "priority": "P1",
+      "requirement": "Maintain backup/restore actions in audit.",
+      "acceptance": "Restore origin and operator are traceable.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "FR-168",
+      "priority": "P2",
+      "requirement": "Support cryptographic chaining/signing or external immutable storage for high-assurance deployments.",
+      "acceptance": "Independent verifier can validate audit integrity.",
+      "subsystem": "Audit and Operations",
+      "milestone": "J0+",
+      "implementationCandidates": [
+        "packages/audit"
+      ],
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "reviewNote": "Development audit/recovery evidence exists; production isolation and drills pending"
+    },
+    {
+      "id": "V2-001",
+      "requirement": "Reproducible context snapshots",
+      "subsystem": "Intelligence",
+      "milestone": "J1",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-002",
+      "requirement": "Explicit runtime state machine",
+      "subsystem": "Core Runtime",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-003",
+      "requirement": "Versioned event envelope with causation/correlation",
+      "subsystem": "Events",
+      "milestone": "J0/J4",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-004",
+      "requirement": "Idempotency contract for side effects",
+      "subsystem": "Tools",
+      "milestone": "J2",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-005",
+      "requirement": "Checkpoint-before-consequential-side-effect rule",
+      "subsystem": "Agents",
+      "milestone": "J2",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-006",
+      "requirement": "Model fallback cannot broaden privacy/permissions",
+      "subsystem": "Models/Security",
+      "milestone": "J1",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-007",
+      "requirement": "External content treated as untrusted data",
+      "subsystem": "Security",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-008",
+      "requirement": "Knowledge-to-memory promotion is policy controlled",
+      "subsystem": "Memory/Knowledge",
+      "milestone": "J1",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-009",
+      "requirement": "Provenance-aware derived-data revocation",
+      "subsystem": "Data/Knowledge",
+      "milestone": "J1",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-010",
+      "requirement": "Explicit autonomy budgets: time/steps/tokens/cost/actions",
+      "subsystem": "Agents",
+      "milestone": "J2",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-011",
+      "requirement": "Self-trigger/duplicate proactive-loop prevention",
+      "subsystem": "Events",
+      "milestone": "J4",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-012",
+      "requirement": "Physical commands require deterministic safety interlocks",
+      "subsystem": "Devices",
+      "milestone": "J5/J8",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-013",
+      "requirement": "Language model output cannot directly drive actuators",
+      "subsystem": "Robotics/Security",
+      "milestone": "J8",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-014",
+      "requirement": "Typed error taxonomy across services",
+      "subsystem": "Core Runtime",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-015",
+      "requirement": "Trace propagation across models/tools/workers",
+      "subsystem": "Observability",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-016",
+      "requirement": "Disaster-recovery restore drill as release evidence",
+      "subsystem": "Operations",
+      "milestone": "J0+",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-017",
+      "requirement": "Schema/data migrations are versioned and rollback-aware",
+      "subsystem": "Data",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-018",
+      "requirement": "SBOM/dependency/secret scanning release controls",
+      "subsystem": "Supply Chain",
+      "milestone": "J0",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-019",
+      "requirement": "Per-source retention and raw multimodal retention controls",
+      "subsystem": "Privacy",
+      "milestone": "J3",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-020",
+      "requirement": "Device state freshness/confidence semantics",
+      "subsystem": "Digital Twin",
+      "milestone": "J5/J6",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-021",
+      "requirement": "Independent verification for high-risk actions",
+      "subsystem": "Agents/Security",
+      "milestone": "J2",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-022",
+      "requirement": "Permission inheritance cannot widen through delegation",
+      "subsystem": "Agents/Security",
+      "milestone": "J2",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-023",
+      "requirement": "Model/provider data-handling metadata in registry",
+      "subsystem": "Models/Privacy",
+      "milestone": "J1",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    },
+    {
+      "id": "V2-024",
+      "requirement": "Operational runbooks required before production",
+      "subsystem": "SRE",
+      "milestone": "J0+",
+      "status": "MAPPED",
+      "releaseEvidence": [],
+      "acceptance": "Milestone-specific acceptance procedure and evidence still required"
+    }
+  ]
+}

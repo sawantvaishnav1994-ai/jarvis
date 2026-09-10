@@ -19,6 +19,8 @@ import {
     ModelProviderRegistry,
     ModelRouter,
     SyntheticModelAdapter,
+    LocalOllamaAdapter,
+    type LocalOllamaConfig,
     type J06ModelRequest,
     type ModelDescriptor,
 } from "@jarvis/models";
@@ -99,6 +101,7 @@ function localModelRequest(
     sessionId: string,
     message: string,
     requestId: string,
+    timeoutMs = 5_000,
 ): J06ModelRequest {
     return {
         version: 1,
@@ -134,7 +137,7 @@ function localModelRequest(
         maxOutputTokens: 200,
         maxTotalTokens: 2_500,
         maxCost: 0,
-        timeoutMs: 5_000,
+        timeoutMs,
         responseFormat: "text",
         contractId: null,
     };
@@ -144,7 +147,11 @@ export function conversationHandler(
     engine: IdentityEngine,
     serviceKey: Buffer,
     sessions: ConversationSessionRepository,
+    localOllama?: LocalOllamaConfig,
 ) {
+    const selected = localOllama ? new LocalOllamaAdapter(localOllama) : null;
+    const selectedDescriptor = selected?.descriptor() ?? descriptor;
+    const timeoutMs = localOllama?.timeoutMs ?? 5_000;
     return async (
         req: IncomingMessage,
         res: ServerResponse,
@@ -158,6 +165,8 @@ export function conversationHandler(
             res.end('{"error":"METHOD_NOT_ALLOWED"}');
             return true;
         }
+        const disconnected = new AbortController();
+        res.once("close", () => disconnected.abort());
         let stage = "request";
         try {
             const body = await readBody(req);
@@ -256,27 +265,48 @@ export function conversationHandler(
                 operatingMode: "assistant" as const,
             };
             let authorityLive = true;
+            const verifyLive = async () => {
+                if (!authorityLive || disconnected.signal.aborted) return false;
+                if (selected) {
+                    try {
+                        await engine.assertLiveSession(
+                            rpc.token,
+                            rpc.contextHash,
+                            {
+                                ownerId: inspected.owner.id,
+                                deviceId: current.deviceId,
+                                sessionId: current.id,
+                                epoch: current.epoch,
+                            },
+                        );
+                    } catch {
+                        return false;
+                    }
+                }
+                return true;
+            };
             const assembler = new ContextAssembler({
-                verify: () => authorityLive,
+                verify: verifyLive,
             });
             const registry = new ModelProviderRegistry();
             registry.register(
-                new SyntheticModelAdapter(descriptor, {
-                    responseText: `JARVIS development response: ${rpc.request.message}`,
-                }),
+                selected ??
+                    new SyntheticModelAdapter(descriptor, {
+                        responseText: `JARVIS development response: ${rpc.request.message}`,
+                    }),
             );
             const orchestrator = new J13ModelOrchestrator(
                 new ModelRouter(registry),
-                { verify: () => authorityLive },
+                { verify: verifyLive },
                 { create: () => `j1.11:${randomUUID()}` },
                 { now: Date.now },
             );
             const pipeline = new J14TurnPipeline(
                 {
-                    verify: () => ({
-                        valid: authorityLive,
-                        reason: authorityLive ? "OK" : "REVOKED",
-                    }),
+                    verify: async () => {
+                        const valid = await verifyLive();
+                        return { valid, reason: valid ? "OK" : "REVOKED" };
+                    },
                 },
                 assembler,
                 orchestrator,
@@ -335,16 +365,19 @@ export function conversationHandler(
                         conversationSession.id,
                         rpc.request.message,
                         `j1.11:${turnId}`,
+                        timeoutMs,
                     ),
                     modelPolicy: {
                         route: {
-                            allowedProviderIds: ["synthetic-ui"],
+                            allowedProviderIds: [selectedDescriptor.providerId],
                             deniedProviderIds: [],
-                            preferredProviderIds: ["synthetic-ui"],
+                            preferredProviderIds: [
+                                selectedDescriptor.providerId,
+                            ],
                             allowDegraded: false,
                             maxAttempts: 1,
                         },
-                        operationTimeoutMs: 5_000,
+                        operationTimeoutMs: timeoutMs,
                         operationAttemptLimit: 1,
                         operationMaxTokens: 2_500,
                         operationMaxCost: 0,
@@ -353,8 +386,13 @@ export function conversationHandler(
                         circuitResetMs: 1_000,
                     },
                 },
-                AbortSignal.timeout(6_000),
+                AbortSignal.any([
+                    disconnected.signal,
+                    AbortSignal.timeout(timeoutMs + 1_000),
+                ]),
             );
+            if (selected && !(await verifyLive()))
+                throw new IdentityFault("SESSION_INVALID");
             authorityLive = false;
             stage = "response";
             res.writeHead(200);
@@ -376,7 +414,7 @@ export function conversationHandler(
                             stored: false,
                         },
                         source: {
-                            provider: "synthetic-ui",
+                            provider: selectedDescriptor.providerId,
                             provenance: "J1.11:authenticated-browser-turn",
                         },
                         approval: null,

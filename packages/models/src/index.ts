@@ -61,3 +61,9 @@ export class MockModel implements ModelProvider {
         };
     }
 }
+
+export {
+    LocalOllamaAdapter,
+    LocalOllamaConfigSchema,
+    type LocalOllamaConfig,
+} from "./ollama-adapter.js";
