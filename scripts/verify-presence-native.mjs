@@ -84,6 +84,15 @@ try {
         "listening",
         "reasoning",
         "responding",
+        "active",
+        "understanding",
+        "thinking",
+        "memory-retrieval",
+        "knowledge-retrieval",
+        "tool-action",
+        "needs-approval",
+        "error",
+        "background",
     ].entries()) {
         await application.evaluate(
             (_electron, event) => process.emit("message", event),
@@ -101,6 +110,15 @@ try {
             listening: "Listening",
             reasoning: "Thinking",
             responding: "Speaking",
+            active: "Active",
+            understanding: "Understanding",
+            thinking: "Thinking",
+            "memory-retrieval": "Retrieving memory",
+            "knowledge-retrieval": "Retrieving knowledge",
+            "tool-action": "Using a tool",
+            "needs-approval": "Waiting for approval",
+            error: "Attention needed",
+            background: "Working in background",
         }[state];
         await expect(page.locator("#core")).toHaveAttribute(
             "aria-label",

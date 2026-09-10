@@ -7,7 +7,7 @@ test("web shell reflects healthy API, database, queue and worker", async ({
     page.on("console", (message) => {
         if (message.type() === "error") errors.push(message.text());
     });
-    await page.goto("/");
+    await page.goto("/dashboard");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         /A permanent home\s*for your intelligence\./,
     );
@@ -46,7 +46,7 @@ test("small-screen status remains readable without horizontal scrolling", async 
     page,
 }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
+    await page.goto("/dashboard");
     expect(
         await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth,

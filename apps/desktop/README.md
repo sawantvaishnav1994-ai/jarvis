@@ -83,3 +83,11 @@ audio-context cleanup. Late capture results release their own tracks; stale
 errors and track callbacks cannot mute a newer session. The desktop tests use
 synthetic media objects and deferred promises to exercise these races without
 opening a real microphone. Hardware/OS permission acceptance remains pending.
+
+The presentation contract additionally accepts `active`, `understanding`,
+`thinking`, `memory-retrieval`, `knowledge-retrieval`, `tool-action`,
+`needs-approval`, `error` and `background`. `reasoning` remains supported for
+existing integrations. Each has an explicit accessible label; retrieval, tool,
+approval and error states have distinct restrained colors. A `needs-approval`
+event never approves anything: it only describes a state. All states retain
+replay rejection and disconnect expiry. Runtime delivery remains unconnected.

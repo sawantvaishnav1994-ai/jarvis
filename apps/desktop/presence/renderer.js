@@ -48,6 +48,15 @@ function setState() {
                 listening: "Listening",
                 reasoning: "Thinking",
                 responding: "Speaking",
+                active: "Active",
+                understanding: "Understanding",
+                thinking: "Thinking",
+                "memory-retrieval": "Retrieving memory",
+                "knowledge-retrieval": "Retrieving knowledge",
+                "tool-action": "Using a tool",
+                "needs-approval": "Waiting for approval",
+                error: "Attention needed",
+                background: "Working in background",
             }[state]
           : "Idle · runtime disconnected";
     $("state").textContent = title;
@@ -243,7 +252,14 @@ function draw(now) {
     if (!renderer) return;
     const begin = performance.now(),
         t = reduced ? 0 : now / 1000;
-    const thinking = state === "reasoning",
+    const thinking = [
+            "reasoning",
+            "thinking",
+            "understanding",
+            "memory-retrieval",
+            "knowledge-retrieval",
+            "tool-action",
+        ].includes(state),
         speaking = state === "responding",
         listening = state === "listening";
     const energy = listening || speaking ? smoothed : 0;
@@ -282,13 +298,26 @@ function draw(now) {
     const n = Math.floor((count - 12) * quality) * 2;
     lines.geometry.setDrawRange(0, n);
     points.geometry.setDrawRange(0, Math.floor(count * quality));
-    const color = thinking
-        ? 0xb0a4d0
-        : listening
-          ? 0x83d8ed
-          : speaking
-            ? 0xbdc4f4
-            : 0x90adc7;
+    const color =
+        state === "error"
+            ? 0xe49b8c
+            : state === "needs-approval"
+              ? 0xd8bf8f
+              : state === "memory-retrieval"
+                ? 0x9fc5b3
+                : state === "knowledge-retrieval"
+                  ? 0x9dbfdf
+                  : state === "tool-action"
+                    ? 0xc5acd2
+                    : state === "background"
+                      ? 0x7e8c9d
+                      : thinking
+                        ? 0xb0a4d0
+                        : listening
+                          ? 0x83d8ed
+                          : speaking
+                            ? 0xbdc4f4
+                            : 0x90adc7;
     material.color.lerp(new THREE.Color(color), 0.12);
     lineMaterial.color.copy(material.color);
     points.rotation.y = lines.rotation.y = reduced

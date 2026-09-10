@@ -4210,3 +4210,68 @@ app. Corrected both test invocations to app.emit; kept bounded visibility assert
 and all microphone/security checks. This changes the test stimulus, not production
 permissions or window behavior. Final exact-candidate native result follows in
 the delivery; no native or product GO is inferred from a local harness edit.
+
+## Observed final verification outcome
+
+Published corrected source eaa1804c737e458c9fd2562fd380644950672992, tree
+44d381d0c66de4b7f69ab9ff94ec86c844bc2333, exactly matching local 8e2aaaf.
+Windows native run 34515510546 PASS, native job 102999794794: all ten desktop
+unit tests, the complete native verifier and evidence upload passed. J1 development
+run 34515510487 PASS on the same SHA. The prior failed runs are retained above.
+Local full suite also passed: 657 TypeScript, 68 Python, lint/types/boundaries,
+web production build. Main independently remains
+2586049619072da592ed1d4b7eb225fa0a955e69. No merge or production release occurred.
+
+Desktop native smoke is now verified on Windows CI. Real microphone/ASR/TTS,
+physical-device performance, full approved UI, authenticated desktop runtime,
+mobile packaging and the remaining V1/V2 release requirements are still pending.
+Release readiness check remains NOT READY; no arbitrary completion percentage is
+claimed. This local outcome record supplements the published authorization log;
+the tested source and exact cloud evidence are available through PR 2.
+
+# Complete all incomplete — Home implementation continuation
+
+## Owner prompt verbatim
+
+Complete all incomplete
+
+## Work performed
+
+Continued from the Windows-verified eaa1804 candidate without rebuilding protected
+backend contracts. Implemented Personal Home at root with a dark neural-field
+interface, in-place authenticated conversation, session transcript, provenance,
+activity records, command menu, reduced-motion setting and clear confirmation.
+Moved the existing service dashboard intact to /dashboard and preserved its health
+and responsive test assertions on that route. Reused the existing transport/device
+proof through a shared client; no browser-owned authorization or persistent tokens.
+Added an abortable HomeSession controller with five asynchronous request lifecycle
+tests. Home truthfully marks synthetic model output, current page-only history,
+completed (not live) event records and missing voice/memory/knowledge interfaces.
+
+Extended desktop semantic states and labels for active, understanding, thinking,
+memory retrieval, knowledge retrieval, tools, approval, error and background.
+Existing reasoning events remain compatible; state events still cannot authorize
+anything. Added replay/authority-stripping coverage and expanded real Windows
+fixture rendering checks. Added a browser qualification workflow with explicit
+synthetic transport fixtures, screenshots and responsive/interaction assertions.
+
+## Validation and scope
+
+Local check PASS: lint, boundaries, types, 662 tests across 71 files. Web build
+PASS. Eleven desktop tests PASS. Python syntax/boundary check PASS. Python and
+exact candidate cloud outcomes are recorded after completion. Applied React skill
+review: reusable client, stable external store snapshots, effect cleanup, bounded
+animation rate, hidden render suspension and native accessible dialogs.
+
+Affected files include apps/web/app/home/*, page.tsx, dashboard/page.tsx,
+conversation/client.ts and console imports; tests/unit/personal-home-session.test.ts,
+tests/home-ui/home.spec.ts, tests/e2e/foundation.spec.ts, playwright.home.config.ts,
+.github/workflows/personal-home.yml; desktop state/renderer/tests/native verifier;
+docs/product/personal-home-implementation.md and this cumulative log.
+
+The complete V1/V2 product remains NOT READY. Live voice, persistent product
+history, memory/knowledge ingestion and UI, agents/connectors, device/mobile
+integration, real model quality and production qualification are not completed by
+this increment. No release acceptance is claimed for them. Next work must connect
+those paths to existing server-governed services and verify on real runtime/device
+infrastructure; documentation and synthetic UI tests alone cannot close them.

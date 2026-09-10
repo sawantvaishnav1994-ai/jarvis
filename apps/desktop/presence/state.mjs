@@ -4,6 +4,15 @@ export const states = Object.freeze([
     "listening",
     "reasoning",
     "responding",
+    "active",
+    "understanding",
+    "thinking",
+    "memory-retrieval",
+    "knowledge-retrieval",
+    "tool-action",
+    "needs-approval",
+    "error",
+    "background",
 ]);
 export function parseEvent(value, now = Date.now()) {
     if (

@@ -59,3 +59,46 @@ test("invalid persisted positions never reach native display lookup", () => {
         assert.equal(normalizePoint(value), undefined);
     assert.deepEqual(normalizePoint({ x: -20.5, y: 10.2 }), { x: -20, y: 10 });
 });
+
+test("extended semantic states retain replay protection and cannot convey approvals", () => {
+    const names = [
+        "active",
+        "understanding",
+        "thinking",
+        "memory-retrieval",
+        "knowledge-retrieval",
+        "tool-action",
+        "needs-approval",
+        "error",
+        "background",
+    ];
+    const controller = new PresenceController();
+    for (const [sequence, name] of names.entries()) {
+        const event = {
+            version: 1,
+            type: `presence.${name}`,
+            sequence,
+            runId: "fixture",
+            at: 10000,
+            amplitude: 0,
+            approved: true,
+            tool: "shell",
+        };
+        assert.equal(controller.accept(event, 10000), true);
+        assert.deepEqual(controller.snapshot(10000), {
+            state: name,
+            amplitude: 0,
+            connected: true,
+        });
+        assert.equal(controller.accept(event, 10000), false);
+        assert.equal(
+            Object.hasOwn(controller.snapshot(10000), "approved"),
+            false,
+        );
+    }
+    assert.deepEqual(controller.snapshot(16000), {
+        state: "idle",
+        amplitude: 0,
+        connected: false,
+    });
+});
