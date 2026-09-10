@@ -146,7 +146,7 @@ try {
             BrowserWindow.getAllWindows()[0].isVisible(),
         ),
     ).toBe(false);
-    await application.evaluate(() => process.emit("second-instance"));
+    await application.evaluate(({ app }) => app.emit("second-instance"));
     await expect
         .poll(
             () =>
@@ -181,7 +181,7 @@ try {
         globalThis.resolveConsent({ response: 1 }),
     );
     expect(await page.evaluate(() => window.consentAttempt)).toBe(false);
-    await application.evaluate(() => process.emit("second-instance"));
+    await application.evaluate(({ app }) => app.emit("second-instance"));
     await expect
         .poll(
             () =>

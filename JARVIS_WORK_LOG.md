@@ -4195,3 +4195,18 @@ Native Windows qualification is a limited desktop gate, not full product release
 Previously verified unchanged runtime: 657 TypeScript tests, 68 Python tests,
 10 desktop tests, lint/types/boundaries and production web build passed. Publication
 and exact Windows/J1 run outcomes are to be reported after observing the candidate.
+
+## Exact first publication and native root cause
+
+Published commit 1edbc47654d7df7c6e83779cd22e51740c1ae509 on the approved
+validation branch. GitHub tree 3fb3ca72335be66c20a004c5820e8b9122664a9c
+exactly equals local 2e60084's tree. J1 Development Checks 34515253289 PASS.
+Windows run 34515251104 failed the retained restore assertion after successful
+sandbox, controls, real WebGL and alpha-pixel checks; all ten desktop tests passed.
+
+The stack trace disproved the initial timing-only diagnosis. The harness emitted
+second-instance on Node process, but production registers that event on Electron
+app. Corrected both test invocations to app.emit; kept bounded visibility asserts
+and all microphone/security checks. This changes the test stimulus, not production
+permissions or window behavior. Final exact-candidate native result follows in
+the delivery; no native or product GO is inferred from a local harness edit.
