@@ -4083,3 +4083,115 @@ Local continuation validation: 657 TypeScript tests, four desktop state tests,
 68 Python regressions, lint/boundaries/types and web production build passed.
 Native verifier also covers delayed consent resolved after hide using a test-only
 native-dialog stub; it never requests actual microphone capture in CI.
+
+# PRD continuation and native verification repair — 2026-09-10
+
+## Owner prompt verbatim
+
+Continue previous chats jarvis projects work complete as per given pdr and all continue and finish the work
+
+## Recovered evidence and implementation
+
+Recovered existing candidate at 618497b60f02526548233d6d3058f71fac6ad692,
+PR 2 and the corrected 192-entry V1/V2 requirements register. Prior saved context
+was stale; repository and current work-log evidence take precedence. Main remains
+2586049619072da592ed1d4b7eb225fa0a955e69.
+
+Inspected Windows run 34444816119 and native job 102767221097. Real sandboxed
+rendering, alpha transparency, controls and initial hide/restore passed. A later
+immediate native visibility assertion failed after cancelled microphone consent.
+Completed the recovered uncommitted fix in scripts/verify-presence-native.mjs:
+bounded polling waits for actual native visibility on both restores, preserving
+the assertion and sandbox; stack traces now identify future failing assertions.
+Formatted the changed script with the pinned formatter.
+
+Local validation: npm run check PASS (lint, boundaries, types, 657 tests);
+npm run build:web PASS; Python syntax/boundaries PASS; 68 Python regressions
+PASS; four desktop state tests PASS. Exact-candidate Windows rerun pending
+publication. No full-stack/release GO, main merge or production deployment.
+
+The requested full V1/V2 product remains unfinished. Outstanding release work
+includes live voice/ASR/TTS, authenticated desktop integration, reviewed memory
+and knowledge flows, real governed connectors, durable agents/workflows,
+mobile/native distribution, physical devices and production qualification.
+This change repairs a concrete verification blocker; it does not complete them.
+
+# Continued local microphone lifecycle hardening — 2026-09-10
+
+## Owner prompt verbatim
+
+Continue
+
+## Publication blocker
+
+Local commit d1c853d contains the native visibility verifier repair. Automatic
+approval review rejected its git push to validation/j1.product-readiness-20260909,
+stating that uploading code and the cumulative work log to an external GitHub
+destination required explicit publication authorization. No alternate publication
+route was attempted after rejection. The connected repository metadata reports
+public visibility; uploading the log/source therefore exposes them publicly.
+Exact-candidate Windows verification remains blocked on authorized publication.
+
+## Work performed
+
+Continued unaffected local work. Found overlapping microphone lifecycle races:
+old AudioContext shutdown could revoke a new grant; an old capture rejection or
+track-ended callback could stop replacement capture; old finally cleanup could
+clear the newer pending-request marker. Extracted MicrophonePreview with explicit
+request generation and resource ownership, immediate permission revocation,
+late-result disposal and stale-callback rejection. The renderer now uses that
+controller; Hide no longer waits for asynchronous AudioContext shutdown before
+hiding the window. This remains local amplitude preview, not ASR/TTS.
+
+Affected files: apps/desktop/presence/microphone.mjs,
+apps/desktop/presence/microphone.test.mjs,
+apps/desktop/presence/renderer.js, apps/desktop/README.md and this cumulative log.
+
+## Verification
+
+npm run check PASS: lint, package boundaries, TypeScript, 657 tests in 70 files.
+npm run build:web PASS. Python syntax/boundary check PASS and 68 Python tests
+PASS. Desktop suite PASS: 10 tests, including six new asynchronous media resource
+regressions. Final renderer syntax and git whitespace checks PASS. Tests used
+synthetic media objects; no microphone, credentials or live provider was used.
+The product inventory check accounts for all 168 V1 and 24 V2 requirements;
+--release correctly reports NOT READY because individual release acceptance
+records remain unreviewed. This is not a percentage of missing code.
+
+## Next steps and limitations
+
+Obtain explicit authorization to upload these locally committed changes and the
+cumulative log to the existing public repository's validation branch, then run
+Windows native CI and investigate any failures. Main merge and production release
+are not claimed. Complete the remaining V1/V2 implementation and release evidence,
+including actual authenticated voice/runtime integration, hardware verification,
+connectors, agents, knowledge/memory flows, mobile and production controls.
+
+# Authorized publication and completion clarification — 2026-09-10
+
+## Owner prompt verbatim
+
+Yes do it and is now jarvis project complete what i have given you all done 
+Even ui deaign and a 3d screen present all done right
+
+## Authorization and scope
+
+Owner explicitly approved publishing the previously described code and cumulative
+log to the existing public validation branch for Windows verification. Publication
+covers local commits d1c853d and 728084e and this authorization record. No production
+release or main merge is included. Source-tree equality will be checked if GitHub
+Git objects are used to publish the candidate.
+
+## Actual completion status
+
+Full V1/V2 completion is NOT achieved. The desktop candidate implements a small
+transparent, topmost 3D presence with controls and local amplitude preview. The
+web currently exposes foundation Home, identity and conversation routes; the full
+approved product UI and integrated voice assistant are not complete. Real model
+and voice quality, authenticated desktop runtime, memory/knowledge experiences,
+connectors/agents, mobile packaging and production qualification remain pending.
+Native Windows qualification is a limited desktop gate, not full product release.
+
+Previously verified unchanged runtime: 657 TypeScript tests, 68 Python tests,
+10 desktop tests, lint/types/boundaries and production web build passed. Publication
+and exact Windows/J1 run outcomes are to be reported after observing the candidate.

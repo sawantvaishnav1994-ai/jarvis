@@ -76,3 +76,10 @@ expiry and display clamping. `npm run check` and `npm run build:web` preserve th
 existing application gates. Native acceptance still requires Windows/macOS/Linux
 compositor testing, real microphone permissions and hardware measurement.
 See `docs/roadmap/floating-presence-v1.md` for evidence and remaining gates.
+
+Microphone preview resource ownership is isolated in `presence/microphone.mjs`.
+Mute invalidates the pending request and revokes permission before asynchronous
+audio-context cleanup. Late capture results release their own tracks; stale
+errors and track callbacks cannot mute a newer session. The desktop tests use
+synthetic media objects and deferred promises to exercise these races without
+opening a real microphone. Hardware/OS permission acceptance remains pending.

@@ -147,6 +147,15 @@ try {
         ),
     ).toBe(false);
     await application.evaluate(() => process.emit("second-instance"));
+    await expect
+        .poll(
+            () =>
+                application.evaluate(({ BrowserWindow }) =>
+                    BrowserWindow.getAllWindows()[0].isVisible(),
+                ),
+            { message: "Native window restores after hide" },
+        )
+        .toBe(true);
     await expect(page.locator("#core")).toBeVisible();
     evidence.checks.push("resize, hide and restore");
     await application.evaluate(({ dialog }) => {
@@ -173,11 +182,15 @@ try {
     );
     expect(await page.evaluate(() => window.consentAttempt)).toBe(false);
     await application.evaluate(() => process.emit("second-instance"));
-    expect(
-        await application.evaluate(({ BrowserWindow }) =>
-            BrowserWindow.getAllWindows()[0].isVisible(),
-        ),
-    ).toBe(true);
+    await expect
+        .poll(
+            () =>
+                application.evaluate(({ BrowserWindow }) =>
+                    BrowserWindow.getAllWindows()[0].isVisible(),
+                ),
+            { message: "Native window restores after cancelled consent" },
+        )
+        .toBe(true);
     evidence.checks.push("late microphone consent cannot outlive hide");
 
     await page.evaluate(() => window.jarvisPresence.command("expand", true));
@@ -195,7 +208,7 @@ try {
     evidence.status = "PASS";
 } catch (error) {
     evidence.status = "FAIL";
-    evidence.error = error instanceof Error ? error.message : String(error);
+    evidence.error = error instanceof Error ? error.stack : String(error);
     process.exitCode = 1;
 } finally {
     if (application) await application.close();

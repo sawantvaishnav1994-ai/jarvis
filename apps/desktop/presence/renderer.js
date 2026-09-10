@@ -1,17 +1,12 @@
 import * as THREE from "../../../node_modules/three/build/three.module.js";
+import { MicrophonePreview } from "./microphone.mjs";
 const $ = (id) => document.getElementById(id);
 const bridge = window.jarvisPresence;
 const canvas = document.querySelector("canvas");
 let state = "idle",
     amplitude = 0,
     runtime = { state: "idle", amplitude: 0, connected: false };
-let stream,
-    context,
-    analyser,
-    audioData,
-    starting = false,
-    generation = 0,
-    expanded = false;
+let expanded = false;
 let reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let renderer,
     frame = 0,
@@ -43,9 +38,9 @@ function activity() {
     }, 8000);
 }
 function setState() {
-    state = stream ? "listening" : runtime.state;
-    amplitude = stream ? amplitude : runtime.amplitude;
-    const title = stream
+    state = microphone.stream ? "listening" : runtime.state;
+    amplitude = microphone.stream ? amplitude : runtime.amplitude;
+    const title = microphone.stream
         ? "Microphone active · local preview"
         : runtime.connected
           ? {
@@ -60,59 +55,27 @@ function setState() {
     $("core").setAttribute("aria-label", `JARVIS ${title}. Open controls`);
     $("mic").hidden = state !== "listening";
 }
-async function stopMic() {
-    generation++;
-    starting = false;
-    stream?.getTracks().forEach((t) => t.stop());
-    stream = null;
-    const old = context;
-    context = null;
-    analyser = null;
-    audioData = null;
-    if (old) await old.close().catch(() => {});
-    command("microphone", false);
-    $("listen").textContent = "Mic preview";
-    amplitude = 0;
-    setState();
-}
-async function toggleMic() {
-    if (stream || starting) {
-        await stopMic();
-        return;
-    }
-    starting = true;
-    const current = ++generation;
-    try {
-        const allowed = await command("microphone", true);
-        if (!allowed || current !== generation) return;
-        const captured = await navigator.mediaDevices.getUserMedia({
+const microphone = new MicrophonePreview({
+    permission: (enabled) => bridge.command("microphone", enabled),
+    capture: () =>
+        navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true },
             video: false,
-        });
-        if (current !== generation || document.hidden) {
-            captured.getTracks().forEach((t) => t.stop());
-            return;
-        }
-        stream = captured;
-        context = new AudioContext();
-        analyser = context.createAnalyser();
-        analyser.fftSize = 256;
-        context.createMediaStreamSource(stream).connect(analyser);
-        audioData = new Uint8Array(analyser.fftSize);
-        stream.getAudioTracks()[0].addEventListener("ended", () => stopMic());
-        $("listen").textContent = "Mute";
+        }),
+    createContext: () => new AudioContext(),
+    isVisible: () => !document.hidden,
+    onChange: () => {
+        $("listen").textContent = microphone.stream ? "Mute" : "Mic preview";
+        amplitude = 0;
         setState();
-    } catch {
-        await stopMic();
-        notice("Microphone unavailable. Check OS permission.");
-    } finally {
-        starting = false;
-    }
-}
-$("listen").onclick = toggleMic;
+    },
+    onError: () => notice("Microphone unavailable. Check OS permission."),
+});
+const stopMic = () => microphone.stop();
+$("listen").onclick = () => microphone.toggle();
 $("home").onclick = () => command("home");
-$("hide").onclick = async () => {
-    await stopMic();
+$("hide").onclick = () => {
+    void stopMic();
     command("hide");
 };
 $("collapse").onclick = () => expand(false);
@@ -265,6 +228,7 @@ function draw(now) {
     if (last) intervals.push(now - last);
     last = now;
     if (intervals.length > 240) intervals.shift();
+    const { analyser, audioData } = microphone;
     if (analyser) {
         analyser.getByteTimeDomainData(audioData);
         amplitude = Math.min(
