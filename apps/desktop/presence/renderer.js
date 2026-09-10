@@ -334,6 +334,7 @@ function draw(now) {
         ? 0
         : Math.cos(t * 0.11) * 0.13;
     renderer.render(scene, camera);
+    canvas.dataset.frames = String(Number(canvas.dataset.frames || 0) + 1);
     const cost = performance.now() - begin;
     renderTimes.push(cost);
     if (renderTimes.length > 240) renderTimes.shift();

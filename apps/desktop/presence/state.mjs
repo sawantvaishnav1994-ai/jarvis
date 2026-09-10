@@ -76,3 +76,15 @@ export function clampPosition(position, area, size) {
         ),
     };
 }
+
+export function normalizePoint(value) {
+    if (
+        !value ||
+        !Number.isFinite(value.x) ||
+        !Number.isFinite(value.y) ||
+        Math.abs(value.x) > 1073741824 ||
+        Math.abs(value.y) > 1073741824
+    )
+        return undefined;
+    return { x: Math.round(value.x), y: Math.round(value.y) };
+}

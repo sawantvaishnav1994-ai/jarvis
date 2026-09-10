@@ -76,3 +76,19 @@ The workspace recovered on the following turn. Source is now carried on
 adapter and corrected V1/V2 requirement register. Default conversation remains
 synthetic; local configuration can select the new adapter. This does not provide
 a live desktop voice connection or satisfy native acceptance.
+
+## Native verification continuation — 2026-09-10
+
+Recovered source was published in PR #2 on
+`185b33b32fa215b1b24f91a5e13431fb36cd6fda`, source tree
+`357e5c32a1c405f62a274416baf7cc39952fc4d1`. Existing J1 Development Checks passed
+in run `34444117630`. This is focused cloud development evidence, not release GO.
+
+A Windows native smoke workflow now exercises the actual Electron process with
+sandbox/CSP intact and a disposable profile. `scripts/verify-presence-native.mjs`
+checks window bounds/topmost state, security settings, WebGL frame production,
+controls, state fixture delivery, transparent pixel capture, resize/hide/restore,
+and records screenshots/process metrics. It does not test real microphone,
+full voice commands, target-device battery life or physical multi-monitor behavior.
+Native pass/fail evidence belongs to the exact workflow run; until it passes,
+this remains an unverified native candidate.

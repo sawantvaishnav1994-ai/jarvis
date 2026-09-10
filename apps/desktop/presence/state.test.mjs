@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PresenceController, parseEvent, clampPosition } from "./state.mjs";
+import {
+    PresenceController,
+    parseEvent,
+    clampPosition,
+    normalizePoint,
+} from "./state.mjs";
 const event = (sequence = 1) => ({
     version: 1,
     type: "presence.reasoning",
@@ -41,4 +46,16 @@ test("positions survive removed monitors, negative coordinates and malformed sto
         ),
         { x: 836, y: 636 },
     );
+});
+
+test("invalid persisted positions never reach native display lookup", () => {
+    for (const value of [
+        null,
+        {},
+        { x: NaN, y: 0 },
+        { x: 0, y: Infinity },
+        { x: 1e30, y: 0 },
+    ])
+        assert.equal(normalizePoint(value), undefined);
+    assert.deepEqual(normalizePoint({ x: -20.5, y: 10.2 }), { x: -20, y: 10 });
 });

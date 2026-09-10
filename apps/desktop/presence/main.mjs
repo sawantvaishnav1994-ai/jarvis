@@ -15,7 +15,7 @@ import {
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { PresenceController, clampPosition } from "./state.mjs";
+import { PresenceController, clampPosition, normalizePoint } from "./state.mjs";
 const root = dirname(fileURLToPath(import.meta.url));
 const entry = pathToFileURL(join(root, "index.html")).href;
 const controller = new PresenceController();
@@ -28,6 +28,7 @@ let win,
 let config = {},
     drag = null,
     microphoneAllowed = false;
+let microphoneRequest = 0;
 const started = performance.now();
 let startupMs = 0;
 const home = new URL(process.env.JARVIS_HOME_URL || "http://localhost:3000");
@@ -46,6 +47,7 @@ const send = (type, value) => {
     if (win && !win.isDestroyed()) win.webContents.send(type, value);
 };
 function position(point) {
+    point = normalizePoint(point);
     const area = screen.getDisplayNearestPoint(
         point || screen.getCursorScreenPoint(),
     ).workArea;
@@ -74,6 +76,7 @@ function show() {
     win.showInactive();
 }
 function hide() {
+    microphoneRequest++;
     microphoneAllowed = false;
     send("suspend");
     collapse();
@@ -235,6 +238,7 @@ else {
                 }
                 return;
             case "microphone": {
+                const requestId = ++microphoneRequest;
                 microphoneAllowed = false;
                 if (value !== true) return false;
                 const consent = await dialog.showMessageBox(win, {
@@ -245,22 +249,29 @@ else {
                     message: "Enable local microphone visualization?",
                     detail: "Audio is analyzed for amplitude only. No recording, upload or transcription. The voice runtime is not connected.",
                 });
-                if (consent.response !== 1) return false;
-                microphoneAllowed =
+                if (
+                    consent.response !== 1 ||
+                    requestId !== microphoneRequest ||
+                    !win.isVisible()
+                )
+                    return false;
+                const osAllowed =
                     process.platform !== "darwin" ||
                     (await systemPreferences.askForMediaAccess("microphone"));
+                microphoneAllowed =
+                    osAllowed &&
+                    requestId === microphoneRequest &&
+                    win.isVisible();
                 return microphoneAllowed;
             }
             case "metrics":
                 return {
                     startupMs,
-                    processes: app
-                        .getAppMetrics()
-                        .map((p) => ({
-                            type: p.type,
-                            cpu: p.cpu,
-                            memory: p.memory,
-                        })),
+                    processes: app.getAppMetrics().map((p) => ({
+                        type: p.type,
+                        cpu: p.cpu,
+                        memory: p.memory,
+                    })),
                     graphics: app.getGPUFeatureStatus(),
                 };
             default:

@@ -4044,3 +4044,42 @@ remain. Refer to the corrected register; do not treat this candidate as 100% rea
 No main merge, production deployment or GO is issued. Exact published commit and
 cloud check references will be recorded in final delivery without making this
 commit self-referential.
+
+# Resume work — 2026-09-10
+
+## Owner prompt verbatim
+
+Resume work
+
+## Source recovery and publication
+
+The shell push had not created the remote branch. Published the complete local
+candidate through GitHub Git objects instead. GitHub tree
+`357e5c32a1c405f62a274416baf7cc39952fc4d1` exactly matches locally tested
+`cc159511fcfa9dd823b7da099469e15e0c5143f6`. Published commit is
+`185b33b32fa215b1b24f91a5e13431fb36cd6fda`; commit metadata differs, source does not.
+Created draft PR https://github.com/sawantvaishnav1994-ai/jarvis/pull/2.
+GitHub J1 Development Checks run `34444117630` passed on that published SHA.
+This is the existing focused J1 development workflow, not full-stack or native GO.
+
+## Continued desktop implementation
+
+- Normalize and bound persisted coordinates before native display lookup.
+- Invalidate outstanding microphone consent requests when hiding or stopping,
+  and recheck request identity/window visibility after asynchronous OS permission.
+- Add rendered-frame telemetry to establish real WebGL drawing in native tests.
+- Add a Windows native smoke verifier with an isolated temporary profile. It
+  preserves Chromium sandbox/CSP, launches the real app, checks small/topmost
+  window and isolated renderer, controls, semantic state fixtures, screenshot
+  alpha, resize/hide/restore and diagnostic metrics. It never opens a real mic
+  or pretends fixture state events are actual voice/runtime integration.
+- Add Windows CI to run the smoke verifier and retain screenshots/evidence.
+
+Native results are pending the exact pushed candidate; no native pass is claimed
+before the Windows job succeeds. Virtual CI performance is not battery/GPU or
+physical multi-monitor certification. Existing V1/V2 release blockers remain.
+
+Local continuation validation: 657 TypeScript tests, four desktop state tests,
+68 Python regressions, lint/boundaries/types and web production build passed.
+Native verifier also covers delayed consent resolved after hide using a test-only
+native-dialog stub; it never requests actual microphone capture in CI.
