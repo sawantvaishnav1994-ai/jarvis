@@ -4,7 +4,7 @@ export function NeuralCore({
     state,
     reducedMotion,
 }: {
-    state: "idle" | "authorizing" | "waiting" | "error";
+    state: "idle" | "authorizing" | "waiting" | "error" | "responding";
     reducedMotion: boolean;
 }) {
     const canvas = useRef<HTMLCanvasElement>(null);
@@ -55,7 +55,10 @@ export function NeuralCore({
                     0.58 +
                     0.15 * Math.sin(u * 3 + phase) +
                     0.06 * Math.cos(u * 2 + phase * 0.3);
-                const breath = 1 + Math.sin(t * 0.6) * 0.014;
+                const breath =
+                    1 +
+                    Math.sin(t * (state === "responding" ? 1.1 : 0.6)) *
+                        (state === "responding" ? 0.035 : 0.014);
                 const x =
                     (Math.cos(u + phase * 0.13) * radius +
                         0.17 * Math.sin(phase)) *

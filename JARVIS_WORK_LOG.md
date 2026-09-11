@@ -4275,3 +4275,47 @@ integration, real model quality and production qualification are not completed b
 this increment. No release acceptance is claimed for them. Next work must connect
 those paths to existing server-governed services and verify on real runtime/device
 infrastructure; documentation and synthetic UI tests alone cannot close them.
+
+# Continue — Home verification and local read-aloud, 2026-09-11
+
+## Owner prompt verbatim
+
+Continue
+
+## Recovered cloud evidence
+
+Candidate 5b746ca226b32a597c543a3fcb7ef6273c747c42 matches local bc2b553
+(tree 43855ed1fb6b402b30a4d8c3275def55b08e705e). Windows native run
+34517235774 and J1 development run 34517235708 PASS. Home run 34517236564
+passed lint/types, 662 tests, production build and two browser scenarios (desktop/
+mobile rendering and synthetic conversation interaction). The third scenario
+failed because unscoped getByRole(alert) matched Next's route announcer as well as
+the real application error. Scoped the assertion to main; all error assertions
+remain. No production auth behavior was weakened.
+
+## Implementation
+
+Added explicit local read-aloud of returned answers, selected local voice setting,
+immediate Stop control, actual synthesis-start speaking indication and Core motion.
+LocalReadAloud owns speech generations and rejects stale callbacks. It re-reads
+voice locality for every utterance, refuses remote voices/default fallback, rejects
+oversized text and stops on voice removal, view change, hide, exit, clear or a new
+request. No autoplay, microphone, speech recognition or external synthesis added.
+
+Four unit tests cover locality/reselection, no autoplay, cancellation/replacement,
+late callbacks, voice disappearance and bounds. Added an explicit browser speech
+fixture scenario for Read aloud, Stop, navigation cancellation and local-only
+selection. Real OS voice availability/quality remains unverified. localService is
+a browser/OS declaration, not proof against a hostile platform.
+
+Local checks: 666 tests in 72 files PASS; lint, boundaries and types PASS; web build
+PASS; Python syntax/boundaries and 68 regressions PASS. Last presentation changes
+receive final type/build checks before publishing. Browser screenshots from the
+prior run were archived, but local artifact materialization returned HTTP 403;
+no manual screenshot inspection is claimed. Exact new cloud outcomes follow.
+
+Affected: apps/web/app/home/{speech.ts,read-aloud.tsx,home.tsx,home.css,core.tsx},
+tests/unit/local-read-aloud.test.ts, tests/home-ui/home.spec.ts, product report and
+this cumulative log. Full V1/V2 remains NOT READY, with real ASR/voice-runtime,
+durable product history, memory/knowledge, agents/connectors, devices/mobile and
+production qualification still requiring implementation and acceptance.

@@ -137,7 +137,7 @@ test("authentication errors are visible and do not invent an answer", async ({
     await page.goto("/");
     await page.getByLabel("Message JARVIS").fill("Denied request");
     await page.getByRole("button", { name: "Send", exact: false }).click();
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
         "Sign in on this device",
     );
     await expect(
@@ -146,4 +146,118 @@ test("authentication errors are visible and do not invent an answer", async ({
     await expect(
         page.getByText("SESSION_INVALID", { exact: true }),
     ).toBeVisible();
+});
+
+test("read-aloud is explicit, local-voice only and stops on navigation", async ({
+    page,
+}) => {
+    await page.addInitScript(() => {
+        const state = {
+            calls: [] as { text: string; local: boolean }[],
+            cancelled: 0,
+        };
+        Object.defineProperty(window, "__speechFixture", { value: state });
+        class FixtureUtterance {
+            text: string;
+            voice: { localService: boolean } | null = null;
+            lang = "";
+            onstart: (() => void) | null = null;
+            onend: (() => void) | null = null;
+            onerror: (() => void) | null = null;
+            constructor(text: string) {
+                this.text = text;
+            }
+        }
+        Object.defineProperty(window, "SpeechSynthesisUtterance", {
+            value: FixtureUtterance,
+            configurable: true,
+        });
+        const voices = [
+            {
+                voiceURI: "remote",
+                name: "Remote fixture",
+                lang: "en",
+                localService: false,
+            },
+            {
+                voiceURI: "local",
+                name: "Device fixture",
+                lang: "en",
+                localService: true,
+            },
+        ];
+        Object.defineProperty(window, "speechSynthesis", {
+            value: {
+                getVoices: () => voices,
+                addEventListener() {},
+                removeEventListener() {},
+                speak: (utterance: FixtureUtterance) => {
+                    state.calls.push({
+                        text: utterance.text,
+                        local: utterance.voice?.localService === true,
+                    });
+                    utterance.onstart?.();
+                },
+                cancel: () => {
+                    state.cancelled++;
+                },
+            },
+            configurable: true,
+        });
+    });
+    await page.route("**/api/conversation", (route) =>
+        route.fulfill({
+            json: {
+                result:
+                    route.request().postDataJSON().phase === "begin"
+                        ? {
+                              challengeId: "fixture",
+                              devicePayload: "fixture",
+                              bindingDigest: "a".repeat(64),
+                          }
+                        : fixtureResult,
+            },
+        }),
+    );
+    await page.goto("/");
+    await page.getByLabel("Message JARVIS").fill("Fixture");
+    await page.getByRole("button", { name: "Send", exact: false }).click();
+    const fixture = () =>
+        page.evaluate(
+            () =>
+                (
+                    window as unknown as {
+                        __speechFixture: {
+                            calls: { text: string; local: boolean }[];
+                            cancelled: number;
+                        };
+                    }
+                ).__speechFixture,
+        );
+    await expect(
+        page.getByRole("button", { name: "Read aloud", exact: true }),
+    ).toBeEnabled();
+    expect((await fixture()).calls).toHaveLength(0);
+    await page.getByRole("button", { name: "Read aloud", exact: true }).click();
+    await expect(
+        page.getByText("Speaking on this device", { exact: true }),
+    ).toBeVisible();
+    expect((await fixture()).calls).toEqual([
+        { text: fixtureResult.response, local: true },
+    ]);
+    await page
+        .getByRole("button", { name: "Stop reading", exact: true })
+        .click();
+    expect((await fixture()).cancelled).toBe(1);
+    await page.getByRole("button", { name: "Read aloud", exact: true }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    expect((await fixture()).cancelled).toBe(2);
+    await expect(
+        page.getByRole("combobox", { name: "Read-aloud voice" }),
+    ).toHaveValue("local");
+    await expect(
+        page
+            .getByRole("combobox", { name: "Read-aloud voice" })
+            .locator("option"),
+    ).toHaveCount(1);
 });

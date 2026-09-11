@@ -45,3 +45,23 @@ Existing authenticated HTTP/security tests remain required independently.
 The Windows verifier renders every supported state with explicit fixture events;
 it retains real sandbox/topmost/alpha/control/restore and consent-race checks.
 Target-laptop compositor, actual microphone, battery and hardware tests remain open.
+
+## Local read-aloud continuation
+
+Returned answers now have explicit Read aloud / Stop reading controls. Voice
+selection only lists browser-declared localService voices; locality is rechecked
+immediately before synthesis and there is no default/remote fallback. No content
+is spoken automatically. Actual synthesis start/end callbacks drive the speaking
+indicator and Home Core response motion. Stop, replacement, navigation, page hide,
+page exit, clear and a new text request cancel playback. Stale callbacks cannot
+restore old playback state. Device voice selection appears in Settings.
+
+This is response playback, not speech recognition or the desktop voice runtime.
+The browser/OS locality declaration is a trusted platform signal, not independently
+verified egress containment. Actual installed voice behavior and audio quality
+remain target-device acceptance items. Browser tests use labelled speech fixtures
+and make no claim that CI produced audible speech.
+
+References inspected:
+- https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisVoice/localService
+- https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis/cancel

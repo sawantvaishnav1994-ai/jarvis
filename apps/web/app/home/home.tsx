@@ -4,9 +4,12 @@ import { rpc, type Challenge, type TurnResult } from "../conversation/client";
 import { deviceKey, deviceProof } from "../identity/device-key";
 import { HomeSession, type Exchange } from "./session";
 import { NeuralCore } from "./core";
+import { LocalReadAloud } from "./speech";
+import { browserSpeech, ReadAloud } from "./read-aloud";
 import "./home.css";
 const states = {
     idle: "Ready when you are",
+    responding: "Reading your answer aloud",
     authorizing: "Checking your device",
     waiting: "Waiting for JARVIS",
     error: "Your attention is needed",
@@ -61,7 +64,13 @@ function Evidence({ result }: { result: TurnResult }) {
         </details>
     );
 }
-function Reply({ exchange }: { exchange: Exchange }) {
+function Reply({
+    exchange,
+    speech,
+}: {
+    exchange: Exchange;
+    speech: LocalReadAloud;
+}) {
     return (
         <article className="home-exchange">
             <div className="home-question">
@@ -81,6 +90,13 @@ function Reply({ exchange }: { exchange: Exchange }) {
                                 Development model · This is a synthetic
                                 response, not an AI-generated answer.
                             </p>
+                        )}
+                        {exchange.result.response && (
+                            <ReadAloud
+                                speech={speech}
+                                id={exchange.id}
+                                text={exchange.result.response}
+                            />
                         )}
                         <Evidence result={exchange.result} />
                     </>
@@ -102,6 +118,12 @@ function Reply({ exchange }: { exchange: Exchange }) {
     );
 }
 export function PersonalHome({ identityHref }: { identityHref: string }) {
+    const [speech] = useState(() => new LocalReadAloud(browserSpeech));
+    const speechState = useSyncExternalStore(
+        speech.subscribe,
+        speech.getSnapshot,
+        speech.getSnapshot,
+    );
     const [session] = useState(
         () =>
             new HomeSession(async (request, signal, waiting) => {
@@ -135,6 +157,15 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
     const commandMenu = useRef<HTMLDialogElement>(null);
     const clearDialog = useRef<HTMLDialogElement>(null);
     useEffect(() => {
+        speech.refresh();
+        const voices = () => speech.refresh();
+        const hidden = () => {
+            if (document.hidden) speech.stop();
+        };
+        window.speechSynthesis?.addEventListener("voiceschanged", voices);
+        document.addEventListener("visibilitychange", hidden);
+        const leaving = () => speech.stop();
+        window.addEventListener("pagehide", leaving);
         const media = matchMedia("(prefers-reduced-motion: reduce)");
         setReduced(media.matches);
         const change = () => setReduced(media.matches);
@@ -153,18 +184,29 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
             media.removeEventListener("change", change);
             document.removeEventListener("keydown", shortcut);
             session.cancel();
+            speech.stop();
+            window.speechSynthesis?.removeEventListener(
+                "voiceschanged",
+                voices,
+            );
+            document.removeEventListener("visibilitychange", hidden);
+            window.removeEventListener("pagehide", leaving);
         };
-    }, [session]);
+    }, [session, speech]);
     function navigate(next: typeof view) {
+        speech.stop();
         setView(next);
         commandMenu.current?.close();
     }
     function send() {
         if (snapshot.pending || !message.trim()) return;
+        speech.stop();
         const input = message;
         setMessage("");
         void session.send(input);
     }
+    const coreState =
+        speechState.phase === "speaking" ? "responding" : snapshot.phase;
     const commands = [
         { name: "Home", action: () => navigate("home") },
         { name: "Activities", action: () => navigate("activities") },
@@ -219,15 +261,13 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
                             aria-label="Talk to JARVIS using text"
                         >
                             <NeuralCore
-                                state={snapshot.phase}
+                                state={coreState}
                                 reducedMotion={reduced}
                             />
                         </button>
                         <div className="home-state" role="status">
-                            <span
-                                className={`home-state-mark ${snapshot.phase}`}
-                            />
-                            {states[snapshot.phase]}
+                            <span className={`home-state-mark ${coreState}`} />
+                            {states[coreState]}
                         </div>
                         {!snapshot.exchanges.length && (
                             <>
@@ -245,7 +285,11 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
                             aria-label="Current conversation"
                         >
                             {snapshot.exchanges.map((exchange) => (
-                                <Reply key={exchange.id} exchange={exchange} />
+                                <Reply
+                                    key={exchange.id}
+                                    exchange={exchange}
+                                    speech={speech}
+                                />
                             ))}
                         </div>
                     )}
@@ -351,7 +395,7 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
                                         {exchange.status}
                                     </span>
                                 </summary>
-                                <Reply exchange={exchange} />
+                                <Reply exchange={exchange} speech={speech} />
                             </details>
                         ))
                     ) : (
@@ -427,10 +471,41 @@ export function PersonalHome({ identityHref }: { identityHref: string }) {
                         <div>
                             <h2>Voice</h2>
                             <p>
-                                Live speech is not connected. The desktop
-                                microphone preview measures volume only.
+                                Voice input is not connected. Read-aloud starts
+                                only when you request it. The desktop microphone
+                                preview measures volume only.
                             </p>
                         </div>
+                    </div>
+                    <div className="home-settings-row">
+                        <div>
+                            <h2>Read-aloud voice</h2>
+                            <p>
+                                Audio is audible to people nearby. No remote
+                                voice fallback is allowed. Availability depends
+                                on your browser and installed voices.
+                            </p>
+                        </div>
+                        <select
+                            aria-label="Read-aloud voice"
+                            value={speechState.selected ?? ""}
+                            disabled={!speechState.voices.length}
+                            onChange={(e) => speech.select(e.target.value)}
+                        >
+                            {!speechState.voices.length && (
+                                <option value="">
+                                    No local voices available
+                                </option>
+                            )}
+                            {speechState.voices.map((voice) => (
+                                <option
+                                    value={voice.voiceURI}
+                                    key={voice.voiceURI}
+                                >
+                                    {voice.name} · {voice.lang}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                     <a href="/dashboard">Open service dashboard</a>
                 </section>

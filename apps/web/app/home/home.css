@@ -578,3 +578,41 @@
         transition: none !important;
     }
 }
+.home-read-aloud {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+    font-size: 12px;
+    color: #9caec2;
+}
+.home-read-aloud button {
+    font-size: 14px !important;
+}
+.home-read-aloud p {
+    width: 100%;
+    font-size: 13px;
+    color: #dfb3a8;
+}
+.home-settings-row select {
+    color: #dce7f0;
+    background: #161d28;
+    border: 1px solid #344050;
+    border-radius: 8px;
+    padding: 12px;
+    max-width: 280px;
+    font-size: 14px;
+}
+.personal-home:has(.home-dialog[open]) {
+    overflow: clip;
+}
+@media (max-width: 700px) {
+    .home-settings-row:has(select) {
+        flex-wrap: wrap;
+    }
+    .home-settings-row select {
+        max-width: 100%;
+        width: 100%;
+    }
+}
