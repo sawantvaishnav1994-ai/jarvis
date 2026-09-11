@@ -5569,3 +5569,19 @@ Provided repository, master ledger and Actions links. No verified hosted JARVIS
 application URL is available; GitHub links are source/progress, not a live app.
 Full approved product remains incomplete. Last engineering interruption was an
 unresponsive workspace command runner; recovery has not been verified here.
+
+
+## UI viewing request — 2026-09-11
+
+Owner prompt verbatim:
+
+So where is live link of jarvis..?
+I want to check a ui how everything is done
+
+Confirmed no verified deployed application URL in this work. Tried workspace pwd
+again; runner did not return, so live preview could not be started. Retrieved
+actual browser evidence artifact 10264677803 from Home run 34601471254 on source
+e9520330fc8cd52755a65a57f630436e628be950. Source test confirms desktop/mobile
+Home PNG screenshots in the archive. GitHub artifact download succeeded through
+the connector. Shared stable artifact link, explicitly labelled screenshots rather
+than live application. No redesigned/mock UI, deployment or further implementation.
