@@ -305,6 +305,7 @@ export class ConversationSessionEngine {
             session.securityEpoch !== validated.securityEpoch
         )
             throw new BoundaryError("CONVERSATION_SESSION_STALE");
+        await this.verifySession(validated, turn.sessionId);
         assertTurnTransition(turn.state, validatedState);
         return this.repository.transitionTurn(
             validated.ownerId,
@@ -328,6 +329,7 @@ export class ConversationSessionEngine {
             validatedTurnId,
         );
         if (!turn) throw new BoundaryError("CONVERSATION_TURN_NOT_FOUND");
+        await this.verifySession(validated, turn.sessionId);
         if (["completed", "failed", "cancelled"].includes(turn.state))
             return turn;
         return this.repository.transitionTurn(

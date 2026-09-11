@@ -37,14 +37,5 @@ for (const r of register.requirements) {
 console.log(
     "PASS: 168 V1 and 24 V2 requirements mapped; completion claims require evidence.",
 );
-if (process.argv.includes("--release")) {
-    const pending = register.requirements.filter(
-        (r) => r.status !== "RELEASED",
-    );
-    if (pending.length) {
-        console.error(
-            `NOT READY: ${pending.length} requirements have no reviewed release acceptance record. This is not a percentage of missing code.`,
-        );
-        process.exitCode = 1;
-    }
-}
+// Completion is governed by the master ledger; the JSON above preserves source wording.
+await import("./check-completion-ledger.mjs");

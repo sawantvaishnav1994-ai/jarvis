@@ -233,16 +233,25 @@ export function conversationHandler(
             };
             const sessionEngine = new ConversationSessionEngine(
                 sessions,
-                async (candidate) =>
-                    candidate.ownerId === conversationAuthority.ownerId &&
-                    candidate.actorId === conversationAuthority.actorId &&
-                    candidate.deviceId === conversationAuthority.deviceId &&
-                    candidate.identitySessionId ===
-                        conversationAuthority.identitySessionId &&
-                    candidate.securityEpoch ===
-                        conversationAuthority.securityEpoch &&
-                    candidate.operatingMode ===
-                        conversationAuthority.operatingMode,
+                async (candidate) => {
+                    await engine.assertLiveSession(rpc.token, rpc.contextHash, {
+                        ownerId: inspected.owner.id,
+                        deviceId: current.deviceId,
+                        sessionId: current.id,
+                        epoch: current.epoch,
+                    });
+                    return (
+                        candidate.ownerId === conversationAuthority.ownerId &&
+                        candidate.actorId === conversationAuthority.actorId &&
+                        candidate.deviceId === conversationAuthority.deviceId &&
+                        candidate.identitySessionId ===
+                            conversationAuthority.identitySessionId &&
+                        candidate.securityEpoch ===
+                            conversationAuthority.securityEpoch &&
+                        candidate.operatingMode ===
+                            conversationAuthority.operatingMode
+                    );
+                },
                 randomUUID,
             );
             stage = "conversation-session";
@@ -267,7 +276,7 @@ export function conversationHandler(
             let authorityLive = true;
             const verifyLive = async () => {
                 if (!authorityLive || disconnected.signal.aborted) return false;
-                if (selected) {
+                {
                     try {
                         await engine.assertLiveSession(
                             rpc.token,
@@ -391,7 +400,7 @@ export function conversationHandler(
                     AbortSignal.timeout(timeoutMs + 1_000),
                 ]),
             );
-            if (selected && !(await verifyLive()))
+            if (!(await verifyLive()))
                 throw new IdentityFault("SESSION_INVALID");
             authorityLive = false;
             stage = "response";

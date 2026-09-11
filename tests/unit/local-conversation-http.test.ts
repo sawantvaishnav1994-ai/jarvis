@@ -18,9 +18,14 @@ async function close(server: Server) {
     server.closeAllConnections();
     await new Promise<void>((r) => server.close(() => r()));
 }
-it.each([false, true])(
-    "authenticated local-model HTTP turn, revoked during inference=%s",
-    async (revoke) => {
+it.each([
+    { local: true, revoke: false },
+    { local: true, revoke: true },
+    { local: false, revoke: false },
+    { local: false, revoke: true },
+])(
+    "authenticated HTTP turn local=$local revoked=$revoke",
+    async ({ local, revoke }) => {
         const repository = new TestIdentityRepository();
         const f = fixture(repository);
         const owner = await root(f);
@@ -61,6 +66,9 @@ it.each([false, true])(
         const sessionRepository: ConversationSessionRepository = {
             async createSession(s) {
                 sessions.set(s.id, s);
+                if (!local && revoke)
+                    repository.state.sessions[session.tokenHash]!.revoked =
+                        true;
                 return s;
             },
             async getSession(ownerId, id) {
@@ -80,11 +88,14 @@ it.each([false, true])(
                 throw Error("not used");
             },
         };
-        const handler = conversationHandler(f.engine, key, sessionRepository, {
-            model: "test:local",
-            port: modelPort,
-            timeoutMs: 1000,
-        });
+        const handler = conversationHandler(
+            f.engine,
+            key,
+            sessionRepository,
+            local
+                ? { model: "test:local", port: modelPort, timeoutMs: 1000 }
+                : undefined,
+        );
         const api = createServer((req, res) => {
             void handler(req, res).then((handled) => {
                 if (!handled) {
@@ -134,19 +145,26 @@ it.each([false, true])(
                 request,
                 proof: owner.device.proof(begin.data.result),
             });
-            expect(modelCalls).toBe(1);
+            expect(modelCalls).toBe(local ? 1 : 0);
             if (revoke) {
                 expect(result.status).toBe(403);
                 expect(result.data.error).toBe("SESSION_INVALID");
                 expect(JSON.stringify(result.data)).not.toContain(
                     "fixture local answer",
                 );
+                expect(JSON.stringify(result.data)).not.toContain(
+                    "JARVIS development response",
+                );
             } else {
                 expect(result.status).toBe(200);
                 expect(result.data.result.response).toBe(
-                    "fixture local answer",
+                    local
+                        ? "fixture local answer"
+                        : "JARVIS development response: hello",
                 );
-                expect(result.data.result.source.provider).toBe("local-ollama");
+                expect(result.data.result.source.provider).toBe(
+                    local ? "local-ollama" : "synthetic-ui",
+                );
                 expect(result.data.result.tool).toBeNull();
             }
         } finally {

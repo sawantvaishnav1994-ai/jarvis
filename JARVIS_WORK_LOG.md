@@ -4319,3 +4319,1209 @@ tests/unit/local-read-aloud.test.ts, tests/home-ui/home.spec.ts, product report 
 this cumulative log. Full V1/V2 remains NOT READY, with real ASR/voice-runtime,
 durable product history, memory/knowledge, agents/connectors, devices/mobile and
 production qualification still requiring implementation and acceptance.
+
+## Observed continuation qualification
+
+Published source 54652256394ec84f60398130bb521cbcb515b24e exactly matches
+local 070e54c tree 3ff603602e16160c43deba85536c954e68936d41. All three
+cloud runs completed successfully on that SHA:
+- Personal Home UI verification 34566871682 PASS (full local-style check,
+  production web build, four browser scenarios including synthetic speech control).
+- Presence native Windows verification 34566871743 PASS.
+- J1 Development Checks 34566871729 PASS.
+
+The corrected alert selector retained the original denial assertions. No runtime
+mock was substituted for a live provider in production; browser/voice fixtures
+remain confined to tests. Confirmed source is on the validation branch, not main.
+Full V1/V2 release status remains NOT READY. Next implementation priorities remain
+server-governed durable conversation history, memory and knowledge product flows,
+ASR and authenticated desktop voice, agents/connectors and deployment/hardware
+acceptance. This local outcome entry supplements the published candidate log.
+
+# Master project completion directive — 2026-09-11
+
+## Owner prompt verbatim
+
+JARVIS — MASTER PROJECT COMPLETION DIRECTIVE
+
+COMPLETE THE ENTIRE APPROVED JARVIS PROJECT
+
+This instruction supersedes fragmented feature-by-feature development instructions.
+
+Your objective is now to take the existing JARVIS repository from its current partially implemented state to the complete implementation of the approved JARVIS V1 PRD + V2 Complete System Engineering Specification.
+
+Do not restart the project.
+
+Do not redesign completed architecture merely because another implementation would be easier.
+
+Do not rebuild features already verified as working.
+
+Do not continue indefinitely creating planning documents instead of implementing.
+
+The existing repository, V1 PRD, V2 engineering specification, approved UI direction, security architecture, J0/J1 work and completed validation evidence are the baseline.
+
+⸻
+
+1. SINGLE SOURCE OF TRUTH
+
+Use these documents as the authoritative product scope:
+
+1. JARVIS Master PRD / Project Blueprint V1
+2. JARVIS Complete System Engineering Specification V2
+3. Existing requirement traceability covering:
+    * FR-001 through FR-168
+    * 24 additional V2 engineering requirements
+    * Total approved mapped scope: 192 requirements
+
+Create or update one repository-controlled completion ledger:
+
+docs/JARVIS_MASTER_COMPLETION_LEDGER.md
+
+Every requirement must have:
+
+* Requirement ID
+* Requirement description
+* Owning subsystem
+* Implementation location
+* Current status
+* Tests
+* Integration verification
+* Security verification where applicable
+* Evidence
+* Blocking dependency, if any
+* Final completion state
+
+Only these statuses are allowed:
+
+* NOT_STARTED
+* IN_PROGRESS
+* IMPLEMENTED_UNVERIFIED
+* VERIFIED_COMPLETE
+* BLOCKED_EXTERNAL
+
+Never mark something complete merely because code exists.
+
+VERIFIED_COMPLETE requires working implementation + tests + integration evidence.
+
+⸻
+
+2. FIRST ACTION — AUDIT THE EXISTING PROJECT
+
+Before adding new functionality, inspect the complete repository.
+
+Determine exactly what already exists.
+
+Do not assume previous conversational claims are accurate.
+
+Verify through source code, tests, runtime behavior and existing evidence.
+
+Map every one of the 192 requirements to the existing implementation.
+
+Preserve all verified completed work.
+
+Identify:
+
+* complete requirements
+* partially complete requirements
+* missing requirements
+* duplicated systems
+* disconnected systems
+* placeholder/mock implementations
+* unfinished runtime wiring
+* missing persistence
+* missing tests
+* missing production qualification
+
+Then update the Master Completion Ledger.
+
+This audit must become the basis for all remaining implementation.
+
+Do not create another independent roadmap afterward.
+
+⸻
+
+3. PRIMARY COMPLETION GOAL
+
+The finished system must implement the real JARVIS runtime loop:
+
+USER
+↓
+INPUT
+↓
+VOICE / TEXT / EVENT
+↓
+UNDERSTANDING
+↓
+IDENTITY + SESSION
+↓
+CONTEXT ASSEMBLY
+↓
+MEMORY RETRIEVAL
+↓
+KNOWLEDGE RETRIEVAL
+↓
+MODEL ORCHESTRATION
+↓
+REASONING
+↓
+PLANNING
+↓
+POLICY / PERMISSIONS
+↓
+APPROVAL IF REQUIRED
+↓
+TOOL / AGENT EXECUTION
+↓
+RESULT VERIFICATION
+↓
+MEMORY UPDATE
+↓
+AUDIT
+↓
+RESPONSE
+↓
+VOICE / TEXT / UI
+
+This must be a real integrated runtime.
+
+Do not simulate the workflow only in the UI.
+
+⸻
+
+4. COMPLETE THE CORE RUNTIME FIRST
+
+Complete and verify the following before expanding secondary surfaces.
+
+4.1 Identity
+
+Complete:
+
+* Root Owner
+* authentication
+* trusted devices
+* sessions
+* permissions
+* authorization
+* role/capability checks
+* credential handling
+* device trust
+* account recovery controls
+* owner-sensitive operations
+
+No subsystem may bypass authorization.
+
+⸻
+
+4.2 Conversation Runtime
+
+Complete:
+
+* new conversation
+* persistent conversation IDs
+* message persistence
+* reload persistence
+* cross-session retrieval
+* conversation titles
+* conversation history
+* streaming responses
+* cancellation
+* retry/recovery
+* attachments where defined
+* conversation metadata
+* model/runtime metadata
+* audit relationship
+
+Conversation history must survive restart/reload.
+
+⸻
+
+4.3 Model Orchestration
+
+Complete:
+
+* provider abstraction
+* model registry
+* local models
+* cloud models
+* model selection
+* routing
+* fallback
+* timeout handling
+* retry policies
+* cost/usage metadata
+* capability detection
+* offline fallback
+* provider outage handling
+
+JARVIS is the system.
+
+Models remain replaceable intelligence providers.
+
+⸻
+
+5. COMPLETE MEMORY
+
+Implement the entire approved memory architecture.
+
+This includes:
+
+* memory objects
+* episodic memory
+* semantic memory
+* procedural/skill memory where specified
+* user preferences
+* project memory
+* relationship linking
+* confidence
+* verification state
+* sensitivity
+* provenance
+* retention
+* versioning
+* embeddings
+* memory retrieval
+* memory ranking
+* memory update
+* correction
+* forgetting/deletion
+* export
+* synchronization where applicable
+
+Complete the interfaces:
+
+* Ambient Memory
+* Memory Graph
+* Memory Tree
+* Memory Detail
+
+Memory must not only have UI.
+
+The runtime must actually retrieve and use it.
+
+⸻
+
+6. COMPLETE KNOWLEDGE
+
+Keep Knowledge separate from Memory.
+
+Implement:
+
+* document ingestion
+* parsing
+* chunking
+* embedding
+* indexing
+* retrieval
+* ranking/reranking where appropriate
+* citations/provenance
+* source metadata
+* knowledge collections
+* refresh/update
+* deletion
+* permissions
+* retrieval into model context
+
+Complete the Knowledge UI and runtime integration.
+
+⸻
+
+7. COMPLETE CONTEXT ENGINE
+
+Create one authoritative context assembly pipeline.
+
+It must intelligently combine:
+
+* current user request
+* conversation history
+* relevant memory
+* relevant knowledge
+* current project/workspace
+* device/environment state
+* agent/task state
+* relevant tool results
+* permissions
+* system policies
+
+Implement context limits and prioritization.
+
+Avoid blindly injecting everything into prompts.
+
+⸻
+
+8. COMPLETE AGENT RUNTIME
+
+Implement the approved:
+
+Planner → Executor → Verifier
+
+architecture.
+
+Agents must support:
+
+* task creation
+* task decomposition
+* steps
+* dependencies
+* execution status
+* retries
+* failure handling
+* approvals
+* cancellation
+* resume/recovery
+* tool invocation
+* verification
+* results
+* audit trail
+
+Do not create unrestricted autonomous agents.
+
+All actions remain governed by owner permissions and policies.
+
+⸻
+
+9. COMPLETE TOOL / ACTION SYSTEM
+
+Implement a real tool registry and execution system.
+
+Support the architecture required for:
+
+* local files
+* applications
+* browser/computer operations
+* APIs
+* shell/approved command execution where allowed
+* web operations
+* project tools
+* communication tools
+* device tools
+* future integrations
+
+Every tool must define:
+
+* ID
+* capabilities
+* input schema
+* output schema
+* permission requirement
+* risk level
+* timeout
+* retry behavior
+* verification mechanism
+* audit information
+
+Do not hard-code tool behavior directly into conversation UI.
+
+⸻
+
+10. COMPLETE APPROVAL & SAFETY SYSTEM
+
+Consequential actions must support explicit approval.
+
+Implement:
+
+* approval request
+* approval UI
+* allow once
+* deny
+* cancel
+* scope-limited approvals
+* approval expiry
+* execution after approval
+* immutable audit relationship
+
+High-risk actions must never silently execute.
+
+⸻
+
+11. COMPLETE ACTIVITIES
+
+Activities must become the live operational history of JARVIS.
+
+Show:
+
+* active task
+* queued
+* waiting
+* waiting for approval
+* running
+* completed
+* failed
+* cancelled
+* background work
+* agent activity
+* tool activity
+* timestamps
+* relevant results
+
+Activities must come from real runtime events, not fake frontend data.
+
+⸻
+
+12. COMPLETE VOICE
+
+Implement the complete voice loop:
+
+Wake / Activate
+↓
+Listen
+↓
+Voice Activity Detection
+↓
+Speech-to-Text
+↓
+Understanding
+↓
+JARVIS Runtime
+↓
+Action / Reasoning
+↓
+Response
+↓
+Text-to-Speech
+↓
+Speak
+
+Requirements include:
+
+* listening state
+* stop listening
+* speaking state
+* stop speaking
+* interruption/barge-in where supported
+* microphone permission
+* local/cloud STT abstraction
+* local/cloud TTS abstraction
+* failures
+* offline mode
+* audio privacy
+* configurable voice
+* no secret recording
+
+Do not limit voice to browser speechSynthesis.
+
+Create provider abstractions suitable for production/local voice engines.
+
+⸻
+
+13. COMPLETE FLOATING JARVIS PRESENCE
+
+Preserve the approved lightweight Presence architecture.
+
+The floating Presence is NOT the complete application.
+
+Desktop Presence must include:
+
+* transparent window
+* frameless UI
+* always-on-top
+* draggable
+* saved position
+* configurable size
+* hide/show
+* multi-monitor behavior
+* real 3D JARVIS Core
+* reduced-motion support
+
+Connect it to real runtime semantic events:
+
+* idle
+* listening
+* understanding
+* reasoning
+* memory retrieval
+* knowledge retrieval
+* tool execution
+* responding
+* background
+* approval required
+* success
+* warning
+* error
+
+Architecture:
+
+JARVIS Runtime
+→ Presence State Controller
+→ Visual State Machine
+→ 3D Renderer
+
+The renderer must never decide JARVIS behavior.
+
+⸻
+
+14. COMPLETE MAIN WEB EXPERIENCE
+
+The web application remains the detailed JARVIS workspace.
+
+Finish all approved surfaces including:
+
+* Home
+* Conversation
+* Memory
+* Knowledge
+* Activities
+* Agents / Tasks where specified
+* Devices
+* World / Digital Twin where in current scope
+* Settings
+* Security
+* permissions/approvals
+* model configuration
+* integrations
+* audit/history
+
+Do not convert JARVIS into a traditional enterprise dashboard.
+
+Preserve the approved minimal, intelligent, spatial product direction.
+
+⸻
+
+15. COMPLETE OFFLINE / DEGRADED MODE
+
+JARVIS must not die when internet access disappears.
+
+Implement connectivity state management.
+
+When offline, support where locally available:
+
+* Presence
+* local authentication
+* local conversation
+* local models
+* local memory
+* local knowledge
+* local STT
+* local TTS
+* local file tools
+* local apps
+* LAN devices
+* local automations
+
+Cloud-only capabilities must clearly become unavailable.
+
+Never pretend an online action succeeded while offline.
+
+Queue only actions explicitly permitted to be queued.
+
+When connectivity returns:
+
+* reconnect
+* synchronize
+* resolve permitted pending operations
+* verify outcomes
+
+⸻
+
+16. COMPLETE EVENTS & AUTOMATION
+
+Implement:
+
+* event bus
+* durable jobs
+* scheduled work
+* triggers
+* background jobs
+* retries
+* idempotency
+* recovery
+* event history
+* policies
+* notifications
+
+Proactivity must come from:
+
+Events + Rules/Policy + Context + Permission
+
+—not from an unrestricted LLM loop.
+
+⸻
+
+17. COMPLETE DEVICES
+
+Implement the approved device abstraction layer.
+
+Include:
+
+* device registry
+* discovery where supported
+* capabilities
+* status
+* permissions
+* commands
+* confirmation
+* device events
+* health
+* online/offline state
+
+No LLM may directly control physical actuators.
+
+Physical actions require deterministic device/control layers.
+
+⸻
+
+18. COMPLETE SECURITY
+
+Verify the entire trust architecture.
+
+Required areas include:
+
+* Root Owner
+* secure authentication
+* authorization
+* trusted devices
+* secrets management
+* encryption
+* permission boundaries
+* approval boundaries
+* prompt-injection defenses
+* tool isolation
+* credential protection
+* audit
+* emergency stop
+* data export
+* deletion
+* backups
+* recovery
+* secure defaults
+
+Run adversarial and negative-path tests.
+
+Do not claim security completion based only on happy-path tests.
+
+⸻
+
+19. COMPLETE AUDIT
+
+Every consequential operation must generate auditable records.
+
+Audit must cover:
+
+* authentication
+* permissions
+* approvals
+* agents
+* tools
+* model calls
+* memory mutation
+* knowledge mutation
+* device operations
+* administrative changes
+* emergency stop
+* failures
+
+Audit data must not be silently alterable by normal application flows.
+
+⸻
+
+20. COMPLETE DATA & STORAGE
+
+Finish production-grade storage for:
+
+* users/owner
+* devices
+* sessions
+* conversations
+* messages
+* memory
+* embeddings
+* knowledge
+* documents
+* tasks
+* agents
+* tool executions
+* approvals
+* events
+* audit
+* settings
+* integrations
+
+Add migrations, constraints, indexes and recovery procedures.
+
+Remove inappropriate production dependence on temporary/in-memory storage.
+
+⸻
+
+21. LOCAL-FIRST ARCHITECTURE
+
+Maintain support for:
+
+Local JARVIS Runtime
++
+Cloud Extensions
+
+JARVIS must remain functional in degraded/offline scenarios where its local dependencies are available.
+
+Cloud providers enhance JARVIS but must not define JARVIS itself.
+
+⸻
+
+22. LEARNING & IMPROVEMENT ARCHITECTURE
+
+Implement the safe foundation for:
+
+1. Memory learning
+2. Knowledge learning
+3. Skill/procedure learning
+4. Controlled model improvement
+
+Do NOT allow uncontrolled online weight modification.
+
+Future fine-tuning/distillation must use curated, permission-safe, verified datasets and separate evaluation before deployment.
+
+⸻
+
+23. MOBILE
+
+After the core runtime and web/desktop systems are stable, implement the approved mobile architecture.
+
+Android:
+
+* JARVIS Presence app/APK
+* voice interaction
+* notifications
+* permissions
+* quick actions
+* approvals
+* supported background operation
+* opening full web environment where appropriate
+
+iOS:
+
+Use only supported Apple APIs.
+
+Do not attempt forbidden arbitrary system overlays.
+
+Use appropriate:
+
+* native application UI
+* notifications
+* widgets
+* Live Activities
+* Dynamic Island where technically appropriate
+* supported voice/background integrations
+
+The mobile application is a JARVIS surface, not a second JARVIS brain.
+
+⸻
+
+24. TESTING IS PART OF IMPLEMENTATION
+
+Every subsystem requires tests.
+
+At minimum use appropriate combinations of:
+
+* unit tests
+* integration tests
+* database tests
+* API tests
+* browser tests
+* runtime tests
+* failure-path tests
+* security tests
+* persistence/restart tests
+* offline/degraded tests
+* performance tests
+
+Do not weaken or delete valid tests merely to get a green pipeline.
+
+Fix the implementation.
+
+⸻
+
+25. REMOVE FAKE COMPLETION
+
+Search for and resolve:
+
+* TODO
+* FIXME
+* placeholders
+* mock-only runtime data
+* fake success responses
+* temporary bypasses
+* disabled security checks
+* empty interfaces
+* unimplemented handlers
+* hard-coded demo results
+* disconnected UI controls
+
+Mocks may remain only inside tests or clearly designated development fixtures.
+
+⸻
+
+26. WORK IN DEPENDENCY ORDER
+
+Do not jump randomly between modules.
+
+Use approximately this completion order:
+
+PHASE A — Repository audit + completion ledger
+
+PHASE B — Core persistence / identity / conversation
+
+PHASE C — Model orchestration + context
+
+PHASE D — Memory + Knowledge
+
+PHASE E — Tools + Agent runtime + approvals
+
+PHASE F — Complete end-to-end JARVIS loop
+
+PHASE G — Voice + Presence integration
+
+PHASE H — Events + automations
+
+PHASE I — Devices + offline/degraded operation
+
+PHASE J — Complete web interfaces
+
+PHASE K — Mobile clients
+
+PHASE L — Security / recovery / observability / performance hardening
+
+PHASE M — Whole-product validation
+
+PHASE N — Production release
+
+Do not proceed merely because the phase’s source files exist.
+
+Proceed when its acceptance tests pass.
+
+⸻
+
+27. DO NOT WAIT FOR ME BETWEEN NORMAL STEPS
+
+You are authorized to continue through normal engineering decisions needed to implement the already approved PRD.
+
+Do not stop after each small task to ask:
+
+“Should I continue?”
+
+Continue.
+
+Only stop for a true external blocker such as:
+
+* required secret/API credential unavailable
+* operating-system signing certificate unavailable
+* paid third-party account unavailable
+* physical hardware unavailable
+* external service requiring owner action
+* irreversible or consequential decision not already approved
+
+When blocked externally:
+
+1. Record BLOCKED_EXTERNAL in the ledger.
+2. Explain exactly what is needed.
+3. Continue implementing every other unblocked requirement.
+
+One blocked feature must not stop the rest of the project.
+
+⸻
+
+28. DO NOT CREATE ENDLESS BRANCHES
+
+Use a controlled integration strategy.
+
+Keep:
+
+* main = protected stable baseline
+* one active completion/integration branch
+* short-lived branches only when technically justified
+
+Continuously integrate verified completed work back into the active completion candidate.
+
+Avoid accumulating dozens of disconnected validation branches.
+
+⸻
+
+29. CI/CD
+
+The pipeline must eventually validate:
+
+* formatting
+* linting
+* type checks
+* builds
+* unit tests
+* integration tests
+* database tests
+* security checks
+* browser tests
+* packaged desktop tests where possible
+
+Use caching and test segmentation where appropriate.
+
+Do not bypass failures.
+
+⸻
+
+30. PERFORMANCE
+
+Measure rather than guess.
+
+Record:
+
+* application startup
+* Presence startup
+* memory usage
+* idle CPU
+* idle GPU
+* database performance
+* model latency
+* voice latency
+* retrieval latency
+* tool latency
+* browser performance
+* failure/recovery behavior
+
+Optimize serious bottlenecks after correctness.
+
+⸻
+
+31. OBSERVABILITY
+
+Implement:
+
+* structured logs
+* metrics
+* traces
+* correlation IDs
+* model execution tracing
+* agent tracing
+* tool tracing
+* job tracing
+* failure diagnostics
+
+Do not leak secrets or sensitive memory into logs.
+
+⸻
+
+32. BACKUP & RECOVERY
+
+Implement and verify:
+
+* database backup
+* encrypted data backup
+* restore
+* configuration recovery
+* memory export
+* user data export
+* deletion
+* disaster recovery documentation
+
+A backup does not count as complete until restore has been tested.
+
+⸻
+
+33. PRODUCTION RELEASE
+
+Only declare JARVIS production-ready after whole-product validation.
+
+Production release must include:
+
+* reproducible builds
+* database migration procedure
+* deployment configuration
+* secrets configuration
+* health checks
+* backup/recovery
+* observability
+* secure production defaults
+* desktop installer
+* supported web deployment
+* mobile artifacts where included in frozen release scope
+* installation documentation
+* operations documentation
+* user documentation
+
+⸻
+
+34. FINAL ACCEPTANCE TEST
+
+Before declaring completion, perform a real end-to-end scenario similar to:
+
+Owner activates JARVIS
+↓
+JARVIS recognizes trusted owner/device
+↓
+Owner speaks or types a task
+↓
+JARVIS understands it
+↓
+Retrieves conversation context
+↓
+Retrieves relevant memory
+↓
+Retrieves relevant knowledge
+↓
+Selects the appropriate model
+↓
+Reasons/plans
+↓
+Determines required permissions
+↓
+Requests approval if necessary
+↓
+Executes tools/agents
+↓
+Verifies results
+↓
+Updates task state
+↓
+Stores appropriate memory
+↓
+Writes audit evidence
+↓
+Responds by text/voice
+↓
+Activities show the real operation
+↓
+Conversation/history survives reload
+↓
+System survives restart
+↓
+Offline/degraded behavior is verified
+
+This test must use real integrated subsystems, not mock results.
+
+⸻
+
+35. DEFINITION OF 100% COMPLETE
+
+Do NOT declare:
+
+“JARVIS is complete”
+
+until all frozen in-scope requirements are one of:
+
+VERIFIED_COMPLETE
+
+or, for things that inherently require resources unavailable to the repository:
+
+BLOCKED_EXTERNAL
+
+Provide a separate external-blocker report.
+
+A requirement is not complete merely because:
+
+* UI exists
+* an API route exists
+* a schema exists
+* a test was mocked
+* one browser flow worked
+* a previous message said it was complete
+
+Completion means implementation + integration + objective verification.
+
+⸻
+
+36. FINAL DELIVERABLES
+
+At project completion provide:
+
+JARVIS_MASTER_COMPLETION_LEDGER.md
+
+JARVIS_FINAL_IMPLEMENTATION_REPORT.md
+
+JARVIS_FINAL_TEST_REPORT.md
+
+JARVIS_SECURITY_VALIDATION_REPORT.md
+
+JARVIS_DEPLOYMENT_GUIDE.md
+
+JARVIS_OPERATIONS_AND_RECOVERY.md
+
+JARVIS_REQUIREMENT_TRACEABILITY_FINAL.md
+
+JARVIS_EXTERNAL_BLOCKERS.md
+
+if external blockers remain.
+
+Also provide:
+
+* final branch
+* final commit SHA
+* CI run
+* deployment URL where applicable
+* desktop build artifact
+* mobile build artifacts where applicable
+* exact list of any unresolved blockers
+
+⸻
+
+37. IMPORTANT WORKING RULE
+
+From this point forward, optimize for finishing the approved product, not generating more plans.
+
+For each implementation cycle:
+
+CHECK LEDGER
+→ SELECT HIGHEST-PRIORITY INCOMPLETE DEPENDENCY
+→ IMPLEMENT
+→ TEST
+→ INTEGRATE
+→ VERIFY
+→ UPDATE LEDGER
+→ CONTINUE
+
+Repeat until the frozen scope is exhausted.
+
+Do not restart completed phases.
+
+Do not redesign merely for novelty.
+
+Do not stop because one feature is difficult.
+
+Do not report “everything is complete” until the evidence supports it.
+
+EXECUTION AUTHORIZATION
+
+Proceed now with:
+
+1. Full repository audit.
+2. Create/update the 192-requirement Master Completion Ledger.
+3. Determine the actual remaining dependency chain.
+4. Begin implementing the highest-priority incomplete foundation.
+5. Continue sequentially through the completion phases.
+6. Validate each subsystem before marking it complete.
+7. Continue until the complete approved JARVIS scope is implemented or an item is demonstrably externally blocked.
+
+The objective is no longer another prototype.
+
+The objective is a finished, integrated, verified JARVIS product based on the approved V1 + V2 specification.
+
+## Audit and first foundation repair
+
+Rechecked both supplied DOCX hashes against the frozen register; match. Inventoried
+549 tracked files, inspected active composition roots, exported subsystem contracts,
+source markers and test locations. Created the 192-record master ledger with source
+wording, acceptance, subsystem, implementation, status, tests, integration/security,
+evidence, dependencies and final status. Initial dispositions are conservative:
+117 IN_PROGRESS, 75 NOT_STARTED. No source-only VERIFIED_COMPLETE claims.
+The initial source audit is not a completed 192-requirement runtime acceptance audit.
+
+Implemented live identity verification for every conversation provider, including
+before opening a conversation session and before disclosing results. Previously
+these runtime checks were conditional on the Ollama adapter. Conversation turn
+transitions and cancellation now verify full owner/actor/device/identity-session/
+epoch/mode binding. Persistence coordinator now checks session authority before
+first write and before committing a response. Governed storage remains mandatory.
+Added nine negative/positive regression cases; existing checks remain intact.
+
+Added scripts/check-completion-ledger.mjs and connected existing readiness checker
+and active J1 CI to it. It checks exact 192 IDs, source wording, mandatory fields,
+allowed states, source paths and structured test/commit/integration evidence for
+completion claims. Source-map JSON remains preserved; ledger owns completion status.
+The release check fails closed while requirements are incomplete.
+
+Affected: docs/JARVIS_MASTER_COMPLETION_LEDGER.md, scripts/check-completion-ledger.mjs,
+scripts/check-product-readiness.mjs, .github/workflows/j1-dev-ci.yml,
+apps/api/src/conversation-http.ts, packages/core/src/conversation-session.ts,
+packages/core/src/final-conversation-persistence.ts, corresponding three unit test
+files and this cumulative log. Validation outcomes and commits follow below.
+
+Local validation completed: npm run check PASS (675 tests in 72 files, lint,
+architecture boundaries and types); web build PASS; Python check and 68 regressions
+PASS. Ledger integrity PASS; --release expected rejection confirmed (exit 1).
+No Docker or psql binary is present in this executor; this does not prevent CI
+qualification and is not recorded as a whole-feature external blocker. No real
+owner data, production mutation, migration change, deployment or main merge.
