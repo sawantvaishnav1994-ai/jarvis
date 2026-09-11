@@ -5585,3 +5585,33 @@ e9520330fc8cd52755a65a57f630436e628be950. Source test confirms desktop/mobile
 Home PNG screenshots in the archive. GitHub artifact download succeeded through
 the connector. Shared stable artifact link, explicitly labelled screenshots rather
 than live application. No redesigned/mock UI, deployment or further implementation.
+
+
+## Live testing deployment — 2026-09-11
+
+Owner prompt verbatim:
+
+Do one thing make this jarvis live to use 
+So we can be use this jarvis and will do a changes and check working
+
+Discovered existing Railway project jarvis-j1-13-remote-runtime with jarvis-runtime,
+pgvector and Redis already deployed successfully. Correction: earlier statements
+that no live URL existed were incorrect; hosting had not been inspected then.
+Existing domain: https://jarvis-runtime-production-ce54.up.railway.app
+
+User authorized live deployment. Compared deployed e666c7ac358d1cc8884d4f6ac6b3eafca0ef0f0f
+with CI-verified 1f8193edef4b3ad076d0a80a94db62513dbc2bda: no SQL migration changes.
+Staged only source repo/branch/commit update through Railway; preserved build checks,
+start command, secrets, domain, RP/origin and data services. Committed staged update
+under existing authorization. No new service, paid upgrade, secret disclosure,
+owner enrollment, application rewrite or main merge.
+
+Deployment 5eb57f4d-9424-4fc3-82d9-44330efc05f2 reached SUCCESS. Build formatting,
+package/web types, lint/boundaries, selected regression tests and web build passed;
+Railway /api/health healthcheck succeeded. Source config rechecked pinned to 1f8193e
+on validation/j1.product-readiness-20260909. Current Home, conversation, Activities,
+settings and read-aloud code deployed. Authentication remains required for chat.
+Runtime model remains synthetic by default: this is a hosted development/testing
+candidate, not a completed personal AI or production release. Browser interaction
+and real owner login were not performed in the unavailable workspace. Web fetch
+could not access domain; live availability evidence is Railway deployment/healthcheck.

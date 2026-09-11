@@ -2742,3 +2742,18 @@ On resume, the workspace runner did not return even for pwd/true. Further local
 engineering validation is blocked; see docs/JARVIS_EXTERNAL_BLOCKERS.md.
 Unfinished product requirements remain IN_PROGRESS/NOT_STARTED. The next dependency
 is pipeline audit and governed durable conversation/history integration.
+
+
+## Hosted testing candidate — 2026-09-11
+
+Existing Railway runtime updated to verified source
+1f8193edef4b3ad076d0a80a94db62513dbc2bda. Deployment
+5eb57f4d-9424-4fc3-82d9-44330efc05f2 SUCCESS; /api/health check PASS.
+URL: https://jarvis-runtime-production-ce54.up.railway.app
+
+Correction to previous progress messages: an older Railway deployment existed.
+Latest Home code is now deployed using that existing service and database. No SQL
+migration changed. Full product acceptance remains open; model is synthetic by
+default, durable product history and other recorded integrations are incomplete.
+This deployment is a testing candidate, not production qualification. Local runner
+unavailability did not block deployment through the connected Railway service.
