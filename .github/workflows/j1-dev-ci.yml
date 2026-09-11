@@ -80,6 +80,8 @@ jobs:
           .github/workflows/j1.8-ci.yml
           .github/workflows/j1.12-ci.yml
           .github/workflows/j1-dev-ci.yml
+      - name: Master completion ledger integrity
+        run: node scripts/check-product-readiness.mjs
       - name: Package and API type build
         run: npm run build:packages
       - name: J1 Web typecheck

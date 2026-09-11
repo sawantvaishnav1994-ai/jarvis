@@ -98,9 +98,10 @@ function fixture() {
             },
         ),
     };
+    let live = true;
     const sessions = new ConversationSessionEngine(
         sessionRepo,
-        async () => true,
+        async () => live,
         randomUUID,
     );
     const history = new ConversationHistoryService(historyRepo, digest);
@@ -127,6 +128,9 @@ function fixture() {
         records,
         historyRepo,
         coordinator,
+        revoke: () => {
+            live = false;
+        },
     };
 }
 
@@ -228,5 +232,60 @@ describe("J1.12 governed durable conversation persistence", () => {
                 classification: "D2",
             }),
         ).rejects.toThrow("J112_PERSISTENCE_BINDING_INVALID");
+    });
+});
+
+describe("durable persistence live authority", () => {
+    it("does not write records or metadata for a revoked session", async () => {
+        const f = fixture();
+        f.revoke();
+        await expect(
+            f.coordinator.beginDurableTurn({
+                authority: f.authority,
+                conversationSessionId: f.conversationSessionId,
+                conversationId: f.conversationId,
+                inputMessageId: f.inputMessageId,
+                message: "private input",
+                projectId: null,
+                classification: "D2",
+                idempotencyKey: "revoked",
+                correlationId: "revoked",
+            }),
+        ).rejects.toThrow("CONVERSATION_AUTHORITY_INVALID");
+        expect(f.order).toEqual([]);
+        expect(f.records.persistConversation).not.toHaveBeenCalled();
+    });
+    it("does not store a late answer after session revocation", async () => {
+        const f = fixture();
+        const durableTurn = await f.coordinator.beginDurableTurn({
+            authority: f.authority,
+            conversationSessionId: f.conversationSessionId,
+            conversationId: f.conversationId,
+            inputMessageId: f.inputMessageId,
+            message: "hello",
+            projectId: null,
+            classification: "D2",
+            idempotencyKey: "late",
+            correlationId: "late",
+        });
+        const prior = [...f.order];
+        f.revoke();
+        await expect(
+            f.coordinator.commitDurableTurn({
+                durableTurn,
+                authority: f.authority,
+                responseMessageId: f.responseMessageId,
+                response: "private answer",
+                terminalState: "COMPLETED",
+                inputDigest: digest("hello"),
+                contextDigest: null,
+                modelDigest: null,
+                responseDigest: digest("private answer"),
+                model: null,
+                classification: "D2",
+            }),
+        ).rejects.toThrow("CONVERSATION_AUTHORITY_INVALID");
+        expect(f.order).toEqual(prior);
+        expect(f.historyRepo.persistTurnResult).not.toHaveBeenCalled();
     });
 });

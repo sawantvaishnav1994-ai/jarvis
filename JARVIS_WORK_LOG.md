@@ -3933,3 +3933,1685 @@ Production HSM/KMS custody, real physical-device A4 ceremonies, geographically i
 ## Final evidence recording rule
 
 The final candidate SHA and final GitHub Actions run are recorded in the owner delivery after all documentation and temporary-helper cleanup are complete. This avoids recursively changing the SHA merely to write its own final SHA into the work log. `J0 FOUNDATION v1 GO RECOMMENDED` may be reported only if that final exact-SHA pipeline passes every required stage. The recommendation does not merge, tag, start J1 or itself execute the owner-controlled GO decision.
+
+# Product readiness continuation — 2026-09-09
+
+## New owner prompt verbatim
+
+Complete full project and 100% ready product
+
+## Previous delivered response verbatim
+
+I implemented a **desktop prototype**, but **V1 is not complete or released**.
+
+Added:
+
+- Small transparent, always-on-top window.
+- Animated 3D Core, dragging and saved position.
+- Compact controls, hide/reopen and click-through.
+- State-event interface and local microphone-amplitude preview.
+- Accessibility controls and performance instrumentation.
+
+**Passed:** 643 existing TypeScript tests, 68 Python tests, 3 new tests and the web build.
+
+**Still pending:** live voice/runtime integration, native desktop verification and hardware benchmarks.
+
+The workspace disconnected before commit/push, so these changes are **not yet safely published to GitHub**. Main remains unchanged.
+
+## Recovery and baseline
+
+The previous desktop source survived the disconnected environment. GitHub main
+was independently checked and remains `2586049619072da592ed1d4b7eb225fa0a955e69`.
+The prior work-log append/commit attempt never ran because the environment was
+offline. This entry now preserves the actual recovered work. The complete earlier
+product/UI directive remains in the conversation; it has not been reconstructed
+as a supposed verbatim transcript here.
+
+The candidate was moved from `validation/floating-presence-v1-20260909` to
+`validation/j1.product-readiness-20260909` to use the existing J1 development CI
+branch trigger. The branch name does not declare a new completed milestone.
+
+## Requirement audit
+
+Read the actual V1 Word document and the user-attached V2 engineering document.
+V2 section 21 maps multiple V1 IDs to incorrect subsystems: FR-001 is interaction,
+FR-051 is knowledge ingestion, FR-061 is tasks, FR-094 is speech, FR-104 is devices,
+and FR-141 is policy. V1 wording remains authoritative. Original files unchanged.
+
+Added `docs/product/requirements.json` with exact V1 requirement/acceptance text,
+168 V1 IDs, 24 V2 additions, source SHA-256 hashes, corrected subsystem ownership,
+implementation candidates and explicit evidence status. Added the full mapping
+comparison in `docs/product/traceability-correction.md` and a fail-closed release
+readiness verifier in `scripts/check-product-readiness.mjs`. All entries are
+MAPPED pending individual release evidence review; this does not mean the
+existing code is 0% implemented or invalidate prior development test results.
+
+## Implementation
+
+Recovered `apps/desktop/presence/` contains the transparent Electron shell,
+Three.js geometry, sandboxed preload, semantic event controller, local mic
+amplitude preview, dragging, position persistence, display clamping, tray,
+keyboard controls, click-through, reduced-motion/high-contrast/labels, hidden
+render pause and performance instrumentation. No native acceptance is claimed.
+
+Added `packages/models/src/ollama-adapter.ts`, an opt-in local inference adapter
+composed through the existing model registry/router and authenticated HTTP turn.
+It uses fixed loopback direct HTTP, preflights local GGUF metadata before sending
+content, rejects cloud-backed model metadata, D5, redirects, unexpected model,
+tool calls, unsupported modalities, malformed/oversized output and excess usage.
+It has bounded timeout, cancellation and payload minimization. No model weights,
+cloud credentials, live provider calls or paid resources were used in tests.
+
+Updated optional runtime model configuration, API composition and the web BFF
+timeout/cancellation. Added identity live-session revalidation to protect longer
+inference from session/device/epoch changes. The local path revalidates authority
+during orchestration and before returning content; revocation blocks the result.
+No direct model-to-tool execution path was added. Core contracts unchanged.
+
+Affected source: apps/api/src/conversation-http.ts, apps/api/src/main.ts,
+apps/web/app/api/conversation/route.ts, packages/config/src/index.ts,
+packages/identity/src/engine.ts, packages/models/src/index.ts and the new adapter.
+New tests: local-ollama, local-conversation-http and live-session. Dependency lock
+adds Electron/Three.js; it also reconciles already-declared API core/model deps.
+
+## Evidence
+
+- `npm run check`: lint, boundaries, strict TypeScript and 657 tests PASS, 70 files.
+- 10 new local adapter transport/security tests PASS.
+- 2 new live identity revalidation tests PASS.
+- 2 new authenticated HTTP integration tests PASS, including in-flight revocation.
+- `npm run build:web`: PASS.
+- `PYTHONPATH=src python3 scripts/check.py`: PASS.
+- Python unittest suite: 68 PASS.
+- `npm test --workspace @jarvis/desktop`: 3 PASS.
+- Requirement inventory structural check: PASS, all 192 IDs accounted for.
+- `--release` readiness check: EXPECTED FAIL / NOT READY. No reviewed per-requirement
+  release evidence has been entered. This gate was not bypassed or weakened.
+- Actual Ollama inference, desktop compositing and hardware metrics NOT TESTED.
+- Native Electron launch requires a normal desktop user/display; root launch
+  refused sandboxed execution. Sandbox was not disabled. Browser download also
+  failed from network timeouts. No visual or native benchmark pass is claimed.
+
+## Remaining release blockers
+
+V1/V2 full completion is not achieved: real model installation/quality evidence,
+authenticated desktop voice and ASR/TTS, full memory/knowledge UI and ingestion,
+durable agents and real governed connectors, proactive workflows, mobile/native
+packaging, devices/twin and hardware-dependent research, production security,
+independent backup/restore and exact-candidate full-stack release qualification
+remain. Refer to the corrected register; do not treat this candidate as 100% ready.
+
+No main merge, production deployment or GO is issued. Exact published commit and
+cloud check references will be recorded in final delivery without making this
+commit self-referential.
+
+# Resume work — 2026-09-10
+
+## Owner prompt verbatim
+
+Resume work
+
+## Source recovery and publication
+
+The shell push had not created the remote branch. Published the complete local
+candidate through GitHub Git objects instead. GitHub tree
+`357e5c32a1c405f62a274416baf7cc39952fc4d1` exactly matches locally tested
+`cc159511fcfa9dd823b7da099469e15e0c5143f6`. Published commit is
+`185b33b32fa215b1b24f91a5e13431fb36cd6fda`; commit metadata differs, source does not.
+Created draft PR https://github.com/sawantvaishnav1994-ai/jarvis/pull/2.
+GitHub J1 Development Checks run `34444117630` passed on that published SHA.
+This is the existing focused J1 development workflow, not full-stack or native GO.
+
+## Continued desktop implementation
+
+- Normalize and bound persisted coordinates before native display lookup.
+- Invalidate outstanding microphone consent requests when hiding or stopping,
+  and recheck request identity/window visibility after asynchronous OS permission.
+- Add rendered-frame telemetry to establish real WebGL drawing in native tests.
+- Add a Windows native smoke verifier with an isolated temporary profile. It
+  preserves Chromium sandbox/CSP, launches the real app, checks small/topmost
+  window and isolated renderer, controls, semantic state fixtures, screenshot
+  alpha, resize/hide/restore and diagnostic metrics. It never opens a real mic
+  or pretends fixture state events are actual voice/runtime integration.
+- Add Windows CI to run the smoke verifier and retain screenshots/evidence.
+
+Native results are pending the exact pushed candidate; no native pass is claimed
+before the Windows job succeeds. Virtual CI performance is not battery/GPU or
+physical multi-monitor certification. Existing V1/V2 release blockers remain.
+
+Local continuation validation: 657 TypeScript tests, four desktop state tests,
+68 Python regressions, lint/boundaries/types and web production build passed.
+Native verifier also covers delayed consent resolved after hide using a test-only
+native-dialog stub; it never requests actual microphone capture in CI.
+
+# PRD continuation and native verification repair — 2026-09-10
+
+## Owner prompt verbatim
+
+Continue previous chats jarvis projects work complete as per given pdr and all continue and finish the work
+
+## Recovered evidence and implementation
+
+Recovered existing candidate at 618497b60f02526548233d6d3058f71fac6ad692,
+PR 2 and the corrected 192-entry V1/V2 requirements register. Prior saved context
+was stale; repository and current work-log evidence take precedence. Main remains
+2586049619072da592ed1d4b7eb225fa0a955e69.
+
+Inspected Windows run 34444816119 and native job 102767221097. Real sandboxed
+rendering, alpha transparency, controls and initial hide/restore passed. A later
+immediate native visibility assertion failed after cancelled microphone consent.
+Completed the recovered uncommitted fix in scripts/verify-presence-native.mjs:
+bounded polling waits for actual native visibility on both restores, preserving
+the assertion and sandbox; stack traces now identify future failing assertions.
+Formatted the changed script with the pinned formatter.
+
+Local validation: npm run check PASS (lint, boundaries, types, 657 tests);
+npm run build:web PASS; Python syntax/boundaries PASS; 68 Python regressions
+PASS; four desktop state tests PASS. Exact-candidate Windows rerun pending
+publication. No full-stack/release GO, main merge or production deployment.
+
+The requested full V1/V2 product remains unfinished. Outstanding release work
+includes live voice/ASR/TTS, authenticated desktop integration, reviewed memory
+and knowledge flows, real governed connectors, durable agents/workflows,
+mobile/native distribution, physical devices and production qualification.
+This change repairs a concrete verification blocker; it does not complete them.
+
+# Continued local microphone lifecycle hardening — 2026-09-10
+
+## Owner prompt verbatim
+
+Continue
+
+## Publication blocker
+
+Local commit d1c853d contains the native visibility verifier repair. Automatic
+approval review rejected its git push to validation/j1.product-readiness-20260909,
+stating that uploading code and the cumulative work log to an external GitHub
+destination required explicit publication authorization. No alternate publication
+route was attempted after rejection. The connected repository metadata reports
+public visibility; uploading the log/source therefore exposes them publicly.
+Exact-candidate Windows verification remains blocked on authorized publication.
+
+## Work performed
+
+Continued unaffected local work. Found overlapping microphone lifecycle races:
+old AudioContext shutdown could revoke a new grant; an old capture rejection or
+track-ended callback could stop replacement capture; old finally cleanup could
+clear the newer pending-request marker. Extracted MicrophonePreview with explicit
+request generation and resource ownership, immediate permission revocation,
+late-result disposal and stale-callback rejection. The renderer now uses that
+controller; Hide no longer waits for asynchronous AudioContext shutdown before
+hiding the window. This remains local amplitude preview, not ASR/TTS.
+
+Affected files: apps/desktop/presence/microphone.mjs,
+apps/desktop/presence/microphone.test.mjs,
+apps/desktop/presence/renderer.js, apps/desktop/README.md and this cumulative log.
+
+## Verification
+
+npm run check PASS: lint, package boundaries, TypeScript, 657 tests in 70 files.
+npm run build:web PASS. Python syntax/boundary check PASS and 68 Python tests
+PASS. Desktop suite PASS: 10 tests, including six new asynchronous media resource
+regressions. Final renderer syntax and git whitespace checks PASS. Tests used
+synthetic media objects; no microphone, credentials or live provider was used.
+The product inventory check accounts for all 168 V1 and 24 V2 requirements;
+--release correctly reports NOT READY because individual release acceptance
+records remain unreviewed. This is not a percentage of missing code.
+
+## Next steps and limitations
+
+Obtain explicit authorization to upload these locally committed changes and the
+cumulative log to the existing public repository's validation branch, then run
+Windows native CI and investigate any failures. Main merge and production release
+are not claimed. Complete the remaining V1/V2 implementation and release evidence,
+including actual authenticated voice/runtime integration, hardware verification,
+connectors, agents, knowledge/memory flows, mobile and production controls.
+
+# Authorized publication and completion clarification — 2026-09-10
+
+## Owner prompt verbatim
+
+Yes do it and is now jarvis project complete what i have given you all done 
+Even ui deaign and a 3d screen present all done right
+
+## Authorization and scope
+
+Owner explicitly approved publishing the previously described code and cumulative
+log to the existing public validation branch for Windows verification. Publication
+covers local commits d1c853d and 728084e and this authorization record. No production
+release or main merge is included. Source-tree equality will be checked if GitHub
+Git objects are used to publish the candidate.
+
+## Actual completion status
+
+Full V1/V2 completion is NOT achieved. The desktop candidate implements a small
+transparent, topmost 3D presence with controls and local amplitude preview. The
+web currently exposes foundation Home, identity and conversation routes; the full
+approved product UI and integrated voice assistant are not complete. Real model
+and voice quality, authenticated desktop runtime, memory/knowledge experiences,
+connectors/agents, mobile packaging and production qualification remain pending.
+Native Windows qualification is a limited desktop gate, not full product release.
+
+Previously verified unchanged runtime: 657 TypeScript tests, 68 Python tests,
+10 desktop tests, lint/types/boundaries and production web build passed. Publication
+and exact Windows/J1 run outcomes are to be reported after observing the candidate.
+
+## Exact first publication and native root cause
+
+Published commit 1edbc47654d7df7c6e83779cd22e51740c1ae509 on the approved
+validation branch. GitHub tree 3fb3ca72335be66c20a004c5820e8b9122664a9c
+exactly equals local 2e60084's tree. J1 Development Checks 34515253289 PASS.
+Windows run 34515251104 failed the retained restore assertion after successful
+sandbox, controls, real WebGL and alpha-pixel checks; all ten desktop tests passed.
+
+The stack trace disproved the initial timing-only diagnosis. The harness emitted
+second-instance on Node process, but production registers that event on Electron
+app. Corrected both test invocations to app.emit; kept bounded visibility asserts
+and all microphone/security checks. This changes the test stimulus, not production
+permissions or window behavior. Final exact-candidate native result follows in
+the delivery; no native or product GO is inferred from a local harness edit.
+
+## Observed final verification outcome
+
+Published corrected source eaa1804c737e458c9fd2562fd380644950672992, tree
+44d381d0c66de4b7f69ab9ff94ec86c844bc2333, exactly matching local 8e2aaaf.
+Windows native run 34515510546 PASS, native job 102999794794: all ten desktop
+unit tests, the complete native verifier and evidence upload passed. J1 development
+run 34515510487 PASS on the same SHA. The prior failed runs are retained above.
+Local full suite also passed: 657 TypeScript, 68 Python, lint/types/boundaries,
+web production build. Main independently remains
+2586049619072da592ed1d4b7eb225fa0a955e69. No merge or production release occurred.
+
+Desktop native smoke is now verified on Windows CI. Real microphone/ASR/TTS,
+physical-device performance, full approved UI, authenticated desktop runtime,
+mobile packaging and the remaining V1/V2 release requirements are still pending.
+Release readiness check remains NOT READY; no arbitrary completion percentage is
+claimed. This local outcome record supplements the published authorization log;
+the tested source and exact cloud evidence are available through PR 2.
+
+# Complete all incomplete — Home implementation continuation
+
+## Owner prompt verbatim
+
+Complete all incomplete
+
+## Work performed
+
+Continued from the Windows-verified eaa1804 candidate without rebuilding protected
+backend contracts. Implemented Personal Home at root with a dark neural-field
+interface, in-place authenticated conversation, session transcript, provenance,
+activity records, command menu, reduced-motion setting and clear confirmation.
+Moved the existing service dashboard intact to /dashboard and preserved its health
+and responsive test assertions on that route. Reused the existing transport/device
+proof through a shared client; no browser-owned authorization or persistent tokens.
+Added an abortable HomeSession controller with five asynchronous request lifecycle
+tests. Home truthfully marks synthetic model output, current page-only history,
+completed (not live) event records and missing voice/memory/knowledge interfaces.
+
+Extended desktop semantic states and labels for active, understanding, thinking,
+memory retrieval, knowledge retrieval, tools, approval, error and background.
+Existing reasoning events remain compatible; state events still cannot authorize
+anything. Added replay/authority-stripping coverage and expanded real Windows
+fixture rendering checks. Added a browser qualification workflow with explicit
+synthetic transport fixtures, screenshots and responsive/interaction assertions.
+
+## Validation and scope
+
+Local check PASS: lint, boundaries, types, 662 tests across 71 files. Web build
+PASS. Eleven desktop tests PASS. Python syntax/boundary check PASS. Python and
+exact candidate cloud outcomes are recorded after completion. Applied React skill
+review: reusable client, stable external store snapshots, effect cleanup, bounded
+animation rate, hidden render suspension and native accessible dialogs.
+
+Affected files include apps/web/app/home/*, page.tsx, dashboard/page.tsx,
+conversation/client.ts and console imports; tests/unit/personal-home-session.test.ts,
+tests/home-ui/home.spec.ts, tests/e2e/foundation.spec.ts, playwright.home.config.ts,
+.github/workflows/personal-home.yml; desktop state/renderer/tests/native verifier;
+docs/product/personal-home-implementation.md and this cumulative log.
+
+The complete V1/V2 product remains NOT READY. Live voice, persistent product
+history, memory/knowledge ingestion and UI, agents/connectors, device/mobile
+integration, real model quality and production qualification are not completed by
+this increment. No release acceptance is claimed for them. Next work must connect
+those paths to existing server-governed services and verify on real runtime/device
+infrastructure; documentation and synthetic UI tests alone cannot close them.
+
+# Continue — Home verification and local read-aloud, 2026-09-11
+
+## Owner prompt verbatim
+
+Continue
+
+## Recovered cloud evidence
+
+Candidate 5b746ca226b32a597c543a3fcb7ef6273c747c42 matches local bc2b553
+(tree 43855ed1fb6b402b30a4d8c3275def55b08e705e). Windows native run
+34517235774 and J1 development run 34517235708 PASS. Home run 34517236564
+passed lint/types, 662 tests, production build and two browser scenarios (desktop/
+mobile rendering and synthetic conversation interaction). The third scenario
+failed because unscoped getByRole(alert) matched Next's route announcer as well as
+the real application error. Scoped the assertion to main; all error assertions
+remain. No production auth behavior was weakened.
+
+## Implementation
+
+Added explicit local read-aloud of returned answers, selected local voice setting,
+immediate Stop control, actual synthesis-start speaking indication and Core motion.
+LocalReadAloud owns speech generations and rejects stale callbacks. It re-reads
+voice locality for every utterance, refuses remote voices/default fallback, rejects
+oversized text and stops on voice removal, view change, hide, exit, clear or a new
+request. No autoplay, microphone, speech recognition or external synthesis added.
+
+Four unit tests cover locality/reselection, no autoplay, cancellation/replacement,
+late callbacks, voice disappearance and bounds. Added an explicit browser speech
+fixture scenario for Read aloud, Stop, navigation cancellation and local-only
+selection. Real OS voice availability/quality remains unverified. localService is
+a browser/OS declaration, not proof against a hostile platform.
+
+Local checks: 666 tests in 72 files PASS; lint, boundaries and types PASS; web build
+PASS; Python syntax/boundaries and 68 regressions PASS. Last presentation changes
+receive final type/build checks before publishing. Browser screenshots from the
+prior run were archived, but local artifact materialization returned HTTP 403;
+no manual screenshot inspection is claimed. Exact new cloud outcomes follow.
+
+Affected: apps/web/app/home/{speech.ts,read-aloud.tsx,home.tsx,home.css,core.tsx},
+tests/unit/local-read-aloud.test.ts, tests/home-ui/home.spec.ts, product report and
+this cumulative log. Full V1/V2 remains NOT READY, with real ASR/voice-runtime,
+durable product history, memory/knowledge, agents/connectors, devices/mobile and
+production qualification still requiring implementation and acceptance.
+
+## Observed continuation qualification
+
+Published source 54652256394ec84f60398130bb521cbcb515b24e exactly matches
+local 070e54c tree 3ff603602e16160c43deba85536c954e68936d41. All three
+cloud runs completed successfully on that SHA:
+- Personal Home UI verification 34566871682 PASS (full local-style check,
+  production web build, four browser scenarios including synthetic speech control).
+- Presence native Windows verification 34566871743 PASS.
+- J1 Development Checks 34566871729 PASS.
+
+The corrected alert selector retained the original denial assertions. No runtime
+mock was substituted for a live provider in production; browser/voice fixtures
+remain confined to tests. Confirmed source is on the validation branch, not main.
+Full V1/V2 release status remains NOT READY. Next implementation priorities remain
+server-governed durable conversation history, memory and knowledge product flows,
+ASR and authenticated desktop voice, agents/connectors and deployment/hardware
+acceptance. This local outcome entry supplements the published candidate log.
+
+# Master project completion directive — 2026-09-11
+
+## Owner prompt verbatim
+
+JARVIS — MASTER PROJECT COMPLETION DIRECTIVE
+
+COMPLETE THE ENTIRE APPROVED JARVIS PROJECT
+
+This instruction supersedes fragmented feature-by-feature development instructions.
+
+Your objective is now to take the existing JARVIS repository from its current partially implemented state to the complete implementation of the approved JARVIS V1 PRD + V2 Complete System Engineering Specification.
+
+Do not restart the project.
+
+Do not redesign completed architecture merely because another implementation would be easier.
+
+Do not rebuild features already verified as working.
+
+Do not continue indefinitely creating planning documents instead of implementing.
+
+The existing repository, V1 PRD, V2 engineering specification, approved UI direction, security architecture, J0/J1 work and completed validation evidence are the baseline.
+
+⸻
+
+1. SINGLE SOURCE OF TRUTH
+
+Use these documents as the authoritative product scope:
+
+1. JARVIS Master PRD / Project Blueprint V1
+2. JARVIS Complete System Engineering Specification V2
+3. Existing requirement traceability covering:
+    * FR-001 through FR-168
+    * 24 additional V2 engineering requirements
+    * Total approved mapped scope: 192 requirements
+
+Create or update one repository-controlled completion ledger:
+
+docs/JARVIS_MASTER_COMPLETION_LEDGER.md
+
+Every requirement must have:
+
+* Requirement ID
+* Requirement description
+* Owning subsystem
+* Implementation location
+* Current status
+* Tests
+* Integration verification
+* Security verification where applicable
+* Evidence
+* Blocking dependency, if any
+* Final completion state
+
+Only these statuses are allowed:
+
+* NOT_STARTED
+* IN_PROGRESS
+* IMPLEMENTED_UNVERIFIED
+* VERIFIED_COMPLETE
+* BLOCKED_EXTERNAL
+
+Never mark something complete merely because code exists.
+
+VERIFIED_COMPLETE requires working implementation + tests + integration evidence.
+
+⸻
+
+2. FIRST ACTION — AUDIT THE EXISTING PROJECT
+
+Before adding new functionality, inspect the complete repository.
+
+Determine exactly what already exists.
+
+Do not assume previous conversational claims are accurate.
+
+Verify through source code, tests, runtime behavior and existing evidence.
+
+Map every one of the 192 requirements to the existing implementation.
+
+Preserve all verified completed work.
+
+Identify:
+
+* complete requirements
+* partially complete requirements
+* missing requirements
+* duplicated systems
+* disconnected systems
+* placeholder/mock implementations
+* unfinished runtime wiring
+* missing persistence
+* missing tests
+* missing production qualification
+
+Then update the Master Completion Ledger.
+
+This audit must become the basis for all remaining implementation.
+
+Do not create another independent roadmap afterward.
+
+⸻
+
+3. PRIMARY COMPLETION GOAL
+
+The finished system must implement the real JARVIS runtime loop:
+
+USER
+↓
+INPUT
+↓
+VOICE / TEXT / EVENT
+↓
+UNDERSTANDING
+↓
+IDENTITY + SESSION
+↓
+CONTEXT ASSEMBLY
+↓
+MEMORY RETRIEVAL
+↓
+KNOWLEDGE RETRIEVAL
+↓
+MODEL ORCHESTRATION
+↓
+REASONING
+↓
+PLANNING
+↓
+POLICY / PERMISSIONS
+↓
+APPROVAL IF REQUIRED
+↓
+TOOL / AGENT EXECUTION
+↓
+RESULT VERIFICATION
+↓
+MEMORY UPDATE
+↓
+AUDIT
+↓
+RESPONSE
+↓
+VOICE / TEXT / UI
+
+This must be a real integrated runtime.
+
+Do not simulate the workflow only in the UI.
+
+⸻
+
+4. COMPLETE THE CORE RUNTIME FIRST
+
+Complete and verify the following before expanding secondary surfaces.
+
+4.1 Identity
+
+Complete:
+
+* Root Owner
+* authentication
+* trusted devices
+* sessions
+* permissions
+* authorization
+* role/capability checks
+* credential handling
+* device trust
+* account recovery controls
+* owner-sensitive operations
+
+No subsystem may bypass authorization.
+
+⸻
+
+4.2 Conversation Runtime
+
+Complete:
+
+* new conversation
+* persistent conversation IDs
+* message persistence
+* reload persistence
+* cross-session retrieval
+* conversation titles
+* conversation history
+* streaming responses
+* cancellation
+* retry/recovery
+* attachments where defined
+* conversation metadata
+* model/runtime metadata
+* audit relationship
+
+Conversation history must survive restart/reload.
+
+⸻
+
+4.3 Model Orchestration
+
+Complete:
+
+* provider abstraction
+* model registry
+* local models
+* cloud models
+* model selection
+* routing
+* fallback
+* timeout handling
+* retry policies
+* cost/usage metadata
+* capability detection
+* offline fallback
+* provider outage handling
+
+JARVIS is the system.
+
+Models remain replaceable intelligence providers.
+
+⸻
+
+5. COMPLETE MEMORY
+
+Implement the entire approved memory architecture.
+
+This includes:
+
+* memory objects
+* episodic memory
+* semantic memory
+* procedural/skill memory where specified
+* user preferences
+* project memory
+* relationship linking
+* confidence
+* verification state
+* sensitivity
+* provenance
+* retention
+* versioning
+* embeddings
+* memory retrieval
+* memory ranking
+* memory update
+* correction
+* forgetting/deletion
+* export
+* synchronization where applicable
+
+Complete the interfaces:
+
+* Ambient Memory
+* Memory Graph
+* Memory Tree
+* Memory Detail
+
+Memory must not only have UI.
+
+The runtime must actually retrieve and use it.
+
+⸻
+
+6. COMPLETE KNOWLEDGE
+
+Keep Knowledge separate from Memory.
+
+Implement:
+
+* document ingestion
+* parsing
+* chunking
+* embedding
+* indexing
+* retrieval
+* ranking/reranking where appropriate
+* citations/provenance
+* source metadata
+* knowledge collections
+* refresh/update
+* deletion
+* permissions
+* retrieval into model context
+
+Complete the Knowledge UI and runtime integration.
+
+⸻
+
+7. COMPLETE CONTEXT ENGINE
+
+Create one authoritative context assembly pipeline.
+
+It must intelligently combine:
+
+* current user request
+* conversation history
+* relevant memory
+* relevant knowledge
+* current project/workspace
+* device/environment state
+* agent/task state
+* relevant tool results
+* permissions
+* system policies
+
+Implement context limits and prioritization.
+
+Avoid blindly injecting everything into prompts.
+
+⸻
+
+8. COMPLETE AGENT RUNTIME
+
+Implement the approved:
+
+Planner → Executor → Verifier
+
+architecture.
+
+Agents must support:
+
+* task creation
+* task decomposition
+* steps
+* dependencies
+* execution status
+* retries
+* failure handling
+* approvals
+* cancellation
+* resume/recovery
+* tool invocation
+* verification
+* results
+* audit trail
+
+Do not create unrestricted autonomous agents.
+
+All actions remain governed by owner permissions and policies.
+
+⸻
+
+9. COMPLETE TOOL / ACTION SYSTEM
+
+Implement a real tool registry and execution system.
+
+Support the architecture required for:
+
+* local files
+* applications
+* browser/computer operations
+* APIs
+* shell/approved command execution where allowed
+* web operations
+* project tools
+* communication tools
+* device tools
+* future integrations
+
+Every tool must define:
+
+* ID
+* capabilities
+* input schema
+* output schema
+* permission requirement
+* risk level
+* timeout
+* retry behavior
+* verification mechanism
+* audit information
+
+Do not hard-code tool behavior directly into conversation UI.
+
+⸻
+
+10. COMPLETE APPROVAL & SAFETY SYSTEM
+
+Consequential actions must support explicit approval.
+
+Implement:
+
+* approval request
+* approval UI
+* allow once
+* deny
+* cancel
+* scope-limited approvals
+* approval expiry
+* execution after approval
+* immutable audit relationship
+
+High-risk actions must never silently execute.
+
+⸻
+
+11. COMPLETE ACTIVITIES
+
+Activities must become the live operational history of JARVIS.
+
+Show:
+
+* active task
+* queued
+* waiting
+* waiting for approval
+* running
+* completed
+* failed
+* cancelled
+* background work
+* agent activity
+* tool activity
+* timestamps
+* relevant results
+
+Activities must come from real runtime events, not fake frontend data.
+
+⸻
+
+12. COMPLETE VOICE
+
+Implement the complete voice loop:
+
+Wake / Activate
+↓
+Listen
+↓
+Voice Activity Detection
+↓
+Speech-to-Text
+↓
+Understanding
+↓
+JARVIS Runtime
+↓
+Action / Reasoning
+↓
+Response
+↓
+Text-to-Speech
+↓
+Speak
+
+Requirements include:
+
+* listening state
+* stop listening
+* speaking state
+* stop speaking
+* interruption/barge-in where supported
+* microphone permission
+* local/cloud STT abstraction
+* local/cloud TTS abstraction
+* failures
+* offline mode
+* audio privacy
+* configurable voice
+* no secret recording
+
+Do not limit voice to browser speechSynthesis.
+
+Create provider abstractions suitable for production/local voice engines.
+
+⸻
+
+13. COMPLETE FLOATING JARVIS PRESENCE
+
+Preserve the approved lightweight Presence architecture.
+
+The floating Presence is NOT the complete application.
+
+Desktop Presence must include:
+
+* transparent window
+* frameless UI
+* always-on-top
+* draggable
+* saved position
+* configurable size
+* hide/show
+* multi-monitor behavior
+* real 3D JARVIS Core
+* reduced-motion support
+
+Connect it to real runtime semantic events:
+
+* idle
+* listening
+* understanding
+* reasoning
+* memory retrieval
+* knowledge retrieval
+* tool execution
+* responding
+* background
+* approval required
+* success
+* warning
+* error
+
+Architecture:
+
+JARVIS Runtime
+→ Presence State Controller
+→ Visual State Machine
+→ 3D Renderer
+
+The renderer must never decide JARVIS behavior.
+
+⸻
+
+14. COMPLETE MAIN WEB EXPERIENCE
+
+The web application remains the detailed JARVIS workspace.
+
+Finish all approved surfaces including:
+
+* Home
+* Conversation
+* Memory
+* Knowledge
+* Activities
+* Agents / Tasks where specified
+* Devices
+* World / Digital Twin where in current scope
+* Settings
+* Security
+* permissions/approvals
+* model configuration
+* integrations
+* audit/history
+
+Do not convert JARVIS into a traditional enterprise dashboard.
+
+Preserve the approved minimal, intelligent, spatial product direction.
+
+⸻
+
+15. COMPLETE OFFLINE / DEGRADED MODE
+
+JARVIS must not die when internet access disappears.
+
+Implement connectivity state management.
+
+When offline, support where locally available:
+
+* Presence
+* local authentication
+* local conversation
+* local models
+* local memory
+* local knowledge
+* local STT
+* local TTS
+* local file tools
+* local apps
+* LAN devices
+* local automations
+
+Cloud-only capabilities must clearly become unavailable.
+
+Never pretend an online action succeeded while offline.
+
+Queue only actions explicitly permitted to be queued.
+
+When connectivity returns:
+
+* reconnect
+* synchronize
+* resolve permitted pending operations
+* verify outcomes
+
+⸻
+
+16. COMPLETE EVENTS & AUTOMATION
+
+Implement:
+
+* event bus
+* durable jobs
+* scheduled work
+* triggers
+* background jobs
+* retries
+* idempotency
+* recovery
+* event history
+* policies
+* notifications
+
+Proactivity must come from:
+
+Events + Rules/Policy + Context + Permission
+
+—not from an unrestricted LLM loop.
+
+⸻
+
+17. COMPLETE DEVICES
+
+Implement the approved device abstraction layer.
+
+Include:
+
+* device registry
+* discovery where supported
+* capabilities
+* status
+* permissions
+* commands
+* confirmation
+* device events
+* health
+* online/offline state
+
+No LLM may directly control physical actuators.
+
+Physical actions require deterministic device/control layers.
+
+⸻
+
+18. COMPLETE SECURITY
+
+Verify the entire trust architecture.
+
+Required areas include:
+
+* Root Owner
+* secure authentication
+* authorization
+* trusted devices
+* secrets management
+* encryption
+* permission boundaries
+* approval boundaries
+* prompt-injection defenses
+* tool isolation
+* credential protection
+* audit
+* emergency stop
+* data export
+* deletion
+* backups
+* recovery
+* secure defaults
+
+Run adversarial and negative-path tests.
+
+Do not claim security completion based only on happy-path tests.
+
+⸻
+
+19. COMPLETE AUDIT
+
+Every consequential operation must generate auditable records.
+
+Audit must cover:
+
+* authentication
+* permissions
+* approvals
+* agents
+* tools
+* model calls
+* memory mutation
+* knowledge mutation
+* device operations
+* administrative changes
+* emergency stop
+* failures
+
+Audit data must not be silently alterable by normal application flows.
+
+⸻
+
+20. COMPLETE DATA & STORAGE
+
+Finish production-grade storage for:
+
+* users/owner
+* devices
+* sessions
+* conversations
+* messages
+* memory
+* embeddings
+* knowledge
+* documents
+* tasks
+* agents
+* tool executions
+* approvals
+* events
+* audit
+* settings
+* integrations
+
+Add migrations, constraints, indexes and recovery procedures.
+
+Remove inappropriate production dependence on temporary/in-memory storage.
+
+⸻
+
+21. LOCAL-FIRST ARCHITECTURE
+
+Maintain support for:
+
+Local JARVIS Runtime
++
+Cloud Extensions
+
+JARVIS must remain functional in degraded/offline scenarios where its local dependencies are available.
+
+Cloud providers enhance JARVIS but must not define JARVIS itself.
+
+⸻
+
+22. LEARNING & IMPROVEMENT ARCHITECTURE
+
+Implement the safe foundation for:
+
+1. Memory learning
+2. Knowledge learning
+3. Skill/procedure learning
+4. Controlled model improvement
+
+Do NOT allow uncontrolled online weight modification.
+
+Future fine-tuning/distillation must use curated, permission-safe, verified datasets and separate evaluation before deployment.
+
+⸻
+
+23. MOBILE
+
+After the core runtime and web/desktop systems are stable, implement the approved mobile architecture.
+
+Android:
+
+* JARVIS Presence app/APK
+* voice interaction
+* notifications
+* permissions
+* quick actions
+* approvals
+* supported background operation
+* opening full web environment where appropriate
+
+iOS:
+
+Use only supported Apple APIs.
+
+Do not attempt forbidden arbitrary system overlays.
+
+Use appropriate:
+
+* native application UI
+* notifications
+* widgets
+* Live Activities
+* Dynamic Island where technically appropriate
+* supported voice/background integrations
+
+The mobile application is a JARVIS surface, not a second JARVIS brain.
+
+⸻
+
+24. TESTING IS PART OF IMPLEMENTATION
+
+Every subsystem requires tests.
+
+At minimum use appropriate combinations of:
+
+* unit tests
+* integration tests
+* database tests
+* API tests
+* browser tests
+* runtime tests
+* failure-path tests
+* security tests
+* persistence/restart tests
+* offline/degraded tests
+* performance tests
+
+Do not weaken or delete valid tests merely to get a green pipeline.
+
+Fix the implementation.
+
+⸻
+
+25. REMOVE FAKE COMPLETION
+
+Search for and resolve:
+
+* TODO
+* FIXME
+* placeholders
+* mock-only runtime data
+* fake success responses
+* temporary bypasses
+* disabled security checks
+* empty interfaces
+* unimplemented handlers
+* hard-coded demo results
+* disconnected UI controls
+
+Mocks may remain only inside tests or clearly designated development fixtures.
+
+⸻
+
+26. WORK IN DEPENDENCY ORDER
+
+Do not jump randomly between modules.
+
+Use approximately this completion order:
+
+PHASE A — Repository audit + completion ledger
+
+PHASE B — Core persistence / identity / conversation
+
+PHASE C — Model orchestration + context
+
+PHASE D — Memory + Knowledge
+
+PHASE E — Tools + Agent runtime + approvals
+
+PHASE F — Complete end-to-end JARVIS loop
+
+PHASE G — Voice + Presence integration
+
+PHASE H — Events + automations
+
+PHASE I — Devices + offline/degraded operation
+
+PHASE J — Complete web interfaces
+
+PHASE K — Mobile clients
+
+PHASE L — Security / recovery / observability / performance hardening
+
+PHASE M — Whole-product validation
+
+PHASE N — Production release
+
+Do not proceed merely because the phase’s source files exist.
+
+Proceed when its acceptance tests pass.
+
+⸻
+
+27. DO NOT WAIT FOR ME BETWEEN NORMAL STEPS
+
+You are authorized to continue through normal engineering decisions needed to implement the already approved PRD.
+
+Do not stop after each small task to ask:
+
+“Should I continue?”
+
+Continue.
+
+Only stop for a true external blocker such as:
+
+* required secret/API credential unavailable
+* operating-system signing certificate unavailable
+* paid third-party account unavailable
+* physical hardware unavailable
+* external service requiring owner action
+* irreversible or consequential decision not already approved
+
+When blocked externally:
+
+1. Record BLOCKED_EXTERNAL in the ledger.
+2. Explain exactly what is needed.
+3. Continue implementing every other unblocked requirement.
+
+One blocked feature must not stop the rest of the project.
+
+⸻
+
+28. DO NOT CREATE ENDLESS BRANCHES
+
+Use a controlled integration strategy.
+
+Keep:
+
+* main = protected stable baseline
+* one active completion/integration branch
+* short-lived branches only when technically justified
+
+Continuously integrate verified completed work back into the active completion candidate.
+
+Avoid accumulating dozens of disconnected validation branches.
+
+⸻
+
+29. CI/CD
+
+The pipeline must eventually validate:
+
+* formatting
+* linting
+* type checks
+* builds
+* unit tests
+* integration tests
+* database tests
+* security checks
+* browser tests
+* packaged desktop tests where possible
+
+Use caching and test segmentation where appropriate.
+
+Do not bypass failures.
+
+⸻
+
+30. PERFORMANCE
+
+Measure rather than guess.
+
+Record:
+
+* application startup
+* Presence startup
+* memory usage
+* idle CPU
+* idle GPU
+* database performance
+* model latency
+* voice latency
+* retrieval latency
+* tool latency
+* browser performance
+* failure/recovery behavior
+
+Optimize serious bottlenecks after correctness.
+
+⸻
+
+31. OBSERVABILITY
+
+Implement:
+
+* structured logs
+* metrics
+* traces
+* correlation IDs
+* model execution tracing
+* agent tracing
+* tool tracing
+* job tracing
+* failure diagnostics
+
+Do not leak secrets or sensitive memory into logs.
+
+⸻
+
+32. BACKUP & RECOVERY
+
+Implement and verify:
+
+* database backup
+* encrypted data backup
+* restore
+* configuration recovery
+* memory export
+* user data export
+* deletion
+* disaster recovery documentation
+
+A backup does not count as complete until restore has been tested.
+
+⸻
+
+33. PRODUCTION RELEASE
+
+Only declare JARVIS production-ready after whole-product validation.
+
+Production release must include:
+
+* reproducible builds
+* database migration procedure
+* deployment configuration
+* secrets configuration
+* health checks
+* backup/recovery
+* observability
+* secure production defaults
+* desktop installer
+* supported web deployment
+* mobile artifacts where included in frozen release scope
+* installation documentation
+* operations documentation
+* user documentation
+
+⸻
+
+34. FINAL ACCEPTANCE TEST
+
+Before declaring completion, perform a real end-to-end scenario similar to:
+
+Owner activates JARVIS
+↓
+JARVIS recognizes trusted owner/device
+↓
+Owner speaks or types a task
+↓
+JARVIS understands it
+↓
+Retrieves conversation context
+↓
+Retrieves relevant memory
+↓
+Retrieves relevant knowledge
+↓
+Selects the appropriate model
+↓
+Reasons/plans
+↓
+Determines required permissions
+↓
+Requests approval if necessary
+↓
+Executes tools/agents
+↓
+Verifies results
+↓
+Updates task state
+↓
+Stores appropriate memory
+↓
+Writes audit evidence
+↓
+Responds by text/voice
+↓
+Activities show the real operation
+↓
+Conversation/history survives reload
+↓
+System survives restart
+↓
+Offline/degraded behavior is verified
+
+This test must use real integrated subsystems, not mock results.
+
+⸻
+
+35. DEFINITION OF 100% COMPLETE
+
+Do NOT declare:
+
+“JARVIS is complete”
+
+until all frozen in-scope requirements are one of:
+
+VERIFIED_COMPLETE
+
+or, for things that inherently require resources unavailable to the repository:
+
+BLOCKED_EXTERNAL
+
+Provide a separate external-blocker report.
+
+A requirement is not complete merely because:
+
+* UI exists
+* an API route exists
+* a schema exists
+* a test was mocked
+* one browser flow worked
+* a previous message said it was complete
+
+Completion means implementation + integration + objective verification.
+
+⸻
+
+36. FINAL DELIVERABLES
+
+At project completion provide:
+
+JARVIS_MASTER_COMPLETION_LEDGER.md
+
+JARVIS_FINAL_IMPLEMENTATION_REPORT.md
+
+JARVIS_FINAL_TEST_REPORT.md
+
+JARVIS_SECURITY_VALIDATION_REPORT.md
+
+JARVIS_DEPLOYMENT_GUIDE.md
+
+JARVIS_OPERATIONS_AND_RECOVERY.md
+
+JARVIS_REQUIREMENT_TRACEABILITY_FINAL.md
+
+JARVIS_EXTERNAL_BLOCKERS.md
+
+if external blockers remain.
+
+Also provide:
+
+* final branch
+* final commit SHA
+* CI run
+* deployment URL where applicable
+* desktop build artifact
+* mobile build artifacts where applicable
+* exact list of any unresolved blockers
+
+⸻
+
+37. IMPORTANT WORKING RULE
+
+From this point forward, optimize for finishing the approved product, not generating more plans.
+
+For each implementation cycle:
+
+CHECK LEDGER
+→ SELECT HIGHEST-PRIORITY INCOMPLETE DEPENDENCY
+→ IMPLEMENT
+→ TEST
+→ INTEGRATE
+→ VERIFY
+→ UPDATE LEDGER
+→ CONTINUE
+
+Repeat until the frozen scope is exhausted.
+
+Do not restart completed phases.
+
+Do not redesign merely for novelty.
+
+Do not stop because one feature is difficult.
+
+Do not report “everything is complete” until the evidence supports it.
+
+EXECUTION AUTHORIZATION
+
+Proceed now with:
+
+1. Full repository audit.
+2. Create/update the 192-requirement Master Completion Ledger.
+3. Determine the actual remaining dependency chain.
+4. Begin implementing the highest-priority incomplete foundation.
+5. Continue sequentially through the completion phases.
+6. Validate each subsystem before marking it complete.
+7. Continue until the complete approved JARVIS scope is implemented or an item is demonstrably externally blocked.
+
+The objective is no longer another prototype.
+
+The objective is a finished, integrated, verified JARVIS product based on the approved V1 + V2 specification.
+
+## Audit and first foundation repair
+
+Rechecked both supplied DOCX hashes against the frozen register; match. Inventoried
+549 tracked files, inspected active composition roots, exported subsystem contracts,
+source markers and test locations. Created the 192-record master ledger with source
+wording, acceptance, subsystem, implementation, status, tests, integration/security,
+evidence, dependencies and final status. Initial dispositions are conservative:
+117 IN_PROGRESS, 75 NOT_STARTED. No source-only VERIFIED_COMPLETE claims.
+The initial source audit is not a completed 192-requirement runtime acceptance audit.
+
+Implemented live identity verification for every conversation provider, including
+before opening a conversation session and before disclosing results. Previously
+these runtime checks were conditional on the Ollama adapter. Conversation turn
+transitions and cancellation now verify full owner/actor/device/identity-session/
+epoch/mode binding. Persistence coordinator now checks session authority before
+first write and before committing a response. Governed storage remains mandatory.
+Added nine negative/positive regression cases; existing checks remain intact.
+
+Added scripts/check-completion-ledger.mjs and connected existing readiness checker
+and active J1 CI to it. It checks exact 192 IDs, source wording, mandatory fields,
+allowed states, source paths and structured test/commit/integration evidence for
+completion claims. Source-map JSON remains preserved; ledger owns completion status.
+The release check fails closed while requirements are incomplete.
+
+Affected: docs/JARVIS_MASTER_COMPLETION_LEDGER.md, scripts/check-completion-ledger.mjs,
+scripts/check-product-readiness.mjs, .github/workflows/j1-dev-ci.yml,
+apps/api/src/conversation-http.ts, packages/core/src/conversation-session.ts,
+packages/core/src/final-conversation-persistence.ts, corresponding three unit test
+files and this cumulative log. Validation outcomes and commits follow below.
+
+Local validation completed: npm run check PASS (675 tests in 72 files, lint,
+architecture boundaries and types); web build PASS; Python check and 68 regressions
+PASS. Ledger integrity PASS; --release expected rejection confirmed (exit 1).
+No Docker or psql binary is present in this executor; this does not prevent CI
+qualification and is not recorded as a whole-feature external blocker. No real
+owner data, production mutation, migration change, deployment or main merge.
+
+
+## Resumed checkpoint and verified CI — 2026-09-11
+
+Owner prompt verbatim:
+
+Resume from where it was previously stopped ,
+becz of credits limits has been ended
+
+Recovered integration branch at 1f8193edef4b3ad076d0a80a94db62513dbc2bda;
+local source commit c3e40e5, identical tree bfddc4996d581580b45fc3ac903a70387652ec45.
+GitHub API confirms exact-source runs passed:
+- J1 Development Checks: 34568543758.
+- Personal Home UI verification: 34568543711.
+- Presence native Windows verification: 34568543826.
+
+Attempted to continue Phase B by inspecting pipeline audit and governed persistence.
+Workspace commands stopped returning: read-only source inspection, pwd, and true
+without a login shell each hung. Stopped waiting; no mutations were requested by
+those calls. GitHub connector remains responsive. This documentation-only update
+preserves the verified checkpoint and interruption. No additional runtime code,
+new test run, completed durable history, production deployment or main merge claimed.
+
+External execution blocker: restore a responsive workspace command runner for
+local source edits and required verification. No API key or purchase is shown
+necessary. Requirement statuses remain open, not falsely BLOCKED_EXTERNAL.
+Next code work is pipeline audit and governed durable conversation/history using
+existing authority/storage ports, followed by real database restart/reload checks.
+
+
+## Owner status request — 2026-09-11
+
+Owner prompt verbatim:
+
+What is status of Jarvis provide me the link also to check what is done still now
+
+Read-only GitHub verification: integration head e9520330fc8cd52755a65a57f630436e628be950.
+J1 run 34601471262 PASS; Windows Presence run 34601471361 PASS; Home UI run
+34601471254 still in progress when checked. Previous source 1f8193e passed all
+three workflows. No new implementation or deployment in this status response.
+Provided repository, master ledger and Actions links. No verified hosted JARVIS
+application URL is available; GitHub links are source/progress, not a live app.
+Full approved product remains incomplete. Last engineering interruption was an
+unresponsive workspace command runner; recovery has not been verified here.
+
+
+## UI viewing request — 2026-09-11
+
+Owner prompt verbatim:
+
+So where is live link of jarvis..?
+I want to check a ui how everything is done
+
+Confirmed no verified deployed application URL in this work. Tried workspace pwd
+again; runner did not return, so live preview could not be started. Retrieved
+actual browser evidence artifact 10264677803 from Home run 34601471254 on source
+e9520330fc8cd52755a65a57f630436e628be950. Source test confirms desktop/mobile
+Home PNG screenshots in the archive. GitHub artifact download succeeded through
+the connector. Shared stable artifact link, explicitly labelled screenshots rather
+than live application. No redesigned/mock UI, deployment or further implementation.
+
+
+## Live testing deployment — 2026-09-11
+
+Owner prompt verbatim:
+
+Do one thing make this jarvis live to use 
+So we can be use this jarvis and will do a changes and check working
+
+Discovered existing Railway project jarvis-j1-13-remote-runtime with jarvis-runtime,
+pgvector and Redis already deployed successfully. Correction: earlier statements
+that no live URL existed were incorrect; hosting had not been inspected then.
+Existing domain: https://jarvis-runtime-production-ce54.up.railway.app
+
+User authorized live deployment. Compared deployed e666c7ac358d1cc8884d4f6ac6b3eafca0ef0f0f
+with CI-verified 1f8193edef4b3ad076d0a80a94db62513dbc2bda: no SQL migration changes.
+Staged only source repo/branch/commit update through Railway; preserved build checks,
+start command, secrets, domain, RP/origin and data services. Committed staged update
+under existing authorization. No new service, paid upgrade, secret disclosure,
+owner enrollment, application rewrite or main merge.
+
+Deployment 5eb57f4d-9424-4fc3-82d9-44330efc05f2 reached SUCCESS. Build formatting,
+package/web types, lint/boundaries, selected regression tests and web build passed;
+Railway /api/health healthcheck succeeded. Source config rechecked pinned to 1f8193e
+on validation/j1.product-readiness-20260909. Current Home, conversation, Activities,
+settings and read-aloud code deployed. Authentication remains required for chat.
+Runtime model remains synthetic by default: this is a hosted development/testing
+candidate, not a completed personal AI or production release. Browser interaction
+and real owner login were not performed in the unavailable workspace. Web fetch
+could not access domain; live availability evidence is Railway deployment/healthcheck.

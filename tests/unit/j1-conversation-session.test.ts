@@ -133,3 +133,64 @@ describe("J1.1 conversation session engine", () => {
         expect(repo.sessions.size).toBe(0);
     });
 });
+
+describe("conversation turn authority isolation", () => {
+    it.each([
+        { actorId: "another-actor" },
+        { deviceId: "another-device" },
+        { identitySessionId: "another-session" },
+        { operatingMode: "copilot" as const },
+    ])(
+        "rejects transitions and cancellation under a different binding %j",
+        async (change) => {
+            const repo = new Repo();
+            const engine = new ConversationSessionEngine(
+                repo,
+                async () => true,
+                newId,
+            );
+            const session = await engine.openSession(authority);
+            const turn = await engine.acceptTurn({
+                authority,
+                sessionId: session.id,
+                conversationId: newId(),
+                idempotencyKey: "isolation",
+                correlationId: "isolation",
+            });
+            const other = { ...authority, ...change };
+            await expect(
+                engine.transition(other, turn.id, "assembling_context"),
+            ).rejects.toThrow("CONVERSATION_SESSION_BINDING_INVALID");
+            await expect(engine.cancel(other, turn.id)).rejects.toThrow(
+                "CONVERSATION_SESSION_BINDING_INVALID",
+            );
+            expect(repo.turns.get(turn.id)).toEqual(turn);
+        },
+    );
+    it("rejects cancellation after conversation session revocation", async () => {
+        const repo = new Repo();
+        const engine = new ConversationSessionEngine(
+            repo,
+            async () => true,
+            newId,
+        );
+        const session = await engine.openSession(authority);
+        const turn = await engine.acceptTurn({
+            authority,
+            sessionId: session.id,
+            conversationId: newId(),
+            idempotencyKey: "revoked",
+            correlationId: "revoked",
+        });
+        await repo.updateSessionState(
+            authority.ownerId,
+            session.id,
+            session.version,
+            "REVOKED",
+        );
+        await expect(engine.cancel(authority, turn.id)).rejects.toThrow(
+            "CONVERSATION_SESSION_BINDING_INVALID",
+        );
+        expect(repo.turns.get(turn.id)).toEqual(turn);
+    });
+});

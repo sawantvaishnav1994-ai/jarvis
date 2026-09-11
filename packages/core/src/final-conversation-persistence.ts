@@ -68,6 +68,10 @@ export class J112ConversationPersistenceCoordinator {
         idempotencyKey: string;
         correlationId: string;
     }): Promise<J112DurableTurn> {
+        await this.sessions.verifySession(
+            input.authority,
+            input.conversationSessionId,
+        );
         const conversation = await this.records.persistConversation({
             ownerId: input.authority.ownerId,
             actorId: input.authority.actorId,
@@ -157,6 +161,11 @@ export class J112ConversationPersistenceCoordinator {
             durableTurn.turn.conversationId !== durableTurn.conversationId
         )
             throw new BoundaryError("J112_PERSISTENCE_BINDING_INVALID");
+
+        await this.sessions.verifySession(
+            authority,
+            durableTurn.conversationSessionId,
+        );
 
         if (input.response !== null) {
             if (!input.responseMessageId)

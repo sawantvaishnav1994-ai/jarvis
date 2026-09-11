@@ -181,6 +181,7 @@ async function main() {
         identity,
         transportKey,
         new PostgresConversationSessionRepository(pool),
+        config.models.localOllama,
     );
     const server = healthServer(
         "api",

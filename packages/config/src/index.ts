@@ -44,6 +44,23 @@ export const ConfigSchema = z
         models: z.strictObject({
             providers: z.array(z.enum(["mock-a", "mock-b"])).min(1),
             allowCloud: z.literal(false),
+            localOllama: z
+                .strictObject({
+                    model: z
+                        .string()
+                        .regex(
+                            /^[a-zA-Z0-9][a-zA-Z0-9._/-]*:[a-zA-Z0-9][a-zA-Z0-9._-]*$/,
+                        )
+                        .max(200),
+                    port: z.number().int().min(1024).max(65535).default(11434),
+                    timeoutMs: z
+                        .number()
+                        .int()
+                        .min(1000)
+                        .max(120000)
+                        .default(60000),
+                })
+                .optional(),
         }),
         privacy: z.strictObject({
             default: z.literal("local-only"),
