@@ -2729,3 +2729,16 @@ web production build PASS, Python check PASS and 68 regressions PASS.
 Ledger validation PASS; --release intentionally exits 1. No SQL migration changed.
 This evidence closes the identified code defects; it does not close FR-001,
 FR-012, FR-013, FR-019 or FR-021 in their entirety. Exact candidate CI follows.
+
+
+## Exact candidate evidence and execution interruption
+
+Source `1f8193edef4b3ad076d0a80a94db62513dbc2bda`, tree
+`bfddc4996d581580b45fc3ac903a70387652ec45`, passed J1 run 34568543758,
+Home UI run 34568543711 and Windows Presence run 34568543826. These verify the
+first foundation repair and previous development coverage, not whole-product acceptance.
+
+On resume, the workspace runner did not return even for pwd/true. Further local
+engineering validation is blocked; see docs/JARVIS_EXTERNAL_BLOCKERS.md.
+Unfinished product requirements remain IN_PROGRESS/NOT_STARTED. The next dependency
+is pipeline audit and governed durable conversation/history integration.

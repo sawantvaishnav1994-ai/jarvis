@@ -5525,3 +5525,31 @@ PASS. Ledger integrity PASS; --release expected rejection confirmed (exit 1).
 No Docker or psql binary is present in this executor; this does not prevent CI
 qualification and is not recorded as a whole-feature external blocker. No real
 owner data, production mutation, migration change, deployment or main merge.
+
+
+## Resumed checkpoint and verified CI — 2026-09-11
+
+Owner prompt verbatim:
+
+Resume from where it was previously stopped ,
+becz of credits limits has been ended
+
+Recovered integration branch at 1f8193edef4b3ad076d0a80a94db62513dbc2bda;
+local source commit c3e40e5, identical tree bfddc4996d581580b45fc3ac903a70387652ec45.
+GitHub API confirms exact-source runs passed:
+- J1 Development Checks: 34568543758.
+- Personal Home UI verification: 34568543711.
+- Presence native Windows verification: 34568543826.
+
+Attempted to continue Phase B by inspecting pipeline audit and governed persistence.
+Workspace commands stopped returning: read-only source inspection, pwd, and true
+without a login shell each hung. Stopped waiting; no mutations were requested by
+those calls. GitHub connector remains responsive. This documentation-only update
+preserves the verified checkpoint and interruption. No additional runtime code,
+new test run, completed durable history, production deployment or main merge claimed.
+
+External execution blocker: restore a responsive workspace command runner for
+local source edits and required verification. No API key or purchase is shown
+necessary. Requirement statuses remain open, not falsely BLOCKED_EXTERNAL.
+Next code work is pipeline audit and governed durable conversation/history using
+existing authority/storage ports, followed by real database restart/reload checks.
